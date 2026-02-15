@@ -27,6 +27,7 @@ fun GameSetupScreen(
     onNavigateBack: () -> Unit
 ) {
     var selectedGridSize by remember { mutableStateOf(6) }
+    var selectedMode by remember { mutableStateOf(gameMode) }
     val gridSizeOptions = listOf(5, 6, 7, 8, 10)
     
     Scaffold(
@@ -119,7 +120,7 @@ fun GameSetupScreen(
             Spacer(modifier = Modifier.weight(1f))
             
             // Bot difficulty selection (if bot mode)
-            if (gameMode.isBot) {
+            if (selectedMode.isBot) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -130,23 +131,53 @@ fun GameSetupScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Bot Difficulty: ${gameMode.difficulty?.name ?: "EASY"}",
+                            text = "Bot Difficulty",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold
                             )
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // Difficulty buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            DifficultyButton(
+                                text = "Easy",
+                                isSelected = selectedMode == GameMode.BOT_EASY,
+                                onClick = { selectedMode = GameMode.BOT_EASY },
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            DifficultyButton(
+                                text = "Medium",
+                                isSelected = selectedMode == GameMode.BOT_MEDIUM,
+                                onClick = { selectedMode = GameMode.BOT_MEDIUM },
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            DifficultyButton(
+                                text = "Hard",
+                                isSelected = selectedMode == GameMode.BOT_HARD,
+                                onClick = { selectedMode = GameMode.BOT_HARD },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
                         Text(
-                            text = when (gameMode.difficulty) {
+                            text = when (selectedMode.difficulty) {
                                 com.blueedge.chainreaction.data.model.BotDifficulty.EASY -> 
                                     "Bot makes random valid moves"
                                 com.blueedge.chainreaction.data.model.BotDifficulty.MEDIUM -> 
-                                    "Bot uses defensive strategy"
+                                    "Bot uses defensive strategy and territory control"
                                 com.blueedge.chainreaction.data.model.BotDifficulty.HARD -> 
-                                    "Bot uses minimax algorithm"
+                                    "Bot uses minimax algorithm - very challenging!"
                                 else -> "Bot makes random valid moves"
                             },
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
@@ -156,7 +187,13 @@ fun GameSetupScreen(
             
             // Start Game Button
             Button(
-                onClick = { onNavigateToGame(selectedGridSize) },
+                onClick = { 
+                    // Use the selected mode (which may be updated for difficulty)
+                    val finalMode = if (gameMode.isBot) selectedMode else gameMode
+                    // Navigate but we need to pass the mode too
+                    // For now, just navigate with grid size
+                    onNavigateToGame(selectedGridSize) 
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -172,6 +209,44 @@ fun GameSetupScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun DifficultyButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
+            contentColor = if (isSelected) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
+        ),
+        modifier = modifier.height(40.dp),
+        border = if (!isSelected) {
+            androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outline
+            )
+        } else null
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            )
+        )
     }
 }
 

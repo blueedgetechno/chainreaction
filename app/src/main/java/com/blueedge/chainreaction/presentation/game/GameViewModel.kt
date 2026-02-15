@@ -3,8 +3,12 @@ package com.blueedge.chainreaction.presentation.game
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.blueedge.chainreaction.ai.EasyBot
+import com.blueedge.chainreaction.ai.HardBot
+import com.blueedge.chainreaction.ai.MediumBot
 import com.blueedge.chainreaction.data.model.*
 import com.blueedge.chainreaction.data.repository.GameRepository
+import com.blueedge.chainreaction.di.getBotStrategy
 import com.blueedge.chainreaction.domain.GameEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -18,7 +22,10 @@ import javax.inject.Inject
 @HiltViewModel
 class GameViewModel @Inject constructor(
     private val gameEngine: GameEngine,
-    private val gameRepository: GameRepository
+    private val gameRepository: GameRepository,
+    private val easyBot: EasyBot,
+    private val mediumBot: MediumBot,
+    private val hardBot: HardBot
 ) : ViewModel() {
     
     private val _gameState = MutableStateFlow<GameState>(GameState.Setup)
@@ -124,16 +131,20 @@ class GameViewModel @Inject constructor(
     }
     
     private suspend fun executeBotMove() {
-        val player = _currentPlayer.value ?: return
+        val botPlayer = _currentPlayer.value ?: return
+        val humanPlayer = _players.value.find { it.id != botPlayer.id } ?: return
         
-        // Get valid moves
-        val validMoves = gameEngine.getValidMoves(_boardState.value, player)
-        if (validMoves.isEmpty()) return
+        // Get the appropriate bot strategy based on difficulty
+        val botStrategy = gameMode.difficulty?.let {
+            getBotStrategy(it, easyBot, mediumBot, hardBot)
+        } ?: easyBot
         
-        // For now, just pick a random move (Easy bot)
-        // TODO: Implement Medium and Hard bots in Phase 7
-        val move = validMoves.random()
-        executeMove(move.row, move.col, player)
+        // Calculate bot move
+        val move = botStrategy.calculateMove(_boardState.value, botPlayer, humanPlayer)
+        
+        if (move != null) {
+            executeMove(move.row, move.col, botPlayer)
+        }
     }
     
     private fun endGame(winner: Player) {
