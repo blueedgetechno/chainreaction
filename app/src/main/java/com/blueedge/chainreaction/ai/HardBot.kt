@@ -25,6 +25,8 @@ class HardBot @Inject constructor(
             }
         }
         
+        // Large positive/negative scores to represent definite win/loss states
+        // High enough to dominate any positional evaluation, but not Int.MAX/MIN to avoid overflow
         private const val WIN_SCORE = 10000
         private const val LOSE_SCORE = -10000
     }

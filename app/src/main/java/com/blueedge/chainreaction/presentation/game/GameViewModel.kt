@@ -28,6 +28,11 @@ class GameViewModel @Inject constructor(
     private val hardBot: HardBot
 ) : ViewModel() {
     
+    companion object {
+        private const val MOVE_ANIMATION_DELAY_MS = 100L
+        private const val BOT_THINKING_DELAY_MS = 1000L
+    }
+    
     private val _gameState = MutableStateFlow<GameState>(GameState.Setup)
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
     
@@ -99,7 +104,7 @@ class GameViewModel @Inject constructor(
         moveCount++
         
         // Small delay to show the move
-        delay(100)
+        delay(MOVE_ANIMATION_DELAY_MS)
         
         // Check win condition
         val winner = gameEngine.checkWinCondition(result.newBoard, _players.value)
@@ -113,7 +118,7 @@ class GameViewModel @Inject constructor(
         
         // If bot mode and it's bot's turn, execute bot move
         if (gameMode.isBot && _currentPlayer.value?.id == 2) {
-            delay(1000) // Bot thinking time
+            delay(BOT_THINKING_DELAY_MS) // Bot thinking time
             executeBotMove()
         }
     }
