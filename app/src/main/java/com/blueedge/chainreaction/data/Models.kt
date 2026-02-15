@@ -1,0 +1,53 @@
+package com.blueedge.chainreaction.data
+
+enum class GameMode {
+    LOCAL_MULTIPLAYER,
+    VS_BOT
+}
+
+enum class BotDifficulty {
+    EASY,
+    MEDIUM,
+    HARD
+}
+
+data class PlayerInfo(
+    val id: Int,
+    val name: String,
+    val colorIndex: Int,
+    val isBot: Boolean = false
+)
+
+data class CellState(
+    val ownerId: Int = 0,
+    val dots: Int = 0
+) {
+    val isEmpty: Boolean get() = ownerId == 0 && dots == 0
+}
+
+data class Move(val row: Int, val col: Int)
+
+enum class GameStatus {
+    IN_PROGRESS,
+    PLAYER1_WINS,
+    PLAYER2_WINS
+}
+
+data class GameUiState(
+    val board: List<List<CellState>> = emptyList(),
+    val gridSize: Int = 6,
+    val currentPlayerId: Int = 1,
+    val player1: PlayerInfo = PlayerInfo(1, "Player 1", 0),
+    val player2: PlayerInfo = PlayerInfo(2, "Player 2", 1),
+    val player1Score: Int = 0,
+    val player2Score: Int = 0,
+    val moveCount: Int = 0,
+    val gameStatus: GameStatus = GameStatus.IN_PROGRESS,
+    val isAnimating: Boolean = false,
+    val botThinking: Boolean = false,
+    val gameStartTimeMs: Long = 0L,
+    val explodingCells: Set<Pair<Int, Int>> = emptySet(),
+    val lastMovedCell: Pair<Int, Int>? = null,
+    val gameMode: GameMode = GameMode.LOCAL_MULTIPLAYER,
+    val botDifficulty: BotDifficulty = BotDifficulty.MEDIUM
+)
