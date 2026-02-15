@@ -23,7 +23,7 @@ import com.blueedge.chainreaction.data.model.GameMode
 @Composable
 fun GameSetupScreen(
     gameMode: GameMode,
-    onNavigateToGame: (gridSize: Int) -> Unit,
+    onNavigateToGame: (gridSize: Int, finalMode: GameMode) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     var selectedGridSize by remember { mutableStateOf(6) }
@@ -190,9 +190,7 @@ fun GameSetupScreen(
                 onClick = { 
                     // Use the selected mode (which may be updated for difficulty)
                     val finalMode = if (gameMode.isBot) selectedMode else gameMode
-                    // Navigate but we need to pass the mode too
-                    // For now, just navigate with grid size
-                    onNavigateToGame(selectedGridSize) 
+                    onNavigateToGame(selectedGridSize, finalMode)
                 },
                 modifier = Modifier
                     .fillMaxWidth()

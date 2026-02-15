@@ -126,8 +126,9 @@ fun MainMenuScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Try to fill the entire field with your color. " +
-                                "Click on your circles to enlarge the dots by one. " +
-                                "Take 4 new squares when you reach 4 white dots in a circle.",
+                                "Tap on your circles to add dots. " +
+                                "When a circle reaches critical mass (2 dots for corners, 3 for edges, 4 for center), " +
+                                "it explodes and spreads dots to adjacent cells, capturing them!",
                         style = MaterialTheme.typography.bodyMedium,
                         lineHeight = 20.sp
                     )

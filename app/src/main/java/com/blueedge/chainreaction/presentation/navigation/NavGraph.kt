@@ -46,8 +46,8 @@ fun NavGraph(
             
             GameSetupScreen(
                 gameMode = gameMode,
-                onNavigateToGame = { gridSize ->
-                    navController.navigate(Screen.Game.createRoute(gridSize, gameMode))
+                onNavigateToGame = { gridSize, finalMode ->
+                    navController.navigate(Screen.Game.createRoute(gridSize, finalMode))
                 },
                 onNavigateBack = {
                     navController.popBackStack()

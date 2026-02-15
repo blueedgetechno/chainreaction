@@ -16,7 +16,15 @@ class HardBot @Inject constructor(
 ) : BotStrategy {
     
     companion object {
-        private const val MAX_DEPTH = 3  // Look ahead 3 moves
+        // Adaptive depth based on grid size for performance
+        private fun getDepth(gridSize: Int): Int {
+            return when {
+                gridSize <= 6 -> 3
+                gridSize <= 8 -> 2
+                else -> 1  // 10x10 grid
+            }
+        }
+        
         private const val WIN_SCORE = 10000
         private const val LOSE_SCORE = -10000
     }
@@ -29,6 +37,8 @@ class HardBot @Inject constructor(
         val validMoves = gameEngine.getValidMoves(boardState, botPlayer)
         if (validMoves.isEmpty()) return null
         
+        val depth = getDepth(boardState.gridSize)
+        
         var bestMove: Move? = null
         var bestScore = Int.MIN_VALUE
         val alpha = Int.MIN_VALUE
@@ -38,7 +48,7 @@ class HardBot @Inject constructor(
             val result = gameEngine.addDot(boardState, move.row, move.col, botPlayer)
             val score = minimax(
                 result.newBoard,
-                MAX_DEPTH - 1,
+                depth - 1,
                 alpha,
                 beta,
                 false,

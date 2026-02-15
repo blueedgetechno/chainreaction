@@ -24,10 +24,15 @@ class GameEngine {
         col: Int,
         player: Player
     ): MoveResult {
-        val cell = board.getCell(row, col) ?: throw IllegalArgumentException("Invalid cell position")
+        val cell = board.getCell(row, col) ?: throw IllegalArgumentException(
+            "Invalid cell position: ($row, $col) on ${board.gridSize}x${board.gridSize} board"
+        )
         
         if (!cell.canAddDot(player)) {
-            throw IllegalStateException("Cannot add dot to this cell")
+            throw IllegalStateException(
+                "Cannot add dot: Player ${player.id} tried to add to cell ($row, $col) " +
+                "owned by player ${cell.playerId}"
+            )
         }
         
         // Add the dot
