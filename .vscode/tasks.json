@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {
+      "label": "assembleDebug",
+      "type": "shell",
+      "command": " ./gradlew.bat installDebug; adb shell am start -n com.blueedge.chainreaction/.MainActivity",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

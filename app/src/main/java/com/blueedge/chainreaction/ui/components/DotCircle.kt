@@ -1,13 +1,8 @@
 package com.blueedge.chainreaction.ui.components
 
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -25,17 +20,6 @@ fun DotCircle(
     isExploding: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
-
     val scale by animateFloatAsState(
         targetValue = if (isExploding) 1.5f else 1.0f,
         animationSpec = spring(
@@ -45,15 +29,12 @@ fun DotCircle(
         label = "scale"
     )
 
-    val alpha = if (isCurrentPlayer && !isExploding) pulseAlpha else 1f
-
     Canvas(
         modifier = modifier
             .fillMaxSize()
             .graphicsLayer(
                 scaleX = scale,
-                scaleY = scale,
-                alpha = alpha
+                scaleY = scale
             )
     ) {
         val circleRadius = size.minDimension * 0.38f
@@ -84,13 +65,13 @@ private fun getDotPositions(count: Int, center: Offset, spread: Float): List<Off
     return when (count) {
         1 -> listOf(center)
         2 -> listOf(
-            Offset(center.x - spread * 0.5f, center.y - spread * 0.5f),
-            Offset(center.x + spread * 0.5f, center.y + spread * 0.5f)
+            Offset(center.x - spread * 0.9f, center.y),
+            Offset(center.x + spread * 0.9f, center.y)
         )
         3 -> listOf(
-            Offset(center.x - spread * 0.6f, center.y - spread * 0.6f),
-            center,
-            Offset(center.x + spread * 0.6f, center.y + spread * 0.6f)
+            Offset(center.x - spread * 0.85f, center.y + spread * 0.55f),
+            Offset(center.x + spread * 0.85f, center.y + spread * 0.55f),
+            Offset(center.x, center.y - spread * 0.8f)
         )
         else -> listOf(
             Offset(center.x - spread * 0.5f, center.y - spread * 0.5f),

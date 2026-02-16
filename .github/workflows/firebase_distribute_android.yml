@@ -1,0 +1,44 @@
+name: Build & Distribute to Firebase
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: Make build script executable
+        run: |
+          chmod +x .github/scripts/build-android.sh
+          chmod +x .github/scripts/package-app-android.sh
+          chmod +x .github/scripts/upload-firebase-android.sh
+
+      - name: 🧪 Test if secrets are set
+        run: |
+          if [ -z "${{ secrets.ANDROID_APP_ID }}" ]; then
+            echo "Error: ANDROID_APP_ID is not set."
+            exit 1
+          fi
+          if [ -z "${{ secrets.FIREBASE_TOKEN }}" ]; then
+            echo "Error: FIREBASE_TOKEN is not set."
+            exit 1
+          fi
+
+      - name: 🛠️ Build Android APK (Release)
+        run: .github/scripts/build-android.sh
+
+      - name: Package .apk
+        run: .github/scripts/package-app-android.sh
+
+      - name: 📤 Upload Android APK to Firebase
+        run: .github/scripts/upload-firebase-android.sh
+        env:
+          ANDROID_APP_ID: ${{ secrets.ANDROID_APP_ID }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

@@ -20,26 +20,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.blueedge.chainreaction.data.BotDifficulty
 import com.blueedge.chainreaction.data.GameConfig
@@ -56,22 +52,18 @@ import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.ui.theme.PlayerColorNames
 import com.blueedge.chainreaction.ui.theme.PlayerColors
 import com.blueedge.chainreaction.utils.Constants
+import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameSetupScreen(
     gameMode: GameMode,
     onStartGame: () -> Unit,
     onBack: () -> Unit
 ) {
-    var gridSize by remember { mutableIntStateOf(GameConfig.gridSize) }
+    var localGridSize by remember { mutableIntStateOf(GameConfig.gridSize) }
     var player1Name by remember { mutableStateOf(GameConfig.player1Name) }
     var player1ColorIndex by remember { mutableIntStateOf(GameConfig.player1ColorIndex) }
-    var player2Name by remember {
-        mutableStateOf(
-            if (gameMode == GameMode.VS_BOT) "Bot" else GameConfig.player2Name
-        )
-    }
+    var player2Name by remember { mutableStateOf(GameConfig.player2Name) }
     var player2ColorIndex by remember { mutableIntStateOf(GameConfig.player2ColorIndex) }
     var botDifficulty by remember { mutableStateOf(GameConfig.botDifficulty) }
 
@@ -82,39 +74,20 @@ fun GameSetupScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (gameMode == GameMode.LOCAL_MULTIPLAYER) "Local Multiplayer" else "Play vs Bot"
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (gameMode == GameMode.LOCAL_MULTIPLAYER) {
             // Grid Size Section
             SectionCard(title = "Grid Size") {
                 GridSizeSelector(
-                    selectedSize = gridSize,
-                    onSizeSelected = { gridSize = it }
+                    selectedSize = localGridSize,
+                    onSizeSelected = { localGridSize = it }
                 )
             }
 
@@ -142,72 +115,81 @@ fun GameSetupScreen(
                 )
             }
 
-            // Player 2 / Bot Section
-            if (gameMode == GameMode.LOCAL_MULTIPLAYER) {
-                SectionCard(title = "Player 2") {
-                    OutlinedTextField(
-                        value = player2Name,
-                        onValueChange = { player2Name = it },
-                        label = { Text("Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Color",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ColorPicker(
-                        selectedIndex = player2ColorIndex,
-                        disabledIndex = player1ColorIndex,
-                        onColorSelected = { player2ColorIndex = it }
-                    )
-                }
-            } else {
-                SectionCard(title = "Bot Settings") {
-                    DifficultySelector(
-                        selected = botDifficulty,
-                        onSelected = { botDifficulty = it }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Start Game Button
-            Button(
-                onClick = {
-                    GameConfig.apply {
-                        this.gameMode = gameMode
-                        this.gridSize = gridSize
-                        this.player1Name = player1Name.ifBlank { "Player 1" }
-                        this.player1ColorIndex = player1ColorIndex
-                        this.player2Name = player2Name.ifBlank {
-                            if (gameMode == GameMode.VS_BOT) "Bot" else "Player 2"
-                        }
-                        this.player2ColorIndex = player2ColorIndex
-                        this.botDifficulty = botDifficulty
-                    }
-                    onStartGame()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp),
-                shape = RoundedCornerShape(16.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-            ) {
+            // Player 2 Section
+            SectionCard(title = "Player 2") {
+                OutlinedTextField(
+                    value = player2Name,
+                    onValueChange = { player2Name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "START GAME",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = "Color",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ColorPicker(
+                    selectedIndex = player2ColorIndex,
+                    disabledIndex = player1ColorIndex,
+                    onColorSelected = { player2ColorIndex = it }
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
+        } else {
+            // VS_BOT mode - only show difficulty slider
+            SectionCard(title = "Difficulty") {
+                DifficultySlider(
+                    selected = botDifficulty,
+                    onSelected = { botDifficulty = it }
+                )
+            }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Start Game Button
+        Button(
+            onClick = {
+                GameConfig.apply {
+                    this.gameMode = gameMode
+                    if (gameMode == GameMode.VS_BOT) {
+                        this.gridSize = when (botDifficulty) {
+                            BotDifficulty.EASY -> 5
+                            BotDifficulty.MEDIUM -> 7
+                            BotDifficulty.HARD -> 10
+                        }
+                        this.player1Name = "Player 1"
+                        this.player1ColorIndex = 0  // Blue
+                        this.player2Name = "Bot"
+                        this.player2ColorIndex = 1  // Red
+                        this.botDifficulty = botDifficulty
+                    } else {
+                        this.gridSize = localGridSize
+                        this.player1Name = player1Name.ifBlank { "Player 1" }
+                        this.player1ColorIndex = player1ColorIndex
+                        this.player2Name = player2Name.ifBlank { "Player 2" }
+                        this.player2ColorIndex = player2ColorIndex
+                    }
+                }
+                onStartGame()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+        ) {
+            Text(
+                "Play",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -297,7 +279,7 @@ private fun ColorPicker(
             ) {
                 if (isSelected) {
                     Text(
-                        text = "✓",
+                        text = "?",
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -317,64 +299,83 @@ private fun ColorPicker(
 }
 
 @Composable
-private fun DifficultySelector(
+private fun DifficultySlider(
     selected: BotDifficulty,
     onSelected: (BotDifficulty) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        BotDifficulty.entries.forEach { difficulty ->
-            val (label, description) = when (difficulty) {
-                BotDifficulty.EASY -> "Easy" to "Random moves — great for learning"
-                BotDifficulty.MEDIUM -> "Medium" to "Strategic blocking and expansion"
-                BotDifficulty.HARD -> "Hard" to "Minimax AI — a real challenge!"
-            }
+    val difficulties = BotDifficulty.entries
+    var sliderValue by remember { mutableFloatStateOf(selected.ordinal.toFloat()) }
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelected(difficulty) },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (selected == difficulty)
-                        MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.surfaceVariant
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = if (selected == difficulty) 4.dp else 1.dp
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    if (selected == difficulty) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("✓", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
+    // Sync slider when external selection changes
+    LaunchedEffect(selected) {
+        sliderValue = selected.ordinal.toFloat()
+    }
+
+    Column {
+        Slider(
+            value = sliderValue,
+            onValueChange = { sliderValue = it },
+            onValueChangeFinished = {
+                val snapped = sliderValue.roundToInt().coerceIn(0, 2)
+                sliderValue = snapped.toFloat()
+                onSelected(difficulties[snapped])
+            },
+            valueRange = 0f..2f,
+            modifier = Modifier.fillMaxWidth(),
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Labels row
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Easy",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected == BotDifficulty.EASY) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected == BotDifficulty.EASY) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Start
+            )
+            Text(
+                "Medium",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected == BotDifficulty.MEDIUM) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected == BotDifficulty.MEDIUM) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center
+            )
+            Text(
+                "Hard",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected == BotDifficulty.HARD) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected == BotDifficulty.HARD) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.End
+            )
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Description with grid size info
+        // val description = when (selected) {
+        //     BotDifficulty.EASY -> "Random moves � great for learning (5�5 grid)"
+        //     BotDifficulty.MEDIUM -> "Strategic blocking and expansion (7�7 grid)"
+        //     BotDifficulty.HARD -> "Minimax AI � a real challenge! (10�10 grid)"
+        // }
+        // Text(
+        //     text = description,
+        //     style = MaterialTheme.typography.bodySmall,
+        //     color = MaterialTheme.colorScheme.onSurfaceVariant,
+        //     textAlign = TextAlign.Center,
+        //     modifier = Modifier.fillMaxWidth()
+        // )
     }
 }
