@@ -95,6 +95,7 @@ fun GameBoardScreen(
                     player1Color = player1Color,
                     player2Color = player2Color,
                     explodingCells = state.explodingCells,
+                    explosionMoves = state.explosionMoves,
                     onCellClick = { row, col -> viewModel.onCellClicked(row, col) },
                     isInteractionEnabled = !state.isAnimating &&
                             !state.botThinking &&

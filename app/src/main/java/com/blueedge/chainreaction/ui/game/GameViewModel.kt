@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blueedge.chainreaction.ai.BotStrategy
 import com.blueedge.chainreaction.ai.createBot
+import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameStatus
@@ -77,18 +78,49 @@ class GameViewModel : ViewModel() {
         _state.update { it.copy(isAnimating = true, lastMovedCell = Pair(row, col)) }
 
         // Execute the move in the game engine
-        val (newBoard, explosionWaves) = engine.executeMove(currentState.board, row, col, playerId, isFirstMove)
+        val (newBoard, explosionWaves, explosionMoveWaves) = engine.executeMove(currentState.board, row, col, playerId, isFirstMove)
+
+        // Show the intermediate board state (dots added, before explosion) for dot transition animation
+        if (explosionWaves.isNotEmpty()) {
+            // Build intermediate board: apply only the dot addition, not the explosions
+            val intermediateBoard = currentState.board.map { it.toMutableList() }.toMutableList()
+            if (isFirstMove) {
+                intermediateBoard[row][col] = CellState(ownerId = playerId, dots = 3, previousDots = 0)
+            } else {
+                val currentCell = intermediateBoard[row][col]
+                intermediateBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
+            }
+            _state.update { it.copy(board = intermediateBoard.map { r -> r.toList() }) }
+
+            // Delay 200ms to show the 4-dot state before chain reaction
+            delay(200)
+        } else {
+            // No explosion — just update board with previousDots for animation
+            val animatedBoard = currentState.board.map { it.toMutableList() }.toMutableList()
+            if (isFirstMove) {
+                animatedBoard[row][col] = CellState(ownerId = playerId, dots = 3, previousDots = 0)
+            } else {
+                val currentCell = animatedBoard[row][col]
+                animatedBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
+            }
+            _state.update { it.copy(board = animatedBoard.map { r -> r.toList() }) }
+        }
 
         // Animate explosions wave by wave
-        for (wave in explosionWaves) {
+        for (i in explosionWaves.indices) {
+            val wave = explosionWaves[i]
+            val moves = explosionMoveWaves[i]
             _state.update {
-                it.copy(explodingCells = wave.map { m -> Pair(m.row, m.col) }.toSet())
+                it.copy(
+                    explodingCells = wave.map { m -> Pair(m.row, m.col) }.toSet(),
+                    explosionMoves = moves
+                )
             }
             delay(350) // Animation delay per wave
         }
 
         // Clear explosion markers
-        _state.update { it.copy(explodingCells = emptySet()) }
+        _state.update { it.copy(explodingCells = emptySet(), explosionMoves = emptyList()) }
 
         val newMoveCount = currentState.moveCount + 1
         val p1Score = engine.countPlayerCells(newBoard, 1)

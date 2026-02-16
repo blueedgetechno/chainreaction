@@ -20,12 +20,21 @@ data class PlayerInfo(
 
 data class CellState(
     val ownerId: Int = 0,
-    val dots: Int = 0
+    val dots: Int = 0,
+    val previousDots: Int = 0
 ) {
     val isEmpty: Boolean get() = ownerId == 0 && dots == 0
 }
 
 data class Move(val row: Int, val col: Int)
+
+data class ExplosionMove(
+    val fromRow: Int,
+    val fromCol: Int,
+    val toRow: Int,
+    val toCol: Int,
+    val playerId: Int
+)
 
 enum class GameStatus {
     IN_PROGRESS,
@@ -49,6 +58,7 @@ data class GameUiState(
     val botThinking: Boolean = false,
     val gameStartTimeMs: Long = 0L,
     val explodingCells: Set<Pair<Int, Int>> = emptySet(),
+    val explosionMoves: List<ExplosionMove> = emptyList(),
     val lastMovedCell: Pair<Int, Int>? = null,
     val gameMode: GameMode = GameMode.LOCAL_MULTIPLAYER,
     val botDifficulty: BotDifficulty = BotDifficulty.MEDIUM
