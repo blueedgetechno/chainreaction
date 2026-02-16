@@ -11,7 +11,8 @@ interface BotStrategy {
     suspend fun calculateMove(
         board: List<List<CellState>>,
         botPlayerId: Int,
-        opponentId: Int
+        opponentId: Int,
+        isFirstMove: Boolean = false
     ): Move
 }
 
@@ -21,10 +22,11 @@ class EasyBot : BotStrategy {
     override suspend fun calculateMove(
         board: List<List<CellState>>,
         botPlayerId: Int,
-        opponentId: Int
+        opponentId: Int,
+        isFirstMove: Boolean
     ): Move {
         delay(800)
-        val validMoves = engine.getValidMoves(board, botPlayerId)
+        val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
         return validMoves[Random.nextInt(validMoves.size)]
     }
 }
@@ -35,12 +37,16 @@ class MediumBot : BotStrategy {
     override suspend fun calculateMove(
         board: List<List<CellState>>,
         botPlayerId: Int,
-        opponentId: Int
+        opponentId: Int,
+        isFirstMove: Boolean
     ): Move {
         delay(1200)
-        val validMoves = engine.getValidMoves(board, botPlayerId)
+        val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
         val gridRows = board.size
         val gridCols = board[0].size
+
+        // If first move, pick a random empty cell
+        if (isFirstMove) return validMoves.random()
 
         // Priority 1: Moves that cause explosions capturing opponent cells
         val explosionCaptures = validMoves.filter { move ->
@@ -60,8 +66,7 @@ class MediumBot : BotStrategy {
                         board[n.row][n.col].dots == GameEngine.CRITICAL_MASS - 1
             }
         }.filter { move ->
-            // Only block if we own the cell or it's empty (placing a dot here doesn't help if opponent owns it)
-            board[move.row][move.col].ownerId == botPlayerId || board[move.row][move.col].isEmpty
+            board[move.row][move.col].ownerId == botPlayerId
         }
         if (blockingMoves.isNotEmpty()) return blockingMoves.random()
 
@@ -70,20 +75,6 @@ class MediumBot : BotStrategy {
             board[move.row][move.col].ownerId == botPlayerId
         }.sortedByDescending { board[it.row][it.col].dots }
         if (buildMoves.isNotEmpty()) return buildMoves.first()
-
-        // Priority 4: Expand to cells near opponent
-        val expansionMoves = validMoves.filter { move ->
-            board[move.row][move.col].isEmpty
-        }.sortedByDescending { move ->
-            val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
-            neighbors.count { n -> board[n.row][n.col].ownerId == opponentId }
-        }
-        if (expansionMoves.isNotEmpty() && expansionMoves.first().let { move ->
-                val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
-                neighbors.any { n -> board[n.row][n.col].ownerId == opponentId }
-            }) {
-            return expansionMoves.first()
-        }
 
         return validMoves.random()
     }
@@ -104,16 +95,20 @@ class HardBot : BotStrategy {
     override suspend fun calculateMove(
         board: List<List<CellState>>,
         botPlayerId: Int,
-        opponentId: Int
+        opponentId: Int,
+        isFirstMove: Boolean
     ): Move {
         delay(1500)
-        val validMoves = engine.getValidMoves(board, botPlayerId)
+        val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
+
+        // If first move, pick a random empty cell
+        if (isFirstMove) return validMoves.random()
 
         var bestScore = Int.MIN_VALUE
         var bestMove = validMoves.first()
 
         for (move in validMoves) {
-            val (newBoard, _) = engine.executeMove(board, move.row, move.col, botPlayerId)
+            val (newBoard, _) = engine.executeMove(board, move.row, move.col, botPlayerId, isFirstMove)
 
             // Check for immediate win
             val winner = engine.checkWinCondition(newBoard, 100)

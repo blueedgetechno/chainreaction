@@ -13,23 +13,34 @@ class GameEngine {
         board: List<List<CellState>>,
         row: Int,
         col: Int,
-        playerId: Int
+        playerId: Int,
+        isFirstMove: Boolean = false
     ): Boolean {
         if (row < 0 || row >= board.size || col < 0 || col >= board[0].size) return false
         val cell = board[row][col]
-        return cell.isEmpty || cell.ownerId == playerId
+        return if (isFirstMove) {
+            cell.isEmpty
+        } else {
+            cell.ownerId == playerId
+        }
     }
 
     fun executeMove(
         board: List<List<CellState>>,
         row: Int,
         col: Int,
-        playerId: Int
+        playerId: Int,
+        isFirstMove: Boolean = false
     ): Pair<List<List<CellState>>, List<List<Move>>> {
         val mutableBoard = board.map { it.toMutableList() }.toMutableList()
 
-        val currentCell = mutableBoard[row][col]
-        mutableBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1)
+        if (isFirstMove) {
+            // First move places 3 dots
+            mutableBoard[row][col] = CellState(ownerId = playerId, dots = 3)
+        } else {
+            val currentCell = mutableBoard[row][col]
+            mutableBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1)
+        }
 
         val allExplosionWaves = mutableListOf<List<Move>>()
         processExplosions(mutableBoard, playerId, allExplosionWaves)
@@ -120,11 +131,11 @@ class GameEngine {
         return if (hasOccupied && owners.size == 1) owners.first() else null
     }
 
-    fun getValidMoves(board: List<List<CellState>>, playerId: Int): List<Move> {
+    fun getValidMoves(board: List<List<CellState>>, playerId: Int, isFirstMove: Boolean = false): List<Move> {
         val moves = mutableListOf<Move>()
         for (r in board.indices) {
             for (c in board[r].indices) {
-                if (isValidMove(board, r, c, playerId)) {
+                if (isValidMove(board, r, c, playerId, isFirstMove)) {
                     moves.add(Move(r, c))
                 }
             }

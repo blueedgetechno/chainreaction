@@ -42,6 +42,8 @@ data class GameUiState(
     val player1Score: Int = 0,
     val player2Score: Int = 0,
     val moveCount: Int = 0,
+    val player1HasMoved: Boolean = false,
+    val player2HasMoved: Boolean = false,
     val gameStatus: GameStatus = GameStatus.IN_PROGRESS,
     val isAnimating: Boolean = false,
     val botThinking: Boolean = false,

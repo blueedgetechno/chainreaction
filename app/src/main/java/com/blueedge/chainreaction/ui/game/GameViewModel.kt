@@ -60,7 +60,9 @@ class GameViewModel : ViewModel() {
         if (currentState.isAnimating) return
         if (currentState.botThinking) return
 
-        if (!engine.isValidMove(currentState.board, row, col, currentState.currentPlayerId)) return
+        val isFirstMove = if (currentState.currentPlayerId == 1) !currentState.player1HasMoved else !currentState.player2HasMoved
+
+        if (!engine.isValidMove(currentState.board, row, col, currentState.currentPlayerId, isFirstMove)) return
 
         viewModelScope.launch {
             executeMove(row, col)
@@ -70,11 +72,12 @@ class GameViewModel : ViewModel() {
     private suspend fun executeMove(row: Int, col: Int) {
         val currentState = _state.value
         val playerId = currentState.currentPlayerId
+        val isFirstMove = if (playerId == 1) !currentState.player1HasMoved else !currentState.player2HasMoved
 
         _state.update { it.copy(isAnimating = true, lastMovedCell = Pair(row, col)) }
 
         // Execute the move in the game engine
-        val (newBoard, explosionWaves) = engine.executeMove(currentState.board, row, col, playerId)
+        val (newBoard, explosionWaves) = engine.executeMove(currentState.board, row, col, playerId, isFirstMove)
 
         // Animate explosions wave by wave
         for (wave in explosionWaves) {
@@ -106,6 +109,8 @@ class GameViewModel : ViewModel() {
                 board = newBoard,
                 currentPlayerId = if (gameStatus == GameStatus.IN_PROGRESS) nextPlayer else playerId,
                 moveCount = newMoveCount,
+                player1HasMoved = if (playerId == 1) true else state.player1HasMoved,
+                player2HasMoved = if (playerId == 2) true else state.player2HasMoved,
                 player1Score = p1Score,
                 player2Score = p2Score,
                 gameStatus = gameStatus,
@@ -128,7 +133,8 @@ class GameViewModel : ViewModel() {
 
         try {
             val currentState = _state.value
-            val move = botStrategy?.calculateMove(currentState.board, 2, 1)
+            val isBotFirstMove = !currentState.player2HasMoved
+            val move = botStrategy?.calculateMove(currentState.board, 2, 1, isBotFirstMove)
 
             _state.update { it.copy(botThinking = false) }
 

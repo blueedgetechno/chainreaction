@@ -114,7 +114,7 @@ fun GridCell(
             .clip(RoundedCornerShape(14.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = currentPlayerColor),
+                indication = if (cellState.isEmpty) null else ripple(color = currentPlayerColor),
                 onClick = onClick
             ),
         contentAlignment = Alignment.Center
