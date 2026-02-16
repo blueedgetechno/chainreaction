@@ -167,6 +167,9 @@ private fun getAnimatedDotPositions(
 
         // 3→4: Fourth dot copies from top of triangle (position of dot 3),
         // then 3rd and 4th repel horizontally to form top edge of square
+        // Mapping: triangle bottom-left → square bottom-left (target[2]),
+        //          triangle bottom-right → square bottom-right (target[3]),
+        //          triangle top → splits into square top-left (target[0]) + top-right (target[1])
         previousCount == 3 && targetCount == 4 -> {
             val prevPositions = getDotPositions(3, center, spread)
             // Bottom two dots slide from triangle bottom to square bottom
