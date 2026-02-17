@@ -25,9 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,18 +35,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.blueedge.chainreaction.ui.components.SettingsDialog
-
 @Composable
 fun MainMenuScreen(
     onLocalMultiplayer: () -> Unit,
-    onPlayVsBot: () -> Unit
+    onPlayVsBot: () -> Unit,
+    onSettings: () -> Unit
 ) {
-    var showSettings by remember { mutableStateOf(false) }
-
-    if (showSettings) {
-        SettingsDialog(onDismiss = { showSettings = false })
-    }
 
     Box(
         modifier = Modifier
@@ -70,7 +62,7 @@ fun MainMenuScreen(
                 .size(44.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                .clickable { showSettings = true },
+                .clickable { onSettings() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
