@@ -1,20 +1,15 @@
 package com.blueedge.chainreaction.ui.components
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun DotCircle(
@@ -25,27 +20,19 @@ fun DotCircle(
     previousDots: Int = 0,
     modifier: Modifier = Modifier
 ) {
-    val scale by animateFloatAsState(
-        targetValue = if (isExploding) 1.5f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "scale"
-    )
-
     // Animation progress from 0 (previous positions) to 1 (final positions)
-    val animProgress = remember { Animatable(0f) }
+    // Initialize to 0 if animation needed, to avoid snap-then-animate flicker
+    val needsAnimation = previousDots != dotCount && previousDots >= 0
+    val animProgress = remember(dotCount) {
+        Animatable(if (needsAnimation) 0f else 1f)
+    }
 
-    LaunchedEffect(dotCount, previousDots) {
-        if (previousDots != dotCount && previousDots >= 0) {
-            animProgress.snapTo(0f)
+    LaunchedEffect(dotCount) {
+        if (needsAnimation) {
             animProgress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(durationMillis = 250)
             )
-        } else {
-            animProgress.snapTo(1f)
         }
     }
 
@@ -54,10 +41,6 @@ fun DotCircle(
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .graphicsLayer(
-                scaleX = scale,
-                scaleY = scale
-            )
     ) {
         val circleRadius = size.minDimension * 0.38f
         val center = Offset(size.width / 2, size.height / 2)

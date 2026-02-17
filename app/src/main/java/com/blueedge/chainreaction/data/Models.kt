@@ -36,6 +36,13 @@ data class ExplosionMove(
     val playerId: Int
 )
 
+data class ExplosionWaveData(
+    val explodingCells: List<Move>,
+    val moves: List<ExplosionMove>,
+    val boardBeforeSplit: List<List<CellState>>,
+    val boardAfterSplit: List<List<CellState>>
+)
+
 enum class GameStatus {
     IN_PROGRESS,
     PLAYER1_WINS,

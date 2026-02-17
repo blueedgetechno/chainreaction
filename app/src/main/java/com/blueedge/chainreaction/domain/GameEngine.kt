@@ -2,6 +2,7 @@ package com.blueedge.chainreaction.domain
 
 import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.ExplosionMove
+import com.blueedge.chainreaction.data.ExplosionWaveData
 import com.blueedge.chainreaction.data.Move
 
 class GameEngine {
@@ -32,7 +33,7 @@ class GameEngine {
         col: Int,
         playerId: Int,
         isFirstMove: Boolean = false
-    ): Triple<List<List<CellState>>, List<List<Move>>, List<List<ExplosionMove>>> {
+    ): Pair<List<List<CellState>>, List<ExplosionWaveData>> {
         val mutableBoard = board.map { it.toMutableList() }.toMutableList()
 
         if (isFirstMove) {
@@ -43,18 +44,16 @@ class GameEngine {
             mutableBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
         }
 
-        val allExplosionWaves = mutableListOf<List<Move>>()
-        val allExplosionMoves = mutableListOf<List<ExplosionMove>>()
-        processExplosions(mutableBoard, playerId, allExplosionWaves, allExplosionMoves)
+        val allWaveData = mutableListOf<ExplosionWaveData>()
+        processExplosions(mutableBoard, playerId, allWaveData)
 
-        return Triple(mutableBoard.map { it.toList() }, allExplosionWaves, allExplosionMoves)
+        return Pair(mutableBoard.map { it.toList() }, allWaveData)
     }
 
     private fun processExplosions(
         board: MutableList<MutableList<CellState>>,
         playerId: Int,
-        allWaves: MutableList<List<Move>>,
-        allExplosionMoves: MutableList<List<ExplosionMove>>
+        allWaveData: MutableList<ExplosionWaveData>
     ) {
         val maxIterations = board.size * board[0].size * 4
         var iterations = 0
@@ -73,8 +72,6 @@ class GameEngine {
 
             if (explodingCells.isEmpty()) break
 
-            allWaves.add(explodingCells)
-
             // Build explosion move data for animation
             val waveMoves = mutableListOf<ExplosionMove>()
             for (cell in explodingCells) {
@@ -91,24 +88,38 @@ class GameEngine {
                     )
                 }
             }
-            allExplosionMoves.add(waveMoves)
 
             // Step 1: Empty all exploding cells
             for (cell in explodingCells) {
                 board[cell.row][cell.col] = CellState(ownerId = 0, dots = 0)
             }
 
-            // Step 2: Add dots to neighbors of each exploding cell
+            // Snapshot board after emptying (before adding to neighbors)
+            val boardBeforeSplit = board.map { it.toList() }
+
+            // Step 2: Add dots to neighbors of each exploding cell (cap at 4)
             for (cell in explodingCells) {
                 val neighbors = getNeighbors(cell.row, cell.col, board.size, board[0].size)
                 for (neighbor in neighbors) {
                     val current = board[neighbor.row][neighbor.col]
                     board[neighbor.row][neighbor.col] = CellState(
                         ownerId = playerId,
-                        dots = current.dots + 1
+                        dots = minOf(current.dots + 1, CRITICAL_MASS)
                     )
                 }
             }
+
+            // Snapshot board after adding to neighbors
+            val boardAfterSplit = board.map { it.toList() }
+
+            allWaveData.add(
+                ExplosionWaveData(
+                    explodingCells = explodingCells,
+                    moves = waveMoves,
+                    boardBeforeSplit = boardBeforeSplit,
+                    boardAfterSplit = boardAfterSplit
+                )
+            )
 
             // Check if all cells belong to one player (game over during chain)
             val owners = mutableSetOf<Int>()

@@ -108,7 +108,7 @@ class HardBot : BotStrategy {
         var bestMove = validMoves.first()
 
         for (move in validMoves) {
-            val (newBoard, _, _) = engine.executeMove(board, move.row, move.col, botPlayerId, isFirstMove)
+            val (newBoard, _) = engine.executeMove(board, move.row, move.col, botPlayerId, isFirstMove)
 
             // Check for immediate win
             val winner = engine.checkWinCondition(newBoard, 100)
@@ -149,7 +149,7 @@ class HardBot : BotStrategy {
             // Limit branching factor for performance
             val candidates = prioritizeMoves(moves, board, botPlayerId).take(8)
             for (move in candidates) {
-                val (newBoard, _, _) = engine.executeMove(board, move.row, move.col, botPlayerId)
+                val (newBoard, _) = engine.executeMove(board, move.row, move.col, botPlayerId)
                 val eval = minimax(newBoard, depth - 1, false, botPlayerId, opponentId, currentAlpha, currentBeta)
                 maxEval = maxOf(maxEval, eval)
                 currentAlpha = maxOf(currentAlpha, eval)
@@ -163,7 +163,7 @@ class HardBot : BotStrategy {
 
             val candidates = prioritizeMoves(moves, board, opponentId).take(8)
             for (move in candidates) {
-                val (newBoard, _, _) = engine.executeMove(board, move.row, move.col, opponentId)
+                val (newBoard, _) = engine.executeMove(board, move.row, move.col, opponentId)
                 val eval = minimax(newBoard, depth - 1, true, botPlayerId, opponentId, currentAlpha, currentBeta)
                 minEval = minOf(minEval, eval)
                 currentBeta = minOf(currentBeta, eval)

@@ -78,45 +78,46 @@ class GameViewModel : ViewModel() {
         _state.update { it.copy(isAnimating = true, lastMovedCell = Pair(row, col)) }
 
         // Execute the move in the game engine
-        val (newBoard, explosionWaves, explosionMoveWaves) = engine.executeMove(currentState.board, row, col, playerId, isFirstMove)
+        val (newBoard, explosionWaveData) = engine.executeMove(currentState.board, row, col, playerId, isFirstMove)
 
         // Show the intermediate board state (dots added, before explosion) for dot transition animation
-        if (explosionWaves.isNotEmpty()) {
-            // Build intermediate board: apply only the dot addition, not the explosions
-            val intermediateBoard = currentState.board.map { it.toMutableList() }.toMutableList()
-            if (isFirstMove) {
-                intermediateBoard[row][col] = CellState(ownerId = playerId, dots = 3, previousDots = 0)
-            } else {
-                val currentCell = intermediateBoard[row][col]
-                intermediateBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
-            }
-            _state.update { it.copy(board = intermediateBoard.map { r -> r.toList() }) }
-
-            // Delay 200ms to show the 4-dot state before chain reaction
-            delay(200)
+        val intermediateBoard = currentState.board.map { it.toMutableList() }.toMutableList()
+        if (isFirstMove) {
+            intermediateBoard[row][col] = CellState(ownerId = playerId, dots = 3, previousDots = 0)
         } else {
-            // No explosion — just update board with previousDots for animation
-            val animatedBoard = currentState.board.map { it.toMutableList() }.toMutableList()
-            if (isFirstMove) {
-                animatedBoard[row][col] = CellState(ownerId = playerId, dots = 3, previousDots = 0)
-            } else {
-                val currentCell = animatedBoard[row][col]
-                animatedBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
-            }
-            _state.update { it.copy(board = animatedBoard.map { r -> r.toList() }) }
+            val currentCell = intermediateBoard[row][col]
+            intermediateBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
+        }
+        _state.update { it.copy(board = intermediateBoard.map { r -> r.toList() }) }
+
+        // Wait for dot transition animation (250ms) + 200ms pause if explosion coming
+        if (explosionWaveData.isNotEmpty()) {
+            delay(450) // 250ms animation + 200ms pause before split
+        } else {
+            delay(250) // just dot animation
         }
 
-        // Animate explosions wave by wave
-        for (i in explosionWaves.indices) {
-            val wave = explosionWaves[i]
-            val moves = explosionMoveWaves[i]
+        // Animate explosions wave by wave (BFS)
+        for (waveData in explosionWaveData) {
+            // Phase 1: Show board with exploding cells emptied (cells disappear)
             _state.update {
                 it.copy(
-                    explodingCells = wave.map { m -> Pair(m.row, m.col) }.toSet(),
-                    explosionMoves = moves
+                    board = waveData.boardBeforeSplit,
+                    explodingCells = waveData.explodingCells.map { m -> Pair(m.row, m.col) }.toSet(),
+                    explosionMoves = waveData.moves
                 )
             }
-            delay(350) // Animation delay per wave
+            delay(300) // Movement animation duration
+
+            // Phase 2: Show board after dots arrived at neighbors
+            _state.update {
+                it.copy(
+                    board = waveData.boardAfterSplit,
+                    explodingCells = emptySet(),
+                    explosionMoves = emptyList()
+                )
+            }
+            delay(50) // Brief pause between waves
         }
 
         // Clear explosion markers

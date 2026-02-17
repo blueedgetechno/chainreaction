@@ -71,7 +71,7 @@ class GameEngineTest {
     @Test
     fun `executeMove adds dot to empty cell`() {
         val board = engine.createEmptyBoard(5)
-        val (newBoard, explosions, _) = engine.executeMove(board, 2, 2, 1)
+        val (newBoard, explosions) = engine.executeMove(board, 2, 2, 1)
 
         assertEquals(1, newBoard[2][2].ownerId)
         assertEquals(1, newBoard[2][2].dots)
@@ -85,7 +85,7 @@ class GameEngineTest {
                 this[2] = CellState(ownerId = 1, dots = 2)
             }
         }
-        val (newBoard, explosions, _) = engine.executeMove(board, 2, 2, 1)
+        val (newBoard, explosions) = engine.executeMove(board, 2, 2, 1)
 
         assertEquals(1, newBoard[2][2].ownerId)
         assertEquals(3, newBoard[2][2].dots)
@@ -99,7 +99,7 @@ class GameEngineTest {
                 this[2] = CellState(ownerId = 1, dots = 3)
             }
         }
-        val (newBoard, explosions, _) = engine.executeMove(board, 2, 2, 1)
+        val (newBoard, explosions) = engine.executeMove(board, 2, 2, 1)
 
         // Center should be empty after explosion
         assertTrue(newBoard[2][2].isEmpty)
@@ -125,7 +125,7 @@ class GameEngineTest {
                 this[0] = CellState(ownerId = 1, dots = 3)
             }
         }
-        val (newBoard, explosions, _) = engine.executeMove(board, 0, 0, 1)
+        val (newBoard, explosions) = engine.executeMove(board, 0, 0, 1)
 
         // Corner should be empty
         assertTrue(newBoard[0][0].isEmpty)
@@ -146,7 +146,7 @@ class GameEngineTest {
                 this[2] = CellState(ownerId = 1, dots = 3)
             }
         }
-        val (newBoard, explosions, _) = engine.executeMove(board, 0, 2, 1)
+        val (newBoard, explosions) = engine.executeMove(board, 0, 2, 1)
 
         // Edge cell should be empty
         assertTrue(newBoard[0][2].isEmpty)
@@ -167,7 +167,7 @@ class GameEngineTest {
                 this[3] = CellState(ownerId = 2, dots = 2) // Opponent cell
             }
         }
-        val (newBoard, _, _) = engine.executeMove(board, 2, 2, 1)
+        val (newBoard, _) = engine.executeMove(board, 2, 2, 1)
 
         // The opponent cell at (2,3) should now belong to player 1
         assertEquals(1, newBoard[2][3].ownerId)
@@ -184,7 +184,7 @@ class GameEngineTest {
                 this[3] = CellState(ownerId = 2, dots = 3) // Will chain from explosion
             }
         }
-        val (newBoard, explosions, _) = engine.executeMove(board, 2, 2, 1)
+        val (newBoard, explosions) = engine.executeMove(board, 2, 2, 1)
 
         // Should have at least 2 explosion waves (original + chain)
         assertTrue(explosions.size >= 2)
@@ -291,7 +291,7 @@ class GameEngineTest {
         }
 
         // Adding a dot to (2,1) makes it 4 -> explodes -> (2,2) gets +1 -> becomes 4 -> also explodes
-        val (newBoard, explosions, _) = engine.executeMove(board, 2, 1, 1)
+        val (newBoard, explosions) = engine.executeMove(board, 2, 1, 1)
 
         // Should have multiple waves
         assertTrue(explosions.isNotEmpty())
