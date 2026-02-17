@@ -68,7 +68,7 @@ fun GameBoardScreen(
     // Vivid background that transitions between player colors
     val bgColor by animateColorAsState(
         targetValue = if (state.currentPlayerId == 1)
-            Color(0xFF5BAAEF) // Vivid blue
+            Color(0xFF41AFD4) // Blue
         else
             Color(0xFFE99C7C), // Warm coral
         animationSpec = tween(600),
