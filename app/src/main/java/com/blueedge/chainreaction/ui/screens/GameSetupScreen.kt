@@ -1,8 +1,20 @@
 package com.blueedge.chainreaction.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -43,11 +56,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.blueedge.chainreaction.data.BotDifficulty
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
@@ -150,7 +170,7 @@ fun GameSetupScreen(
             }
         } else {
             // VS_BOT mode - only show difficulty slider
-            SectionCard(title = "Difficulty") {
+            SectionCard(title = "Difficulty", difficulty = botDifficulty) {
                 DifficultySlider(
                     selected = botDifficulty,
                     onSelected = { botDifficulty = it }
@@ -160,42 +180,47 @@ fun GameSetupScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Start Game Button
-        Button(
-            onClick = {
-                GameConfig.apply {
-                    this.gameMode = gameMode
-                    if (gameMode == GameMode.VS_BOT) {
-                        this.gridSize = when (botDifficulty) {
-                            BotDifficulty.EASY -> 5
-                            BotDifficulty.MEDIUM -> 7
-                            BotDifficulty.HARD -> 10
-                        }
-                        this.player1Name = "Player 1"
-                        this.player1ColorIndex = 0  // Blue
-                        this.player2Name = "Bot"
-                        this.player2ColorIndex = 1  // Red
-                        this.botDifficulty = botDifficulty
-                    } else {
-                        this.gridSize = localGridSize
-                        this.player1Name = player1Name.ifBlank { "Player 1" }
-                        this.player1ColorIndex = player1ColorIndex
-                        this.player2Name = player2Name.ifBlank { "Player 2" }
-                        this.player2ColorIndex = player2ColorIndex
-                    }
-                }
-                onStartGame()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+        // Back + Play buttons row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                "Play",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+            Raised3DButton(
+                text = "Back",
+                onClick = onBack,
+                modifier = Modifier.weight(1f),
+                mainColor = Color(0xFFD4956B),
+                shadowColor = Color(0xFFB07A52)
+            )
+            Raised3DButton(
+                text = "Play",
+                onClick = {
+                    GameConfig.apply {
+                        this.gameMode = gameMode
+                        if (gameMode == GameMode.VS_BOT) {
+                            this.gridSize = when (botDifficulty) {
+                                BotDifficulty.EASY -> 5
+                                BotDifficulty.MEDIUM -> 7
+                                BotDifficulty.HARD -> 10
+                            }
+                            this.player1Name = "Player 1"
+                            this.player1ColorIndex = 0  // Blue
+                            this.player2Name = "Bot"
+                            this.player2ColorIndex = 1  // Red
+                            this.botDifficulty = botDifficulty
+                        } else {
+                            this.gridSize = localGridSize
+                            this.player1Name = player1Name.ifBlank { "Player 1" }
+                            this.player1ColorIndex = player1ColorIndex
+                            this.player2Name = player2Name.ifBlank { "Player 2" }
+                            this.player2ColorIndex = player2ColorIndex
+                        }
+                    }
+                    onStartGame()
+                },
+                modifier = Modifier.weight(2f),
+                mainColor = Color(0xFF41AFD4),
+                shadowColor = Color(0xFF2E8DAD)
             )
         }
 
@@ -206,25 +231,74 @@ fun GameSetupScreen(
 @Composable
 private fun SectionCard(
     title: String,
+    difficulty: BotDifficulty? = null,
     content: @Composable () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+    val shadowOffset = 5.dp
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+        // Shadow layer
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .offset(y = shadowOffset)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFFD0D0D0))
+        )
+        // Main card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            content()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                if (difficulty != null) {
+                    // Animated "Difficulty: Easy/Medium/Hard" title
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "$title: ",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                        AnimatedContent(
+                            targetState = difficulty,
+                            transitionSpec = {
+                                ContentTransform(
+                                    targetContentEnter = slideInVertically { -it } + fadeIn(),
+                                    initialContentExit = slideOutVertically { it } + fadeOut()
+                                )
+                            },
+                            label = "difficulty_title"
+                        ) { diff ->
+                            val diffColor = when (diff) {
+                                BotDifficulty.EASY -> Color(0xFFD4956B)
+                                BotDifficulty.MEDIUM -> MaterialTheme.colorScheme.primary
+                                BotDifficulty.HARD -> Color(0xFFE05555)
+                            }
+                            Text(
+                                text = diff.name.lowercase().replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = diffColor
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                content()
+            }
         }
     }
 }
@@ -308,7 +382,6 @@ private fun ColorPicker(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DifficultySlider(
     selected: BotDifficulty,
@@ -317,84 +390,145 @@ private fun DifficultySlider(
     val difficulties = BotDifficulty.entries
     var sliderValue by remember { mutableFloatStateOf(selected.ordinal.toFloat()) }
 
-    // Sync slider when external selection changes
     LaunchedEffect(selected) {
         sliderValue = selected.ordinal.toFloat()
     }
 
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val trackInactiveColor = MaterialTheme.colorScheme.primaryContainer
+    val thumbRadiusDp = 16.dp
+    val trackHeightDp = 16.dp
+    val density = LocalDensity.current
+
     Column {
-        Slider(
-            value = sliderValue,
-            onValueChange = { sliderValue = it },
-            onValueChangeFinished = {
-                val snapped = sliderValue.roundToInt().coerceIn(0, 2)
-                sliderValue = snapped.toFloat()
-                onSelected(difficulties[snapped])
-            },
-            valueRange = 0f..2f,
-            modifier = Modifier.fillMaxWidth(),
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.primary,
-                activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTrackColor = MaterialTheme.colorScheme.primaryContainer
-            ),
-            thumb = {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
+        androidx.compose.foundation.Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .pointerInput(Unit) {
+                    val thumbRadiusPx = with(density) { thumbRadiusDp.toPx() }
+                    detectTapGestures { offset ->
+                        val trackWidth = size.width - 2 * thumbRadiusPx
+                        val fraction = ((offset.x - thumbRadiusPx) / trackWidth).coerceIn(0f, 1f)
+                        val newValue = fraction * 2f
+                        val snapped = newValue.roundToInt().coerceIn(0, 2)
+                        sliderValue = snapped.toFloat()
+                        onSelected(difficulties[snapped])
+                    }
+                }
+                .pointerInput(Unit) {
+                    val thumbRadiusPx = with(density) { thumbRadiusDp.toPx() }
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            val snapped = sliderValue.roundToInt().coerceIn(0, 2)
+                            sliderValue = snapped.toFloat()
+                            onSelected(difficulties[snapped])
+                        }
+                    ) { _, dragAmount ->
+                        val trackWidth = size.width - 2 * thumbRadiusPx
+                        val delta = (dragAmount / trackWidth) * 2f
+                        sliderValue = (sliderValue + delta).coerceIn(0f, 2f)
+                    }
+                }
+        ) {
+            val thumbRadiusPx = thumbRadiusDp.toPx()
+            val trackHeightPx = trackHeightDp.toPx()
+            val centerY = size.height / 2
+            val trackLeft = thumbRadiusPx
+            val trackRight = size.width - thumbRadiusPx
+            val trackWidth = trackRight - trackLeft
+            val fraction = (sliderValue / 2f).coerceIn(0f, 1f)
+            val thumbX = trackLeft + fraction * trackWidth
+            val trackCornerRadius = CornerRadius(trackHeightPx / 2, trackHeightPx / 2)
+
+            // Inactive track (full)
+            drawRoundRect(
+                color = trackInactiveColor,
+                topLeft = Offset(trackLeft, centerY - trackHeightPx / 2),
+                size = Size(trackWidth, trackHeightPx),
+                cornerRadius = trackCornerRadius
+            )
+
+            // Active track
+            if (thumbX > trackLeft) {
+                drawRoundRect(
+                    color = primaryColor.copy(alpha = 0.84f),
+                    topLeft = Offset(trackLeft, centerY - trackHeightPx / 2),
+                    size = Size(thumbX - trackLeft, trackHeightPx),
+                    cornerRadius = trackCornerRadius
                 )
             }
-        )
 
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Labels row
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                "Easy",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (selected == BotDifficulty.EASY) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected == BotDifficulty.EASY) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Start
+            // Thumb circle
+            drawCircle(
+                color = primaryColor,
+                radius = thumbRadiusPx,
+                center = Offset(thumbX, centerY)
             )
-            Text(
-                "Medium",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (selected == BotDifficulty.MEDIUM) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected == BotDifficulty.MEDIUM) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
-            )
-            Text(
-                "Hard",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (selected == BotDifficulty.HARD) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected == BotDifficulty.HARD) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.End
+            // Thumb white border
+            drawCircle(
+                color = Color.White,
+                radius = thumbRadiusPx,
+                center = Offset(thumbX, centerY),
+                style = Stroke(width = 3.5.dp.toPx())
             )
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(8.dp))
+@Composable
+private fun Raised3DButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    mainColor: Color = Color(0xFFD4956B),
+    shadowColor: Color = Color(0xFFB07A52),
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val shadowHeight = 6.dp
+    val yOffset by animateDpAsState(
+        targetValue = if (isPressed) shadowHeight else 0.dp,
+        animationSpec = tween(durationMillis = 80),
+        label = "buttonPress"
+    )
 
-        // Description with grid size info
-        // val description = when (selected) {
-        //     BotDifficulty.EASY -> "Random moves � great for learning (5�5 grid)"
-        //     BotDifficulty.MEDIUM -> "Strategic blocking and expansion (7�7 grid)"
-        //     BotDifficulty.HARD -> "Minimax AI � a real challenge! (10�10 grid)"
-        // }
-        // Text(
-        //     text = description,
-        //     style = MaterialTheme.typography.bodySmall,
-        //     color = MaterialTheme.colorScheme.onSurfaceVariant,
-        //     textAlign = TextAlign.Center,
-        //     modifier = Modifier.fillMaxWidth()
-        // )
+    Box(
+        modifier = modifier
+            .height(66.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        // Shadow / bottom layer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .align(Alignment.BottomCenter)
+                .clip(RoundedCornerShape(18.dp))
+                .background(shadowColor)
+        )
+
+        // Main button layer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .offset(y = yOffset)
+                .clip(RoundedCornerShape(18.dp))
+                .background(mainColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
     }
 }

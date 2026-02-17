@@ -11,6 +11,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.blueedge.chainreaction.data.GameConfig
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF41AFD4),
@@ -33,7 +34,6 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun ChainReactionTheme(
     darkTheme: Boolean = false,
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -42,14 +42,16 @@ fun ChainReactionTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
+    val fontFamily = fontFamilyForAppFont(GameConfig.appFont)
+    val typography = createTypography(fontFamily)
+
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content
     )
 }
