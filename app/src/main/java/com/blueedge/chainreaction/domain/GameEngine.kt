@@ -1,6 +1,8 @@
 package com.blueedge.chainreaction.domain
 
 import com.blueedge.chainreaction.data.CellState
+import com.blueedge.chainreaction.data.ExplosionMove
+import com.blueedge.chainreaction.data.ExplosionWaveData
 import com.blueedge.chainreaction.data.Move
 
 class GameEngine {
@@ -31,27 +33,27 @@ class GameEngine {
         col: Int,
         playerId: Int,
         isFirstMove: Boolean = false
-    ): Pair<List<List<CellState>>, List<List<Move>>> {
+    ): Pair<List<List<CellState>>, List<ExplosionWaveData>> {
         val mutableBoard = board.map { it.toMutableList() }.toMutableList()
 
         if (isFirstMove) {
             // First move places 3 dots
-            mutableBoard[row][col] = CellState(ownerId = playerId, dots = 3)
+            mutableBoard[row][col] = CellState(ownerId = playerId, dots = 3, previousDots = 0)
         } else {
             val currentCell = mutableBoard[row][col]
-            mutableBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1)
+            mutableBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
         }
 
-        val allExplosionWaves = mutableListOf<List<Move>>()
-        processExplosions(mutableBoard, playerId, allExplosionWaves)
+        val allWaveData = mutableListOf<ExplosionWaveData>()
+        processExplosions(mutableBoard, playerId, allWaveData)
 
-        return Pair(mutableBoard.map { it.toList() }, allExplosionWaves)
+        return Pair(mutableBoard.map { it.toList() }, allWaveData)
     }
 
     private fun processExplosions(
         board: MutableList<MutableList<CellState>>,
         playerId: Int,
-        allWaves: MutableList<List<Move>>
+        allWaveData: MutableList<ExplosionWaveData>
     ) {
         val maxIterations = board.size * board[0].size * 4
         var iterations = 0
@@ -70,37 +72,56 @@ class GameEngine {
 
             if (explodingCells.isEmpty()) break
 
-            allWaves.add(explodingCells)
+            // Build explosion move data for animation
+            val waveMoves = mutableListOf<ExplosionMove>()
+            for (cell in explodingCells) {
+                val neighbors = getNeighbors(cell.row, cell.col, board.size, board[0].size)
+                for (neighbor in neighbors) {
+                    waveMoves.add(
+                        ExplosionMove(
+                            fromRow = cell.row,
+                            fromCol = cell.col,
+                            toRow = neighbor.row,
+                            toCol = neighbor.col,
+                            playerId = playerId
+                        )
+                    )
+                }
+            }
 
             // Step 1: Empty all exploding cells
             for (cell in explodingCells) {
                 board[cell.row][cell.col] = CellState(ownerId = 0, dots = 0)
             }
 
-            // Step 2: Add dots to neighbors of each exploding cell
+            // Snapshot board after emptying (before adding to neighbors)
+            val boardBeforeSplit = board.map { it.toList() }
+
+            // Step 2: Add dots to neighbors of each exploding cell (cap at 4)
             for (cell in explodingCells) {
                 val neighbors = getNeighbors(cell.row, cell.col, board.size, board[0].size)
                 for (neighbor in neighbors) {
                     val current = board[neighbor.row][neighbor.col]
+                    val newDots = minOf(current.dots + 1, CRITICAL_MASS)
                     board[neighbor.row][neighbor.col] = CellState(
                         ownerId = playerId,
-                        dots = current.dots + 1
+                        dots = newDots,
+                        previousDots = current.dots
                     )
                 }
             }
 
-            // Check if all cells belong to one player (game over during chain)
-            val owners = mutableSetOf<Int>()
-            var hasOccupied = false
-            for (r in board.indices) {
-                for (c in board[r].indices) {
-                    if (!board[r][c].isEmpty) {
-                        hasOccupied = true
-                        owners.add(board[r][c].ownerId)
-                    }
-                }
-            }
-            if (hasOccupied && owners.size == 1) break
+            // Snapshot board after adding to neighbors
+            val boardAfterSplit = board.map { it.toList() }
+
+            allWaveData.add(
+                ExplosionWaveData(
+                    explodingCells = explodingCells,
+                    moves = waveMoves,
+                    boardBeforeSplit = boardBeforeSplit,
+                    boardAfterSplit = boardAfterSplit
+                )
+            )
         }
     }
 

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blueedge.chainreaction.ai.BotStrategy
 import com.blueedge.chainreaction.ai.createBot
+import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameStatus
@@ -77,18 +78,50 @@ class GameViewModel : ViewModel() {
         _state.update { it.copy(isAnimating = true, lastMovedCell = Pair(row, col)) }
 
         // Execute the move in the game engine
-        val (newBoard, explosionWaves) = engine.executeMove(currentState.board, row, col, playerId, isFirstMove)
+        val (newBoard, explosionWaveData) = engine.executeMove(currentState.board, row, col, playerId, isFirstMove)
 
-        // Animate explosions wave by wave
-        for (wave in explosionWaves) {
+        // Show the intermediate board state (dots added, before explosion) for dot transition animation
+        val intermediateBoard = currentState.board.map { it.toMutableList() }.toMutableList()
+        if (isFirstMove) {
+            intermediateBoard[row][col] = CellState(ownerId = playerId, dots = 3, previousDots = 0)
+        } else {
+            val currentCell = intermediateBoard[row][col]
+            intermediateBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
+        }
+        _state.update { it.copy(board = intermediateBoard.map { r -> r.toList() }) }
+
+        // Wait for dot transition animation (250ms)
+        delay(250)
+
+        // Animate explosions wave by wave (BFS)
+        for (waveData in explosionWaveData) {
+            // Pause before each split to show the 4-dot state
+            delay(200)
+
+            // Phase 1: Show board with exploding cells emptied (cells disappear)
             _state.update {
-                it.copy(explodingCells = wave.map { m -> Pair(m.row, m.col) }.toSet())
+                it.copy(
+                    board = waveData.boardBeforeSplit,
+                    explodingCells = waveData.explodingCells.map { m -> Pair(m.row, m.col) }.toSet(),
+                    explosionMoves = waveData.moves
+                )
             }
-            delay(350) // Animation delay per wave
+            delay(300) // Movement animation duration
+
+            // Phase 2: Show board after dots arrived at neighbors
+            _state.update {
+                it.copy(
+                    board = waveData.boardAfterSplit,
+                    explodingCells = emptySet(),
+                    explosionMoves = emptyList()
+                )
+            }
+            // Allow dot transition animation to play (for newly formed 4-dot cells)
+            delay(250)
         }
 
         // Clear explosion markers
-        _state.update { it.copy(explodingCells = emptySet()) }
+        _state.update { it.copy(explodingCells = emptySet(), explosionMoves = emptyList()) }
 
         val newMoveCount = currentState.moveCount + 1
         val p1Score = engine.countPlayerCells(newBoard, 1)
