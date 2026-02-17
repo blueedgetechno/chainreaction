@@ -7,15 +7,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -60,7 +65,8 @@ fun GameBoardScreen(
         label = "bgColor"
     )
 
-    var showExitDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
+    var showHowToPlay by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -92,20 +98,22 @@ fun GameBoardScreen(
             }
         }
 
-        // Exit capsule button — top right
+        // Settings icon — top right, below status bar
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 12.dp, end = 12.dp)
-                .background(Color.White.copy(alpha = 0.85f), RoundedCornerShape(20.dp))
-                .clickable { showExitDialog = true }
-                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .statusBarsPadding()
+                .padding(top = 8.dp, end = 12.dp)
+                .size(40.dp)
+                .background(Color.White.copy(alpha = 0.85f), CircleShape)
+                .clickable { showSettingsDialog = true },
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "EXIT",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333333)
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = Color(0xFF333333),
+                modifier = Modifier.size(22.dp)
             )
         }
     }
@@ -121,75 +129,128 @@ fun GameBoardScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(24.dp))
-                    .padding(24.dp),
+                    .background(Color.White, RoundedCornerShape(28.dp))
+                    .padding(32.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "\uD83C\uDF89", fontSize = 48.sp)
+                    Text(text = "\uD83C\uDF89", fontSize = 64.sp)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "$winnerName\nWins!",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = winnerColor,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 36.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Button(
+                        onClick = {
+                            val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
+                            onGameEnd(
+                                winnerId,
+                                state.player1Score,
+                                state.player2Score,
+                                state.moveCount,
+                                viewModel.getGameDurationSeconds()
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = winnerColor
+                        )
+                    ) {
+                        Text("Play Again", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text(
-                        text = "$winnerName Wins!",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Black,
-                        color = winnerColor,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    OutlinedButton(
+                        onClick = onExit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = onExit,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Menu", fontWeight = FontWeight.Bold)
-                        }
-
-                        Button(
-                            onClick = {
-                                val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
-                                onGameEnd(
-                                    winnerId,
-                                    state.player1Score,
-                                    state.player2Score,
-                                    state.moveCount,
-                                    viewModel.getGameDurationSeconds()
-                                )
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = winnerColor
-                            )
-                        ) {
-                            Text("Play Again", fontWeight = FontWeight.Bold)
-                        }
+                        Text("Menu", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }
         }
     }
 
-    // Exit confirmation dialog
-    if (showExitDialog) {
-        Dialog(onDismissRequest = { showExitDialog = false }) {
+    // Settings dialog
+    if (showSettingsDialog) {
+        Dialog(onDismissRequest = { showSettingsDialog = false }) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(24.dp))
+                    .background(Color.White, RoundedCornerShape(28.dp))
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Settings",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            showSettingsDialog = false
+                            showHowToPlay = true
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("How to Play")
+                    }
+
+                    Button(
+                        onClick = {
+                            showSettingsDialog = false
+                            onExit()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEA695E)
+                        )
+                    ) {
+                        Text("Exit to Menu", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    // How to Play dialog
+    if (showHowToPlay) {
+        Dialog(onDismissRequest = { showHowToPlay = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White, RoundedCornerShape(28.dp))
                     .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -197,46 +258,32 @@ fun GameBoardScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Exit Game?",
+                        text = "How to Play",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
-                        text = "Your progress will be lost. Are you sure?",
+                        text = "Tap on empty cells to place your dots. " +
+                                "When a cell reaches 4 dots, it explodes and sends dots to adjacent cells. " +
+                                "Capture all opponent cells to win!",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = Color(0xFF555555)
                     )
+
                     Spacer(modifier = Modifier.height(20.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+
+                    Button(
+                        onClick = { showHowToPlay = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = { showExitDialog = false },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Cancel")
-                        }
-                        Button(
-                            onClick = {
-                                showExitDialog = false
-                                onExit()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFEA695E)
-                            )
-                        ) {
-                            Text("Exit", fontWeight = FontWeight.Bold)
-                        }
+                        Text("Got it!")
                     }
                 }
             }

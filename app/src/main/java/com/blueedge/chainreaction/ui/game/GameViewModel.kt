@@ -116,6 +116,8 @@ class GameViewModel : ViewModel() {
                     explosionMoves = emptyList()
                 )
             }
+            // Allow dot transition animation to play (for newly formed 4-dot cells)
+            delay(250)
         }
 
         // Clear explosion markers

@@ -102,9 +102,11 @@ class GameEngine {
                 val neighbors = getNeighbors(cell.row, cell.col, board.size, board[0].size)
                 for (neighbor in neighbors) {
                     val current = board[neighbor.row][neighbor.col]
+                    val newDots = minOf(current.dots + 1, CRITICAL_MASS)
                     board[neighbor.row][neighbor.col] = CellState(
                         ownerId = playerId,
-                        dots = minOf(current.dots + 1, CRITICAL_MASS)
+                        dots = newDots,
+                        previousDots = current.dots
                     )
                 }
             }

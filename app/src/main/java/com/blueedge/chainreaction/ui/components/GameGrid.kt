@@ -118,7 +118,7 @@ fun GameGrid(
                         .height(gridHeight)
                 ) {
                     val progress = moveProgress.value
-                    val circleRadius = cellSizePx * 0.38f * 0.5f
+                    val circleRadius = cellSizePx * 0.38f
 
                     for (move in explosionMoves) {
                         val fromCenter = Offset(
@@ -172,9 +172,9 @@ fun GridCell(
 ) {
     // Always use light cell color (forced light mode)
     val baseColor = CellEmptyLight
-    // If cell is owned by the current player, tint with a muted version of their color
+    // If cell is owned by the current player, tint with a very faint hint of their color
     val targetColor = if (!cellState.isEmpty && isCurrentPlayer) {
-        currentPlayerColor.copy(alpha = 0.18f)
+        androidx.compose.ui.graphics.lerp(baseColor, currentPlayerColor, 0.08f)
     } else {
         baseColor
     }
