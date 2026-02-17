@@ -23,7 +23,7 @@ fun DotCircle(
     // Animation progress from 0 (previous positions) to 1 (final positions)
     // Initialize to 0 if animation needed, to avoid snap-then-animate flicker
     val needsAnimation = previousDots != dotCount && previousDots >= 0
-    val animProgress = remember(dotCount) {
+    val animProgress = remember(dotCount, previousDots) {
         Animatable(if (needsAnimation) 0f else 1f)
     }
 
