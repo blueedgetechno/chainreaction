@@ -7,7 +7,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -33,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.ExplosionMove
-import com.blueedge.chainreaction.ui.theme.CellEmptyDark
 import com.blueedge.chainreaction.ui.theme.CellEmptyLight
 
 @Composable
@@ -58,6 +56,8 @@ fun GameGrid(
         val gridWidth = cellSize * gridSize
         val gridHeight = cellSize * gridSize
         val cellSizePx = with(LocalDensity.current) { cellSize.toPx() }
+        // Border radius proportional to cell width
+        val cellCornerRadius = cellSize * 0.25f
 
         Box(
             modifier = Modifier
@@ -92,6 +92,7 @@ fun GameGrid(
                                 onClick = {
                                     if (isInteractionEnabled) onCellClick(row, col)
                                 },
+                                cellCornerRadius = cellCornerRadius,
                                 modifier = Modifier.size(cellSize)
                             )
                         }
@@ -166,13 +167,20 @@ fun GridCell(
     isExploding: Boolean,
     isCurrentPlayer: Boolean,
     onClick: () -> Unit,
+    cellCornerRadius: androidx.compose.ui.unit.Dp = 14.dp,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
-    val emptyColor = if (isDark) CellEmptyDark else CellEmptyLight
+    // Always use light cell color (forced light mode)
+    val baseColor = CellEmptyLight
+    // If cell is owned by the current player, tint with a muted version of their color
+    val targetColor = if (!cellState.isEmpty && isCurrentPlayer) {
+        currentPlayerColor.copy(alpha = 0.18f)
+    } else {
+        baseColor
+    }
 
     val cellBackground by animateColorAsState(
-        targetValue = emptyColor,
+        targetValue = targetColor,
         animationSpec = tween(400),
         label = "cellColor"
     )
@@ -180,8 +188,8 @@ fun GridCell(
     Box(
         modifier = modifier
             .padding(2.dp)
-            .background(cellBackground, RoundedCornerShape(14.dp))
-            .clip(RoundedCornerShape(14.dp))
+            .background(cellBackground, RoundedCornerShape(cellCornerRadius))
+            .clip(RoundedCornerShape(cellCornerRadius))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = if (cellState.isEmpty) null else ripple(color = currentPlayerColor),

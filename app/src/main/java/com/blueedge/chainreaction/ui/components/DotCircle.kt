@@ -195,10 +195,10 @@ private fun getDotPositions(count: Int, center: Offset, spread: Float): List<Off
             Offset(center.x, center.y - spread * 0.8f)
         )
         else -> listOf(
-            Offset(center.x - spread * 0.5f, center.y - spread * 0.5f),
-            Offset(center.x + spread * 0.5f, center.y - spread * 0.5f),
-            Offset(center.x - spread * 0.5f, center.y + spread * 0.5f),
-            Offset(center.x + spread * 0.5f, center.y + spread * 0.5f)
+            Offset(center.x - spread * 0.85f, center.y - spread * 0.85f),
+            Offset(center.x + spread * 0.85f, center.y - spread * 0.85f),
+            Offset(center.x - spread * 0.85f, center.y + spread * 0.85f),
+            Offset(center.x + spread * 0.85f, center.y + spread * 0.85f)
         )
     }
 }

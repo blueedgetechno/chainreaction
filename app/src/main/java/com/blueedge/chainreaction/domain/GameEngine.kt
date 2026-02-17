@@ -120,19 +120,6 @@ class GameEngine {
                     boardAfterSplit = boardAfterSplit
                 )
             )
-
-            // Check if all cells belong to one player (game over during chain)
-            val owners = mutableSetOf<Int>()
-            var hasOccupied = false
-            for (r in board.indices) {
-                for (c in board[r].indices) {
-                    if (!board[r][c].isEmpty) {
-                        hasOccupied = true
-                        owners.add(board[r][c].ownerId)
-                    }
-                }
-            }
-            if (hasOccupied && owners.size == 1) break
         }
     }
 

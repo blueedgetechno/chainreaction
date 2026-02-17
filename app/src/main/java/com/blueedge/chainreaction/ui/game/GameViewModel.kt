@@ -90,15 +90,14 @@ class GameViewModel : ViewModel() {
         }
         _state.update { it.copy(board = intermediateBoard.map { r -> r.toList() }) }
 
-        // Wait for dot transition animation (250ms) + 200ms pause if explosion coming
-        if (explosionWaveData.isNotEmpty()) {
-            delay(450) // 250ms animation + 200ms pause before split
-        } else {
-            delay(250) // just dot animation
-        }
+        // Wait for dot transition animation (250ms)
+        delay(250)
 
         // Animate explosions wave by wave (BFS)
         for (waveData in explosionWaveData) {
+            // Pause before each split to show the 4-dot state
+            delay(200)
+
             // Phase 1: Show board with exploding cells emptied (cells disappear)
             _state.update {
                 it.copy(
@@ -117,7 +116,6 @@ class GameViewModel : ViewModel() {
                     explosionMoves = emptyList()
                 )
             }
-            delay(50) // Brief pause between waves
         }
 
         // Clear explosion markers
