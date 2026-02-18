@@ -327,8 +327,6 @@ fun GameBoardScreen(
                         )
                     }
                 }
-                    }
-                }
             }
         }
     }
