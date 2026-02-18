@@ -2,9 +2,12 @@ package com.blueedge.chainreaction.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -169,34 +172,48 @@ fun GameBoardScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Play Again button with shadow
+                // Play Again button with animated shadow (light button, dark shadow)
+                val playAgainInteractionSource = remember { MutableInteractionSource() }
+                val isPlayAgainPressed by playAgainInteractionSource.collectIsPressedAsState()
+                val playAgainShadowHeight = 6.dp
+                val playAgainYOffset by animateDpAsState(
+                    targetValue = if (isPlayAgainPressed) playAgainShadowHeight else 0.dp,
+                    animationSpec = tween(durationMillis = 80),
+                    label = "playAgainPress"
+                )
+                
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    // Shadow layer
+                    // Dark shadow layer
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(70.dp)
-                            .offset(y = 6.dp)
+                            .offset(y = playAgainShadowHeight)
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color.Black.copy(alpha = 0.3f))
+                            .background(Color.Black.copy(alpha = 0.25f))
                     )
-                    // Main button
+                    // Light main button
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(70.dp)
+                            .offset(y = playAgainYOffset)
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White.copy(alpha = 0.95f))
-                            .clickable {
-                                val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
-                                onGameEnd(
-                                    winnerId,
-                                    state.player1Score,
-                                    state.player2Score,
-                                    state.moveCount,
-                                    viewModel.getGameDurationSeconds()
-                                )
-                            },
+                            .background(Color.White.copy(alpha = 0.98f))
+                            .clickable(
+                                interactionSource = playAgainInteractionSource,
+                                indication = null,
+                                onClick = {
+                                    val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
+                                    onGameEnd(
+                                        winnerId,
+                                        state.player1Score,
+                                        state.player2Score,
+                                        state.moveCount,
+                                        viewModel.getGameDurationSeconds()
+                                    )
+                                }
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -210,25 +227,96 @@ fun GameBoardScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Menu button with shadow
+                // Stats button with animated shadow (light button, dark shadow)
+                val statsInteractionSource = remember { MutableInteractionSource() }
+                val isStatsPressed by statsInteractionSource.collectIsPressedAsState()
+                val statsShadowHeight = 6.dp
+                val statsYOffset by animateDpAsState(
+                    targetValue = if (isStatsPressed) statsShadowHeight else 0.dp,
+                    animationSpec = tween(durationMillis = 80),
+                    label = "statsPress"
+                )
+                
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    // Shadow layer
+                    // Dark shadow layer
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(70.dp)
-                            .offset(y = 6.dp)
+                            .offset(y = statsShadowHeight)
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color.Black.copy(alpha = 0.3f))
+                            .background(Color.Black.copy(alpha = 0.25f))
                     )
-                    // Main button
+                    // Light main button
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(70.dp)
+                            .offset(y = statsYOffset)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.White.copy(alpha = 0.5f))
+                            .clickable(
+                                interactionSource = statsInteractionSource,
+                                indication = null,
+                                onClick = {
+                                    // Navigate to stats screen - placeholder for now
+                                    // onGameEnd will navigate to GameEndScreen which shows stats
+                                    val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
+                                    onGameEnd(
+                                        winnerId,
+                                        state.player1Score,
+                                        state.player2Score,
+                                        state.moveCount,
+                                        viewModel.getGameDurationSeconds()
+                                    )
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "View Stats",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Menu button with animated shadow (semi-transparent button, dark shadow)
+                val menuInteractionSource = remember { MutableInteractionSource() }
+                val isMenuPressed by menuInteractionSource.collectIsPressedAsState()
+                val menuShadowHeight = 6.dp
+                val menuYOffset by animateDpAsState(
+                    targetValue = if (isMenuPressed) menuShadowHeight else 0.dp,
+                    animationSpec = tween(durationMillis = 80),
+                    label = "menuPress"
+                )
+                
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    // Dark shadow layer
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .offset(y = menuShadowHeight)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.Black.copy(alpha = 0.25f))
+                    )
+                    // Semi-transparent main button
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .offset(y = menuYOffset)
                             .clip(RoundedCornerShape(20.dp))
                             .background(Color.White.copy(alpha = 0.3f))
-                            .clickable { onExit() },
+                            .clickable(
+                                interactionSource = menuInteractionSource,
+                                indication = null,
+                                onClick = { onExit() }
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -237,6 +325,8 @@ fun GameBoardScreen(
                             fontSize = 24.sp,
                             color = Color.White
                         )
+                    }
+                }
                     }
                 }
             }
@@ -279,41 +369,93 @@ fun GameBoardScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Cancel button
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFE0E0E0))
-                                .clickable { showExitConfirmation = false },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Cancel",
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF333333)
+                        // Cancel button with shadow
+                        val cancelInteractionSource = remember { MutableInteractionSource() }
+                        val isCancelPressed by cancelInteractionSource.collectIsPressedAsState()
+                        val cancelShadowHeight = 4.dp
+                        val cancelYOffset by animateDpAsState(
+                            targetValue = if (isCancelPressed) cancelShadowHeight else 0.dp,
+                            animationSpec = tween(durationMillis = 80),
+                            label = "cancelPress"
+                        )
+                        
+                        Box(modifier = Modifier.weight(1f)) {
+                            // Shadow layer
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .offset(y = cancelShadowHeight)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFFB0B0B0))
                             )
+                            // Main button
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .offset(y = cancelYOffset)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFFE0E0E0))
+                                    .clickable(
+                                        interactionSource = cancelInteractionSource,
+                                        indication = null,
+                                        onClick = { showExitConfirmation = false }
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Cancel",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF333333)
+                                )
+                            }
                         }
 
-                        // Exit button
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFEA695E))
-                                .clickable {
-                                    showExitConfirmation = false
-                                    onExit()
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Exit",
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                        // Exit button with shadow
+                        val exitInteractionSource = remember { MutableInteractionSource() }
+                        val isExitPressed by exitInteractionSource.collectIsPressedAsState()
+                        val exitShadowHeight = 4.dp
+                        val exitYOffset by animateDpAsState(
+                            targetValue = if (isExitPressed) exitShadowHeight else 0.dp,
+                            animationSpec = tween(durationMillis = 80),
+                            label = "exitPress"
+                        )
+                        
+                        Box(modifier = Modifier.weight(1f)) {
+                            // Shadow layer
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .offset(y = exitShadowHeight)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFFC55550))
                             )
+                            // Main button
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .offset(y = exitYOffset)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFFEA695E))
+                                    .clickable(
+                                        interactionSource = exitInteractionSource,
+                                        indication = null,
+                                        onClick = {
+                                            showExitConfirmation = false
+                                            onExit()
+                                        }
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Exit",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
                         }
                     }
                 }
