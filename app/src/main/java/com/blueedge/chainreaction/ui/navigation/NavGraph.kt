@@ -1,5 +1,10 @@
 package com.blueedge.chainreaction.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -10,6 +15,7 @@ import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.ui.screens.GameBoardScreen
 import com.blueedge.chainreaction.ui.screens.GameEndScreen
 import com.blueedge.chainreaction.ui.screens.GameSetupScreen
+import com.blueedge.chainreaction.ui.screens.HowToPlayScreen
 import com.blueedge.chainreaction.ui.screens.MainMenuScreen
 import com.blueedge.chainreaction.ui.screens.SettingsScreen
 
@@ -19,6 +25,7 @@ object Routes {
     const val GAME = "game"
     const val GAME_END = "game_end/{winnerId}/{p1Score}/{p2Score}/{moves}/{duration}"
     const val SETTINGS = "settings"
+    const val HOW_TO_PLAY = "how_to_play"
 
     fun gameSetup(mode: String) = "game_setup/$mode"
     fun gameEnd(winnerId: Int, p1Score: Int, p2Score: Int, moves: Int, duration: Long) =
@@ -27,11 +34,19 @@ object Routes {
 
 @Composable
 fun ChainReactionNavGraph(navController: NavHostController) {
+    // Fade + Scale transition
+    val fadeScaleEnter = fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.9f, animationSpec = tween(300))
+    val fadeScaleExit = fadeOut(animationSpec = tween(300)) + scaleOut(targetScale = 0.9f, animationSpec = tween(300))
+    
     NavHost(
         navController = navController,
         startDestination = Routes.MAIN_MENU
     ) {
-        composable(Routes.MAIN_MENU) {
+        composable(
+            Routes.MAIN_MENU,
+            enterTransition = { fadeScaleEnter },
+            exitTransition = { fadeScaleExit }
+        ) {
             MainMenuScreen(
                 onLocalMultiplayer = {
                     navController.navigate(Routes.gameSetup("local"))
@@ -41,17 +56,34 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                 },
                 onSettings = {
                     navController.navigate(Routes.SETTINGS)
+                },
+                onHowToPlay = {
+                    navController.navigate(Routes.HOW_TO_PLAY)
                 }
             )
         }
 
-        composable(Routes.SETTINGS) {
+        composable(
+            Routes.SETTINGS,
+            enterTransition = { fadeScaleEnter },
+            exitTransition = { fadeScaleExit }
+        ) {
             SettingsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
+            Routes.HOW_TO_PLAY,
+            enterTransition = { fadeScaleEnter },
+            exitTransition = { fadeScaleExit }
+        ) {
+            HowToPlayScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(
             route = Routes.GAME_SETUP,
-            arguments = listOf(navArgument("mode") { type = NavType.StringType })
+            arguments = listOf(navArgument("mode") { type = NavType.StringType }),
+            enterTransition = { fadeScaleEnter },
+            exitTransition = { fadeScaleExit }
         ) { backStackEntry ->
             val mode = backStackEntry.arguments?.getString("mode") ?: "local"
             GameSetupScreen(
@@ -65,7 +97,11 @@ fun ChainReactionNavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Routes.GAME) {
+        composable(
+            Routes.GAME,
+            enterTransition = { fadeScaleEnter },
+            exitTransition = { fadeScaleExit }
+        ) {
             GameBoardScreen(
                 onGameEnd = { winnerId, p1Score, p2Score, moves, duration ->
                     navController.navigate(
@@ -88,7 +124,9 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                 navArgument("p2Score") { type = NavType.IntType },
                 navArgument("moves") { type = NavType.IntType },
                 navArgument("duration") { type = NavType.LongType }
-            )
+            ),
+            enterTransition = { fadeScaleEnter },
+            exitTransition = { fadeScaleExit }
         ) { backStackEntry ->
             val args = backStackEntry.arguments!!
             GameEndScreen(
