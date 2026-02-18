@@ -283,10 +283,14 @@ private fun GridSizeSlider(
         
         Slider(
             value = sliderValue,
-            onValueChange = { sliderValue = it },
+            onValueChange = { newValue ->
+                // Snap to nearest grid size
+                val nearest = Constants.GRID_SIZES.minByOrNull { kotlin.math.abs(it - newValue) } ?: selectedSize
+                sliderValue = nearest.toFloat()
+            },
             onValueChangeFinished = {
-                val newSize = sliderValue.roundToInt()
-                onSizeSelected(newSize)
+                val nearest = Constants.GRID_SIZES.minByOrNull { kotlin.math.abs(it - sliderValue) } ?: selectedSize
+                onSizeSelected(nearest)
             },
             valueRange = Constants.GRID_SIZES.first().toFloat()..Constants.GRID_SIZES.last().toFloat(),
             steps = Constants.GRID_SIZES.size - 2,
@@ -345,8 +349,8 @@ private fun PlayerCountSlider(
                 val newCount = sliderValue.roundToInt()
                 onPlayersChanged(newCount)
             },
-            valueRange = 2f..8f,
-            steps = 5,  // 2, 3, 4, 5, 6, 7, 8
+            valueRange = 2f..6f,
+            steps = 3,  // 2, 3, 4, 5, 6
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary
@@ -364,7 +368,7 @@ private fun PlayerCountSlider(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "8",
+                text = "6",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

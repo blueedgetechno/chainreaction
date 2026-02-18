@@ -37,9 +37,13 @@ object Routes {
 
 @Composable
 fun ChainReactionNavGraph(navController: NavHostController) {
-    // Fade + Scale transition
-    val fadeScaleEnter = fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.9f, animationSpec = tween(300))
-    val fadeScaleExit = fadeOut(animationSpec = tween(300)) + scaleOut(targetScale = 0.9f, animationSpec = tween(300))
+    // Deeper navigation: current page fades out with scale up (100% → 105%), target fades in with scale up (95% → 100%)
+    val enterTransition = fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300))
+    val exitTransition = fadeOut(animationSpec = tween(300)) + scaleOut(targetScale = 1.05f, animationSpec = tween(300))
+    
+    // Popping back: opposite scaling
+    val popEnterTransition = fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 1.05f, animationSpec = tween(300))
+    val popExitTransition = fadeOut(animationSpec = tween(300)) + scaleOut(targetScale = 0.95f, animationSpec = tween(300))
     
     NavHost(
         navController = navController,
@@ -47,8 +51,10 @@ fun ChainReactionNavGraph(navController: NavHostController) {
     ) {
         composable(
             Routes.MAIN_MENU,
-            enterTransition = { fadeScaleEnter },
-            exitTransition = { fadeScaleExit }
+            enterTransition = { popEnterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
         ) {
             MainMenuScreen(
                 onLocalMultiplayer = {
@@ -68,16 +74,20 @@ fun ChainReactionNavGraph(navController: NavHostController) {
 
         composable(
             Routes.SETTINGS,
-            enterTransition = { fadeScaleEnter },
-            exitTransition = { fadeScaleExit }
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
         ) {
             SettingsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
             Routes.HOW_TO_PLAY,
-            enterTransition = { fadeScaleEnter },
-            exitTransition = { fadeScaleExit }
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
         ) {
             HowToPlayScreen(onBack = { navController.popBackStack() })
         }
@@ -85,8 +95,10 @@ fun ChainReactionNavGraph(navController: NavHostController) {
         composable(
             route = Routes.GAME_SETUP,
             arguments = listOf(navArgument("mode") { type = NavType.StringType }),
-            enterTransition = { fadeScaleEnter },
-            exitTransition = { fadeScaleExit }
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
         ) { backStackEntry ->
             val mode = backStackEntry.arguments?.getString("mode") ?: "local"
             GameSetupScreen(
@@ -102,8 +114,10 @@ fun ChainReactionNavGraph(navController: NavHostController) {
 
         composable(
             Routes.GAME,
-            enterTransition = { fadeScaleEnter },
-            exitTransition = { fadeScaleExit }
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
         ) {
             GameBoardScreen(
                 onGameEnd = { winnerId, p1Score, p2Score, moves, duration ->
@@ -124,8 +138,10 @@ fun ChainReactionNavGraph(navController: NavHostController) {
 
         composable(
             Routes.IN_GAME_SETTINGS,
-            enterTransition = { fadeScaleEnter },
-            exitTransition = { fadeScaleExit }
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
         ) {
             InGameSettingsScreen(
                 onHowToPlay = {
@@ -146,8 +162,10 @@ fun ChainReactionNavGraph(navController: NavHostController) {
 
         composable(
             Routes.IN_GAME_HOW_TO_PLAY,
-            enterTransition = { fadeScaleEnter },
-            exitTransition = { fadeScaleExit }
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
         ) {
             HowToPlayScreen(onBack = { navController.popBackStack() })
         }
@@ -161,8 +179,10 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                 navArgument("moves") { type = NavType.IntType },
                 navArgument("duration") { type = NavType.LongType }
             ),
-            enterTransition = { fadeScaleEnter },
-            exitTransition = { fadeScaleExit }
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
         ) { backStackEntry ->
             val args = backStackEntry.arguments!!
             GameEndScreen(

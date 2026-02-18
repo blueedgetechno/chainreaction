@@ -159,51 +159,75 @@ fun GameBoardScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Play Again button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color.White.copy(alpha = 0.95f))
-                        .clickable {
-                            val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
-                            onGameEnd(
-                                winnerId,
-                                state.player1Score,
-                                state.player2Score,
-                                state.moveCount,
-                                viewModel.getGameDurationSeconds()
-                            )
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Play Again",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 24.sp,
-                        color = winnerColor
+                // Play Again button with shadow
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    // Shadow layer
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .offset(y = 6.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.Black.copy(alpha = 0.3f))
                     )
+                    // Main button
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.White.copy(alpha = 0.95f))
+                            .clickable {
+                                val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
+                                onGameEnd(
+                                    winnerId,
+                                    state.player1Score,
+                                    state.player2Score,
+                                    state.moveCount,
+                                    viewModel.getGameDurationSeconds()
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Play Again",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp,
+                            color = winnerColor
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Menu button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color.White.copy(alpha = 0.3f))
-                        .clickable { onExit() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Menu",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 24.sp,
-                        color = Color.White
+                // Menu button with shadow
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    // Shadow layer
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .offset(y = 6.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.Black.copy(alpha = 0.3f))
                     )
+                    // Main button
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.White.copy(alpha = 0.3f))
+                            .clickable { onExit() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Menu",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
