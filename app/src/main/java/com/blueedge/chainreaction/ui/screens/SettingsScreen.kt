@@ -283,7 +283,11 @@ private fun SoundToggleButton(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onToggle() }
+        modifier = Modifier.clickable(
+            onClick = onToggle,
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        )
     ) {
         Box(
             modifier = Modifier
@@ -322,7 +326,11 @@ private fun SettingsDropdownRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { expanded = true }
+            .clickable(
+                onClick = { expanded = true },
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

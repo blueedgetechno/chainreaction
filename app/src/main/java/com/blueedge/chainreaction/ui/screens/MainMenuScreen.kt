@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,10 +17,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,7 +44,8 @@ import androidx.compose.ui.unit.sp
 fun MainMenuScreen(
     onLocalMultiplayer: () -> Unit,
     onPlayVsBot: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onHowToPlay: () -> Unit
 ) {
 
     Box(
@@ -98,35 +104,20 @@ fun MainMenuScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Description card with 3D shadow
-            val cardShadowOffset = 5.dp
-            Box(modifier = Modifier.fillMaxWidth()) {
-                // Shadow layer
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .offset(y = cardShadowOffset)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFFD0D0D0))
-                )
-                // Main card
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    Text(
-                        text = "Fill the grid with your color! Tap your circles to add dots. " +
-                                "When a circle reaches 4 dots, it explodes into adjacent squares. " +
-                                "Capture all squares to win!",
-                        modifier = Modifier.padding(20.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+            // How to Play button
+            MenuRaised3DButton(
+                topText = "",
+                bottomText = "HOW TO PLAY",
+                onClick = onHowToPlay,
+                mainColor = Color(0xFFD4956B),
+                shadowColor = Color(0xFFB07A52),
+                modifier = Modifier.fillMaxWidth(),
+                icon = null
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Description removed (moved to How to Play page)
 
             Spacer(modifier = Modifier.height(48.dp))
 
@@ -137,7 +128,8 @@ fun MainMenuScreen(
                 onClick = onLocalMultiplayer,
                 mainColor = MaterialTheme.colorScheme.primary,
                 shadowColor = Color(0xFF2E8DAD),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                icon = Icons.Default.Person
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -149,7 +141,8 @@ fun MainMenuScreen(
                 onClick = onPlayVsBot,
                 mainColor = MaterialTheme.colorScheme.tertiary,
                 shadowColor = Color(0xFFA8524E),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                icon = Icons.Default.SmartToy
             )
         }
     }
@@ -163,6 +156,7 @@ private fun MenuRaised3DButton(
     mainColor: Color,
     shadowColor: Color,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -203,18 +197,37 @@ private fun MenuRaised3DButton(
                 .background(mainColor),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = topText,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-                Text(
-                    text = bottomText,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                }
+                Column(horizontalAlignment = Alignment.Start) {
+                    if (topText.isNotEmpty()) {
+                        Text(
+                            text = topText,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                    Text(
+                        text = bottomText,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }

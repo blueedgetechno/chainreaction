@@ -83,18 +83,8 @@ fun GameSetupScreen(
     onBack: () -> Unit
 ) {
     var localGridSize by remember { mutableIntStateOf(GameConfig.gridSize) }
-    var player1Name by remember { mutableStateOf(GameConfig.player1Name) }
-    var player1ColorIndex by remember { mutableIntStateOf(GameConfig.player1ColorIndex) }
-    var player2Name by remember { mutableStateOf(GameConfig.player2Name) }
-    var player2ColorIndex by remember { mutableIntStateOf(GameConfig.player2ColorIndex) }
+    var numPlayers by remember { mutableIntStateOf(2) }  // New: number of players (2-8)
     var botDifficulty by remember { mutableStateOf(GameConfig.botDifficulty) }
-
-    // Auto-adjust player 2 color if it conflicts with player 1
-    LaunchedEffect(player1ColorIndex) {
-        if (player2ColorIndex == player1ColorIndex) {
-            player2ColorIndex = (player1ColorIndex + 1) % PlayerColors.size
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -113,63 +103,32 @@ fun GameSetupScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (gameMode == GameMode.LOCAL_MULTIPLAYER) {
-            // Grid Size Section
+            // Grid Size Section - now a slider
             SectionCard(title = "Grid Size") {
-                GridSizeSelector(
+                GridSizeSlider(
                     selectedSize = localGridSize,
                     onSizeSelected = { localGridSize = it }
                 )
             }
 
-            // Player 1 Section
-            SectionCard(title = "Player 1") {
-                OutlinedTextField(
-                    value = player1Name,
-                    onValueChange = { player1Name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Color",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                ColorPicker(
-                    selectedIndex = player1ColorIndex,
-                    disabledIndex = player2ColorIndex,
-                    onColorSelected = { player1ColorIndex = it }
-                )
-            }
-
-            // Player 2 Section
-            SectionCard(title = "Player 2") {
-                OutlinedTextField(
-                    value = player2Name,
-                    onValueChange = { player2Name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Color",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                ColorPicker(
-                    selectedIndex = player2ColorIndex,
-                    disabledIndex = player1ColorIndex,
-                    onColorSelected = { player2ColorIndex = it }
+            // Number of Players Section - slider with color preview
+            SectionCard(title = "Number of Players") {
+                PlayerCountSlider(
+                    numPlayers = numPlayers,
+                    onPlayersChanged = { numPlayers = it }
                 )
             }
         } else {
-            // VS_BOT mode - only show difficulty slider
+            // VS_BOT mode
+            // Grid Size Section - separate slider
+            SectionCard(title = "Grid Size") {
+                GridSizeSlider(
+                    selectedSize = localGridSize,
+                    onSizeSelected = { localGridSize = it }
+                )
+            }
+
+            // Difficulty slider
             SectionCard(title = "Difficulty", difficulty = botDifficulty) {
                 DifficultySlider(
                     selected = botDifficulty,
@@ -197,23 +156,20 @@ fun GameSetupScreen(
                 onClick = {
                     GameConfig.apply {
                         this.gameMode = gameMode
+                        this.gridSize = localGridSize
                         if (gameMode == GameMode.VS_BOT) {
-                            this.gridSize = when (botDifficulty) {
-                                BotDifficulty.EASY -> 5
-                                BotDifficulty.MEDIUM -> 7
-                                BotDifficulty.HARD -> 10
-                            }
                             this.player1Name = "Player 1"
                             this.player1ColorIndex = 0  // Blue
                             this.player2Name = "Bot"
                             this.player2ColorIndex = 1  // Red
                             this.botDifficulty = botDifficulty
                         } else {
-                            this.gridSize = localGridSize
-                            this.player1Name = player1Name.ifBlank { "Player 1" }
-                            this.player1ColorIndex = player1ColorIndex
-                            this.player2Name = player2Name.ifBlank { "Player 2" }
-                            this.player2ColorIndex = player2ColorIndex
+                            // Fixed player names and colors in order
+                            this.player1Name = "Player 1"
+                            this.player1ColorIndex = 0
+                            this.player2Name = "Player 2"
+                            this.player2ColorIndex = 1
+                            // Store numPlayers for future multi-player support
                         }
                     }
                     onStartGame()
@@ -304,6 +260,154 @@ private fun SectionCard(
 }
 
 @Composable
+private fun GridSizeSlider(
+    selectedSize: Int,
+    onSizeSelected: (Int) -> Unit
+) {
+    var sliderValue by remember { mutableFloatStateOf(selectedSize.toFloat()) }
+    
+    LaunchedEffect(selectedSize) {
+        sliderValue = selectedSize.toFloat()
+    }
+
+    Column {
+        Text(
+            text = "${selectedSize}x${selectedSize}",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Slider(
+            value = sliderValue,
+            onValueChange = { newValue ->
+                // Snap to nearest grid size
+                val nearest = Constants.GRID_SIZES.minByOrNull { kotlin.math.abs(it - newValue) } ?: selectedSize
+                sliderValue = nearest.toFloat()
+            },
+            onValueChangeFinished = {
+                val nearest = Constants.GRID_SIZES.minByOrNull { kotlin.math.abs(it - sliderValue) } ?: selectedSize
+                onSizeSelected(nearest)
+            },
+            valueRange = Constants.GRID_SIZES.first().toFloat()..Constants.GRID_SIZES.last().toFloat(),
+            steps = Constants.GRID_SIZES.size - 2,
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "${Constants.GRID_SIZES.first()}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "${Constants.GRID_SIZES.last()}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PlayerCountSlider(
+    numPlayers: Int,
+    onPlayersChanged: (Int) -> Unit
+) {
+    var sliderValue by remember { mutableFloatStateOf(numPlayers.toFloat()) }
+    
+    LaunchedEffect(numPlayers) {
+        sliderValue = numPlayers.toFloat()
+    }
+
+    Column {
+        Text(
+            text = "$numPlayers Players",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Slider(
+            value = sliderValue,
+            onValueChange = { sliderValue = it },
+            onValueChangeFinished = {
+                val newCount = sliderValue.roundToInt()
+                onPlayersChanged(newCount)
+            },
+            valueRange = 2f..6f,
+            steps = 3,  // 2, 3, 4, 5, 6
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "2",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "6",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Color preview
+        Text(
+            text = "Player Colors:",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            for (i in 0 until numPlayers) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(PlayerColors[i % PlayerColors.size]),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "${i + 1}",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun GridSizeSelector(
     selectedSize: Int,
     onSizeSelected: (Int) -> Unit
@@ -333,55 +437,6 @@ private fun GridSizeSelector(
 }
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ColorPicker(
-    selectedIndex: Int,
-    disabledIndex: Int,
-    onColorSelected: (Int) -> Unit
-) {
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        PlayerColors.forEachIndexed { index, color ->
-            val isSelected = index == selectedIndex
-            val isDisabled = index == disabledIndex
-
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isDisabled) color.copy(alpha = 0.3f) else color
-                    )
-                    .then(
-                        if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-                        else Modifier
-                    )
-                    .clickable(enabled = !isDisabled) { onColorSelected(index) },
-                contentAlignment = Alignment.Center
-            ) {
-                if (isSelected) {
-                    Text(
-                        text = "?",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-
-    if (selectedIndex in PlayerColorNames.indices) {
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Selected: ${PlayerColorNames[selectedIndex]}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
 @Composable
 private fun DifficultySlider(
     selected: BotDifficulty,
