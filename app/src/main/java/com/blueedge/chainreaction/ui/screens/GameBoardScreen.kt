@@ -18,11 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,12 +28,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blueedge.chainreaction.data.GameStatus
@@ -48,6 +45,7 @@ import com.blueedge.chainreaction.ui.theme.PlayerColors
 fun GameBoardScreen(
     onGameEnd: (winnerId: Int, p1Score: Int, p2Score: Int, moves: Int, duration: Long) -> Unit,
     onExit: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: GameViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -57,10 +55,11 @@ fun GameBoardScreen(
 
     // Vivid background that transitions between player colors
     val bgColor by animateColorAsState(
-        targetValue = if (state.currentPlayerId == 1)
-            Color(0xFF41AFD4) // Blue
-        else
-            Color(0xFFE99C7C), // Warm coral
+        targetValue = when (state.currentPlayerId) {
+            1 -> player1Color
+            2 -> player2Color
+            else -> Color(0xFF41AFD4)
+        },
         animationSpec = tween(600),
         label = "bgColor"
     )
@@ -106,7 +105,7 @@ fun GameBoardScreen(
                 .padding(top = 8.dp, end = 12.dp)
                 .size(40.dp)
                 .background(Color.White.copy(alpha = 0.85f), CircleShape)
-                .clickable { showSettingsDialog = true },
+                .clickable { onOpenSettings() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -118,41 +117,56 @@ fun GameBoardScreen(
         }
     }
 
-    // Victory popup dialog
+    // Full-screen victory overlay
     if (state.gameStatus != GameStatus.IN_PROGRESS) {
         val winnerName = if (state.gameStatus == GameStatus.PLAYER1_WINS)
             state.player1.name else state.player2.name
         val winnerColor = if (state.gameStatus == GameStatus.PLAYER1_WINS)
             player1Color else player2Color
 
-        Dialog(onDismissRequest = { }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(28.dp))
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(winnerColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(32.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "\uD83C\uDF89", fontSize = 64.sp)
+                Text(
+                    text = "\uD83C\uDFC6",
+                    fontSize = 80.sp
+                )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                    Text(
-                        text = "$winnerName\nWins!",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black,
-                        color = winnerColor,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 36.sp
-                    )
+                Text(
+                    text = "$winnerName",
+                    style = MaterialTheme.typography.displayLarge,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                
+                Text(
+                    text = "WINS!",
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White.copy(alpha = 0.9f),
+                    textAlign = TextAlign.Center
+                )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
-                    Button(
-                        onClick = {
+                // Play Again button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White.copy(alpha = 0.95f))
+                        .clickable {
                             val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
                             onGameEnd(
                                 winnerId,
@@ -162,129 +176,34 @@ fun GameBoardScreen(
                                 viewModel.getGameDurationSeconds()
                             )
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = winnerColor
-                        )
-                    ) {
-                        Text("Play Again", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedButton(
-                        onClick = onExit,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Text("Menu", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
-            }
-        }
-    }
-
-    // Settings dialog
-    if (showSettingsDialog) {
-        Dialog(onDismissRequest = { showSettingsDialog = false }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(28.dp))
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        text = "Play Again",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 24.sp,
+                        color = winnerColor
                     )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    OutlinedButton(
-                        onClick = {
-                            showSettingsDialog = false
-                            showHowToPlay = true
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("How to Play")
-                    }
-
-                    Button(
-                        onClick = {
-                            showSettingsDialog = false
-                            onExit()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFEA695E)
-                        )
-                    ) {
-                        Text("Exit to Menu", fontWeight = FontWeight.Bold)
-                    }
                 }
-            }
-        }
-    }
 
-    // How to Play dialog
-    if (showHowToPlay) {
-        Dialog(onDismissRequest = { showHowToPlay = false }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(28.dp))
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Menu button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White.copy(alpha = 0.3f))
+                        .clickable { onExit() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "How to Play",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        text = "Menu",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 24.sp,
+                        color = Color.White
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Tap on empty cells to place your dots. " +
-                                "When a cell reaches 4 dots, it explodes and sends dots to adjacent cells. " +
-                                "Capture all opponent cells to win!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color = Color(0xFF555555)
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Button(
-                        onClick = { showHowToPlay = false },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Got it!")
-                    }
                 }
             }
         }

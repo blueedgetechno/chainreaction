@@ -16,6 +16,7 @@ import com.blueedge.chainreaction.ui.screens.GameBoardScreen
 import com.blueedge.chainreaction.ui.screens.GameEndScreen
 import com.blueedge.chainreaction.ui.screens.GameSetupScreen
 import com.blueedge.chainreaction.ui.screens.HowToPlayScreen
+import com.blueedge.chainreaction.ui.screens.InGameSettingsScreen
 import com.blueedge.chainreaction.ui.screens.MainMenuScreen
 import com.blueedge.chainreaction.ui.screens.SettingsScreen
 
@@ -26,6 +27,8 @@ object Routes {
     const val GAME_END = "game_end/{winnerId}/{p1Score}/{p2Score}/{moves}/{duration}"
     const val SETTINGS = "settings"
     const val HOW_TO_PLAY = "how_to_play"
+    const val IN_GAME_SETTINGS = "in_game_settings"
+    const val IN_GAME_HOW_TO_PLAY = "in_game_how_to_play"
 
     fun gameSetup(mode: String) = "game_setup/$mode"
     fun gameEnd(winnerId: Int, p1Score: Int, p2Score: Int, moves: Int, duration: Long) =
@@ -112,8 +115,41 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                 },
                 onExit = {
                     navController.popBackStack(Routes.MAIN_MENU, inclusive = false)
+                },
+                onOpenSettings = {
+                    navController.navigate(Routes.IN_GAME_SETTINGS)
                 }
             )
+        }
+
+        composable(
+            Routes.IN_GAME_SETTINGS,
+            enterTransition = { fadeScaleEnter },
+            exitTransition = { fadeScaleExit }
+        ) {
+            InGameSettingsScreen(
+                onHowToPlay = {
+                    navController.navigate(Routes.IN_GAME_HOW_TO_PLAY)
+                },
+                onRestart = {
+                    navController.popBackStack(Routes.GAME, inclusive = true)
+                    navController.navigate(Routes.GAME)
+                },
+                onExitToMenu = {
+                    navController.popBackStack(Routes.MAIN_MENU, inclusive = false)
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            Routes.IN_GAME_HOW_TO_PLAY,
+            enterTransition = { fadeScaleEnter },
+            exitTransition = { fadeScaleExit }
+        ) {
+            HowToPlayScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
