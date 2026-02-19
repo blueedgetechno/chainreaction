@@ -146,6 +146,8 @@ fun GameBoardScreen(
 
         LaunchedEffect(state.gameStatus) {
             // Animate circle expanding to cover full screen
+            // Diagonal of the screen = sqrt(w² + h²). We use 3000f as a safe fallback
+            // for when screen size hasn't been reported yet (covers all common display resolutions).
             val maxRadius = if (screenSize != IntSize.Zero) {
                 sqrt((screenSize.width * screenSize.width + screenSize.height * screenSize.height).toDouble()).toFloat()
             } else {
