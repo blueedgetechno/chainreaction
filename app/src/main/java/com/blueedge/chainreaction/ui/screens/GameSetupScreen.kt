@@ -158,18 +158,18 @@ fun GameSetupScreen(
                         this.gameMode = gameMode
                         this.gridSize = localGridSize
                         if (gameMode == GameMode.VS_BOT) {
+                            this.numPlayers = 2
                             this.player1Name = "Player 1"
                             this.player1ColorIndex = 0  // Blue
                             this.player2Name = "Bot"
                             this.player2ColorIndex = 1  // Red
                             this.botDifficulty = botDifficulty
                         } else {
-                            // Fixed player names and colors in order
+                            this.numPlayers = numPlayers
                             this.player1Name = "Player 1"
                             this.player1ColorIndex = 0
                             this.player2Name = "Player 2"
                             this.player2ColorIndex = 1
-                            // Store numPlayers for future multi-player support
                         }
                     }
                     onStartGame()

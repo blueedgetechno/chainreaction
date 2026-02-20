@@ -2,8 +2,10 @@ package com.blueedge.chainreaction.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -28,16 +30,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -47,6 +54,7 @@ import com.blueedge.chainreaction.data.GameStatus
 import com.blueedge.chainreaction.ui.components.GameGrid
 import com.blueedge.chainreaction.ui.game.GameViewModel
 import com.blueedge.chainreaction.ui.theme.PlayerColors
+import kotlin.math.sqrt
 
 @Composable
 fun GameBoardScreen(
@@ -57,22 +65,18 @@ fun GameBoardScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    val player1Color = PlayerColors.getOrElse(state.player1.colorIndex) { PlayerColors[0] }
-    val player2Color = PlayerColors.getOrElse(state.player2.colorIndex) { PlayerColors[1] }
+    val playerColors = state.players.map { player ->
+        PlayerColors.getOrElse(player.colorIndex) { PlayerColors[player.id - 1] }
+    }
+    val currentPlayerColor = playerColors.getOrElse(state.currentPlayerId - 1) { Color(0xFF41AFD4) }
 
     // Vivid background that transitions between player colors
     val bgColor by animateColorAsState(
-        targetValue = when (state.currentPlayerId) {
-            1 -> player1Color
-            2 -> player2Color
-            else -> Color(0xFF41AFD4)
-        },
+        targetValue = currentPlayerColor,
         animationSpec = tween(600),
         label = "bgColor"
     )
 
-    var showSettingsDialog by remember { mutableStateOf(false) }
-    var showHowToPlay by remember { mutableStateOf(false) }
     var showExitConfirmation by remember { mutableStateOf(false) }
 
     // Handle back button press
@@ -95,8 +99,7 @@ fun GameBoardScreen(
                     board = state.board,
                     gridSize = state.gridSize,
                     currentPlayerId = state.currentPlayerId,
-                    player1Color = player1Color,
-                    player2Color = player2Color,
+                    playerColors = playerColors,
                     explodingCells = state.explodingCells,
                     explosionMoves = state.explosionMoves,
                     onCellClick = { row, col -> viewModel.onCellClicked(row, col) },
@@ -130,22 +133,58 @@ fun GameBoardScreen(
         }
     }
 
-    // Full-screen victory overlay
-    if (state.gameStatus != GameStatus.IN_PROGRESS) {
-        val winnerName = if (state.gameStatus == GameStatus.PLAYER1_WINS)
-            state.player1.name else state.player2.name
-        val winnerColor = if (state.gameStatus == GameStatus.PLAYER1_WINS)
-            player1Color else player2Color
+    // Full-screen victory overlay with circular fill animation
+    if (state.gameStatus == GameStatus.GAME_OVER) {
+        val winnerColor = playerColors.getOrElse(state.winnerId - 1) { Color(0xFF41AFD4) }
+        val winnerName = state.players.firstOrNull { it.id == state.winnerId }?.name
+            ?: "Player ${state.winnerId}"
+
+        // Circular reveal animation
+        val circleRadius = remember { Animatable(0f) }
+        val contentAlpha = remember { Animatable(0f) }
+        var screenSize by remember { mutableStateOf(IntSize.Zero) }
+
+        LaunchedEffect(state.gameStatus) {
+            // Animate circle expanding to cover full screen
+            // Diagonal of the screen = sqrt(w² + h²). We use 3000f as a safe fallback
+            // for when screen size hasn't been reported yet (covers all common display resolutions).
+            val maxRadius = if (screenSize != IntSize.Zero) {
+                sqrt((screenSize.width * screenSize.width + screenSize.height * screenSize.height).toDouble()).toFloat()
+            } else {
+                3000f
+            }
+            circleRadius.animateTo(
+                targetValue = maxRadius,
+                animationSpec = tween(durationMillis = 700)
+            )
+            // Fade in content after circle fills screen
+            contentAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 350)
+            )
+        }
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(winnerColor),
+                .onSizeChanged { screenSize = it },
             contentAlignment = Alignment.Center
         ) {
+            // Animated circular fill canvas
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(
+                    color = winnerColor,
+                    radius = circleRadius.value,
+                    center = Offset(size.width / 2f, size.height / 2f)
+                )
+            }
+
+            // Victory content fades in after circle fills
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(32.dp)
+                modifier = Modifier
+                    .padding(32.dp)
+                    .alpha(contentAlpha.value)
             ) {
                 Text(
                     text = "\uD83C\uDFC6",
@@ -155,13 +194,13 @@ fun GameBoardScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "$winnerName",
+                    text = winnerName,
                     style = MaterialTheme.typography.displayLarge,
                     fontWeight = FontWeight.Black,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Text(
                     text = "WINS!",
                     style = MaterialTheme.typography.displayMedium,
@@ -172,161 +211,55 @@ fun GameBoardScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Play Again button with animated shadow (light button, dark shadow)
-                val playAgainInteractionSource = remember { MutableInteractionSource() }
-                val isPlayAgainPressed by playAgainInteractionSource.collectIsPressedAsState()
-                val playAgainShadowHeight = 6.dp
-                val playAgainYOffset by animateDpAsState(
-                    targetValue = if (isPlayAgainPressed) playAgainShadowHeight else 0.dp,
-                    animationSpec = tween(durationMillis = 80),
-                    label = "playAgainPress"
-                )
-                
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    // Dark shadow layer
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .offset(y = playAgainShadowHeight)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color.Black.copy(alpha = 0.25f))
-                    )
-                    // Light main button
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .offset(y = playAgainYOffset)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White.copy(alpha = 0.98f))
-                            .clickable(
-                                interactionSource = playAgainInteractionSource,
-                                indication = null,
-                                onClick = {
-                                    val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
-                                    onGameEnd(
-                                        winnerId,
-                                        state.player1Score,
-                                        state.player2Score,
-                                        state.moveCount,
-                                        viewModel.getGameDurationSeconds()
-                                    )
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Play Again",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 24.sp,
-                            color = winnerColor
+                // Play Again button
+                VictoryRaisedButton(
+                    text = "Play Again",
+                    mainColor = Color.White.copy(alpha = 0.98f),
+                    shadowColor = Color.Black.copy(alpha = 0.25f),
+                    textColor = winnerColor,
+                    onClick = {
+                        onGameEnd(
+                            state.winnerId,
+                            state.player1Score,
+                            state.player2Score,
+                            state.moveCount,
+                            viewModel.getGameDurationSeconds()
                         )
-                    }
-                }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Stats button with animated shadow (light button, dark shadow)
-                val statsInteractionSource = remember { MutableInteractionSource() }
-                val isStatsPressed by statsInteractionSource.collectIsPressedAsState()
-                val statsShadowHeight = 6.dp
-                val statsYOffset by animateDpAsState(
-                    targetValue = if (isStatsPressed) statsShadowHeight else 0.dp,
-                    animationSpec = tween(durationMillis = 80),
-                    label = "statsPress"
-                )
-                
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    // Dark shadow layer
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .offset(y = statsShadowHeight)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color.Black.copy(alpha = 0.25f))
-                    )
-                    // Light main button
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .offset(y = statsYOffset)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White.copy(alpha = 0.5f))
-                            .clickable(
-                                interactionSource = statsInteractionSource,
-                                indication = null,
-                                onClick = {
-                                    // Navigate to stats screen - placeholder for now
-                                    // onGameEnd will navigate to GameEndScreen which shows stats
-                                    val winnerId = if (state.gameStatus == GameStatus.PLAYER1_WINS) 1 else 2
-                                    onGameEnd(
-                                        winnerId,
-                                        state.player1Score,
-                                        state.player2Score,
-                                        state.moveCount,
-                                        viewModel.getGameDurationSeconds()
-                                    )
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "View Stats",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 24.sp,
-                            color = Color.White
+                // Stats button
+                VictoryRaisedButton(
+                    text = "View Stats",
+                    mainColor = Color.White.copy(alpha = 0.5f),
+                    shadowColor = Color.Black.copy(alpha = 0.25f),
+                    textColor = Color.White,
+                    onClick = {
+                        onGameEnd(
+                            state.winnerId,
+                            state.player1Score,
+                            state.player2Score,
+                            state.moveCount,
+                            viewModel.getGameDurationSeconds()
                         )
-                    }
-                }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Menu button with animated shadow (semi-transparent button, dark shadow)
-                val menuInteractionSource = remember { MutableInteractionSource() }
-                val isMenuPressed by menuInteractionSource.collectIsPressedAsState()
-                val menuShadowHeight = 6.dp
-                val menuYOffset by animateDpAsState(
-                    targetValue = if (isMenuPressed) menuShadowHeight else 0.dp,
-                    animationSpec = tween(durationMillis = 80),
-                    label = "menuPress"
+                // Menu button
+                VictoryRaisedButton(
+                    text = "Menu",
+                    mainColor = Color.White.copy(alpha = 0.3f),
+                    shadowColor = Color.Black.copy(alpha = 0.25f),
+                    textColor = Color.White,
+                    onClick = { onExit() },
+                    modifier = Modifier.fillMaxWidth()
                 )
-                
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    // Dark shadow layer
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .offset(y = menuShadowHeight)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color.Black.copy(alpha = 0.25f))
-                    )
-                    // Semi-transparent main button
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .offset(y = menuYOffset)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White.copy(alpha = 0.3f))
-                            .clickable(
-                                interactionSource = menuInteractionSource,
-                                indication = null,
-                                onClick = { onExit() }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Menu",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 24.sp,
-                            color = Color.White
-                        )
-                    }
-                }
             }
         }
     }
@@ -376,7 +309,7 @@ fun GameBoardScreen(
                             animationSpec = tween(durationMillis = 80),
                             label = "cancelPress"
                         )
-                        
+
                         Box(modifier = Modifier.weight(1f)) {
                             // Shadow layer
                             Box(
@@ -419,7 +352,7 @@ fun GameBoardScreen(
                             animationSpec = tween(durationMillis = 80),
                             label = "exitPress"
                         )
-                        
+
                         Box(modifier = Modifier.weight(1f)) {
                             // Shadow layer
                             Box(
@@ -461,3 +394,60 @@ fun GameBoardScreen(
         }
     }
 }
+
+/**
+ * A 3D raised button used on the victory overlay.
+ */
+@Composable
+private fun VictoryRaisedButton(
+    text: String,
+    mainColor: Color,
+    shadowColor: Color,
+    textColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val shadowHeight = 6.dp
+    val yOffset by animateDpAsState(
+        targetValue = if (isPressed) shadowHeight else 0.dp,
+        animationSpec = tween(durationMillis = 80),
+        label = "victoryButtonPress"
+    )
+
+    Box(modifier = modifier.height(76.dp)) {
+        // Shadow layer (static, always at bottom)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .offset(y = shadowHeight)
+                .clip(RoundedCornerShape(20.dp))
+                .background(shadowColor)
+        )
+        // Main button layer (moves down on press)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .offset(y = yOffset)
+                .clip(RoundedCornerShape(20.dp))
+                .background(mainColor)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 24.sp,
+                color = textColor
+            )
+        }
+    }
+}
+

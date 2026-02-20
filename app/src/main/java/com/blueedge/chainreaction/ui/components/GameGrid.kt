@@ -39,8 +39,7 @@ fun GameGrid(
     board: List<List<CellState>>,
     gridSize: Int,
     currentPlayerId: Int,
-    player1Color: Color,
-    player2Color: Color,
+    playerColors: List<Color>,
     explodingCells: Set<Pair<Int, Int>>,
     explosionMoves: List<ExplosionMove> = emptyList(),
     onCellClick: (Int, Int) -> Unit,
@@ -75,13 +74,11 @@ fun GameGrid(
                     Row {
                         for (col in 0 until gridSize) {
                             val cell = board[row][col]
-                            val ownerColor = when (cell.ownerId) {
-                                1 -> player1Color
-                                2 -> player2Color
-                                else -> Color.Transparent
-                            }
+                            val ownerColor = if (cell.ownerId > 0)
+                                playerColors.getOrElse(cell.ownerId - 1) { Color.Gray }
+                            else Color.Transparent
 
-                            val currentColor = if (currentPlayerId == 1) player1Color else player2Color
+                            val currentColor = playerColors.getOrElse(currentPlayerId - 1) { playerColors[0] }
 
                             GridCell(
                                 cellState = cell,
@@ -134,11 +131,7 @@ fun GameGrid(
                             y = fromCenter.y + (toCenter.y - fromCenter.y) * progress
                         )
 
-                        val moveColor = when (move.playerId) {
-                            1 -> player1Color
-                            2 -> player2Color
-                            else -> Color.Gray
-                        }
+                        val moveColor = playerColors.getOrElse(move.playerId - 1) { Color.Gray }
 
                         // Draw moving circle
                         drawCircle(

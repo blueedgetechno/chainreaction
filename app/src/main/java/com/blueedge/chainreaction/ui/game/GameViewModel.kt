@@ -34,21 +34,15 @@ class GameViewModel : ViewModel() {
 
     private fun createInitialState(): GameUiState {
         val config = GameConfig
+        val playersList = config.getPlayers()
         return GameUiState(
             board = engine.createEmptyBoard(config.gridSize),
             gridSize = config.gridSize,
             currentPlayerId = 1,
-            player1 = PlayerInfo(
-                id = 1,
-                name = config.player1Name,
-                colorIndex = config.player1ColorIndex
-            ),
-            player2 = PlayerInfo(
-                id = 2,
-                name = if (config.gameMode == GameMode.VS_BOT) config.player2Name else config.player2Name,
-                colorIndex = config.player2ColorIndex,
-                isBot = config.gameMode == GameMode.VS_BOT
-            ),
+            player1 = playersList.getOrElse(0) { PlayerInfo(1, "Player 1", 0) },
+            player2 = playersList.getOrElse(1) { PlayerInfo(2, "Player 2", 1) },
+            players = playersList,
+            numPlayers = playersList.size,
             gameMode = config.gameMode,
             botDifficulty = config.botDifficulty,
             gameStartTimeMs = System.currentTimeMillis()
@@ -61,7 +55,7 @@ class GameViewModel : ViewModel() {
         if (currentState.isAnimating) return
         if (currentState.botThinking) return
 
-        val isFirstMove = if (currentState.currentPlayerId == 1) !currentState.player1HasMoved else !currentState.player2HasMoved
+        val isFirstMove = !currentState.playersHasMoved.contains(currentState.currentPlayerId)
 
         if (!engine.isValidMove(currentState.board, row, col, currentState.currentPlayerId, isFirstMove)) return
 
@@ -73,7 +67,7 @@ class GameViewModel : ViewModel() {
     private suspend fun executeMove(row: Int, col: Int) {
         val currentState = _state.value
         val playerId = currentState.currentPlayerId
-        val isFirstMove = if (playerId == 1) !currentState.player1HasMoved else !currentState.player2HasMoved
+        val isFirstMove = !currentState.playersHasMoved.contains(playerId)
 
         _state.update { it.copy(isAnimating = true, lastMovedCell = Pair(row, col)) }
 
@@ -126,27 +120,29 @@ class GameViewModel : ViewModel() {
         val newMoveCount = currentState.moveCount + 1
         val p1Score = engine.countPlayerCells(newBoard, 1)
         val p2Score = engine.countPlayerCells(newBoard, 2)
+        val newPlayersHasMoved = currentState.playersHasMoved + playerId
 
-        // Check win condition
-        val winner = engine.checkWinCondition(newBoard, newMoveCount)
-        val gameStatus = when (winner) {
-            1 -> GameStatus.PLAYER1_WINS
-            2 -> GameStatus.PLAYER2_WINS
-            else -> GameStatus.IN_PROGRESS
+        // Check win condition only after all players have made at least one move
+        val winner = if (newPlayersHasMoved.size >= currentState.numPlayers) {
+            engine.checkWinCondition(newBoard, newMoveCount)
+        } else {
+            null
         }
+        val gameStatus = if (winner != null) GameStatus.GAME_OVER else GameStatus.IN_PROGRESS
 
-        val nextPlayer = if (playerId == 1) 2 else 1
+        // Determine next player: cycle through active players (skip eliminated ones)
+        val nextPlayer = getNextActivePlayer(newBoard, playerId, currentState.players, newPlayersHasMoved)
 
         _state.update { state ->
             state.copy(
                 board = newBoard,
                 currentPlayerId = if (gameStatus == GameStatus.IN_PROGRESS) nextPlayer else playerId,
                 moveCount = newMoveCount,
-                player1HasMoved = if (playerId == 1) true else state.player1HasMoved,
-                player2HasMoved = if (playerId == 2) true else state.player2HasMoved,
+                playersHasMoved = newPlayersHasMoved,
                 player1Score = p1Score,
                 player2Score = p2Score,
                 gameStatus = gameStatus,
+                winnerId = winner ?: 0,
                 isAnimating = false,
                 lastMovedCell = null
             )
@@ -161,12 +157,35 @@ class GameViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Returns the ID of the next active player after [currentPlayerId].
+     * Active = has cells on board OR hasn't made their first move yet.
+     */
+    private fun getNextActivePlayer(
+        board: List<List<CellState>>,
+        currentPlayerId: Int,
+        players: List<PlayerInfo>,
+        playersHasMoved: Set<Int>
+    ): Int {
+        val numPlayers = players.size
+        // Try each candidate in turn order
+        for (offset in 1..numPlayers) {
+            val candidate = ((currentPlayerId - 1 + offset) % numPlayers) + 1
+            val hasMoved = playersHasMoved.contains(candidate)
+            val hasCells = board.any { row -> row.any { it.ownerId == candidate } }
+            // Player is active if they haven't moved yet (first move) or still have cells
+            if (!hasMoved || hasCells) return candidate
+        }
+        // Fallback: return next in rotation (shouldn't happen if game is still in progress)
+        return (currentPlayerId % numPlayers) + 1
+    }
+
     private suspend fun executeBotMove() {
         _state.update { it.copy(botThinking = true) }
 
         try {
             val currentState = _state.value
-            val isBotFirstMove = !currentState.player2HasMoved
+            val isBotFirstMove = !currentState.playersHasMoved.contains(2)
             val move = botStrategy?.calculateMove(currentState.board, 2, 1, isBotFirstMove)
 
             _state.update { it.copy(botThinking = false) }

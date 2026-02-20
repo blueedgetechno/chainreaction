@@ -46,7 +46,8 @@ data class ExplosionWaveData(
 enum class GameStatus {
     IN_PROGRESS,
     PLAYER1_WINS,
-    PLAYER2_WINS
+    PLAYER2_WINS,
+    GAME_OVER
 }
 
 data class GameUiState(
@@ -55,11 +56,13 @@ data class GameUiState(
     val currentPlayerId: Int = 1,
     val player1: PlayerInfo = PlayerInfo(1, "Player 1", 0),
     val player2: PlayerInfo = PlayerInfo(2, "Player 2", 1),
+    val players: List<PlayerInfo> = listOf(PlayerInfo(1, "Player 1", 0), PlayerInfo(2, "Player 2", 1)),
+    val numPlayers: Int = 2,
     val player1Score: Int = 0,
     val player2Score: Int = 0,
     val moveCount: Int = 0,
-    val player1HasMoved: Boolean = false,
-    val player2HasMoved: Boolean = false,
+    val playersHasMoved: Set<Int> = emptySet(),
+    val winnerId: Int = 0,
     val gameStatus: GameStatus = GameStatus.IN_PROGRESS,
     val isAnimating: Boolean = false,
     val botThinking: Boolean = false,

@@ -1,30 +1,37 @@
 package com.blueedge.chainreaction.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blueedge.chainreaction.data.GameConfig
@@ -40,9 +47,10 @@ fun GameEndScreen(
     onPlayAgain: () -> Unit,
     onMainMenu: () -> Unit
 ) {
-    val winnerName = if (winnerId == 1) GameConfig.player1Name else GameConfig.player2Name
-    val winnerColorIndex = if (winnerId == 1) GameConfig.player1ColorIndex else GameConfig.player2ColorIndex
-    val winnerColor = PlayerColors.getOrElse(winnerColorIndex) { PlayerColors[0] }
+    val players = GameConfig.getPlayers()
+    val winner = players.firstOrNull { it.id == winnerId }
+    val winnerName = winner?.name ?: "Player $winnerId"
+    val winnerColor = PlayerColors.getOrElse((winner?.colorIndex ?: 0)) { PlayerColors[0] }
 
     Box(
         modifier = Modifier
@@ -133,47 +141,87 @@ fun GameEndScreen(
 
             Spacer(Modifier.height(40.dp))
 
-            // Play Again button
-            Button(
+            // Play Again button — 3D raised style
+            Raised3DButton(
+                text = "Play Again",
                 onClick = onPlayAgain,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = winnerColor
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-            ) {
-                Text(
-                    "Play Again",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                mainColor = winnerColor,
+                shadowColor = winnerColor.copy(alpha = 0.65f),
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
-            // Main Menu button
-            OutlinedButton(
+            // Main Menu button — 3D raised style
+            Raised3DButton(
+                text = "Main Menu",
                 onClick = onMainMenu,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    "Main Menu",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+                mainColor = Color(0xFFD4956B),
+                shadowColor = Color(0xFFB07A52),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun Raised3DButton(
+    text: String,
+    onClick: () -> Unit,
+    mainColor: Color,
+    shadowColor: Color,
+    modifier: Modifier = Modifier,
+    shadowHeight: Dp = 6.dp
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val yOffset by animateDpAsState(
+        targetValue = if (isPressed) shadowHeight else 0.dp,
+        animationSpec = tween(durationMillis = 80),
+        label = "buttonPress"
+    )
+
+    Box(
+        modifier = modifier.height(66.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        // Shadow layer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .align(Alignment.BottomCenter)
+                .clip(RoundedCornerShape(18.dp))
+                .background(shadowColor)
+        )
+        // Main button layer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .offset(y = yOffset)
+                .clip(RoundedCornerShape(18.dp))
+                .background(mainColor)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
         }
     }
 }
 
 @Composable
 private fun StatRow(label: String, value: String) {
-    Row(
+    androidx.compose.foundation.layout.Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
