@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,16 +51,19 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.blueedge.chainreaction.data.GameConfig
+import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameStatus
 import com.blueedge.chainreaction.ui.components.GameGrid
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.game.GameViewModel
+import com.blueedge.chainreaction.ui.theme.PlayerColorNames
 import com.blueedge.chainreaction.ui.theme.PlayerColors
 import kotlin.math.sqrt
 
 @Composable
 fun GameBoardScreen(
-    onGameEnd: (winnerId: Int, p1Score: Int, p2Score: Int, moves: Int, duration: Long) -> Unit,
+    onGameEnd: (winnerId: Int, capturedCells: Int, moves: Int, duration: Long) -> Unit,
     onExit: () -> Unit,
     onOpenSettings: () -> Unit,
     viewModel: GameViewModel = viewModel()
@@ -141,8 +145,15 @@ fun GameBoardScreen(
     // Full-screen victory overlay with circular fill animation
     if (state.gameStatus == GameStatus.GAME_OVER) {
         val winnerColor = playerColors.getOrElse(state.winnerId - 1) { Color(0xFF41AFD4) }
-        val winnerName = state.players.firstOrNull { it.id == state.winnerId }?.name
-            ?: "Player ${state.winnerId}"
+        val winnerPlayer = state.players.firstOrNull { it.id == state.winnerId }
+        val isBotMode = GameConfig.gameMode == GameMode.VS_BOT
+        val winnerName = if (isBotMode) {
+            if (winnerPlayer?.isBot == true) "Bot" else "You"
+        } else {
+            val colorIndex = winnerPlayer?.colorIndex ?: (state.winnerId - 1)
+            PlayerColorNames.getOrElse(colorIndex) { "Player ${state.winnerId}" }
+        }
+        val winsText = if (isBotMode) "WON!" else "WINS!"
 
         // Circular reveal animation
         val circleRadius = remember { Animatable(0f) }
@@ -184,6 +195,36 @@ fun GameBoardScreen(
                 )
             }
 
+            // Info (stats) icon — top right, below status bar
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, end = 12.dp)
+                    .size(40.dp)
+                    .background(Color.White.copy(alpha = 0.85f), CircleShape)
+                    .alpha(contentAlpha.value)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {
+                            onGameEnd(
+                                state.winnerId,
+                                state.capturedCells,
+                                state.moveCount,
+                                viewModel.getGameDurationSeconds()
+                            )
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Equalizer,
+                    contentDescription = "View Stats",
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
             // Victory content fades in after circle fills
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -207,7 +248,7 @@ fun GameBoardScreen(
                 )
 
                 Text(
-                    text = "WINS!",
+                    text = winsText,
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Black,
                     color = Color.White.copy(alpha = 0.9f),
@@ -219,34 +260,13 @@ fun GameBoardScreen(
                 // Play Again button
                 Raised3DButton(
                     text = "Play Again",
-                    mainColor = Color.White.copy(alpha = 0.98f),
-                    shadowColor = Color.Black.copy(alpha = 0.25f),
+                    mainColor = Color.White,
+                    shadowColor = Color(0xFFDDDDDD),
                     textColor = winnerColor,
                     onClick = {
                         onGameEnd(
                             state.winnerId,
-                            state.player1Score,
-                            state.player2Score,
-                            state.moveCount,
-                            viewModel.getGameDurationSeconds()
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Stats button
-                Raised3DButton(
-                    text = "View Stats",
-                    mainColor = Color.White.copy(alpha = 0.5f),
-                    shadowColor = Color.Black.copy(alpha = 0.25f),
-                    textColor = Color.White,
-                    onClick = {
-                        onGameEnd(
-                            state.winnerId,
-                            state.player1Score,
-                            state.player2Score,
+                            state.capturedCells,
                             state.moveCount,
                             viewModel.getGameDurationSeconds()
                         )
@@ -259,9 +279,9 @@ fun GameBoardScreen(
                 // Menu button
                 Raised3DButton(
                     text = "Menu",
-                    mainColor = Color.White.copy(alpha = 0.3f),
-                    shadowColor = Color.Black.copy(alpha = 0.25f),
                     textColor = Color.White,
+                    mainColor = Color(0xFFD4956B),
+                    shadowColor = Color(0xFFB07A52),
                     onClick = { onExit() },
                     modifier = Modifier.fillMaxWidth()
                 )

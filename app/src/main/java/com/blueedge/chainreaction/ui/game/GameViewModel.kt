@@ -118,8 +118,7 @@ class GameViewModel : ViewModel() {
         _state.update { it.copy(explodingCells = emptySet(), explosionMoves = emptyList()) }
 
         val newMoveCount = currentState.moveCount + 1
-        val p1Score = engine.countPlayerCells(newBoard, 1)
-        val p2Score = engine.countPlayerCells(newBoard, 2)
+        val capturedCells = newBoard.sumOf { row -> row.count { it.dots > 0 } }
         val newPlayersHasMoved = currentState.playersHasMoved + playerId
 
         // Check win condition only after all players have made at least one move
@@ -139,8 +138,7 @@ class GameViewModel : ViewModel() {
                 currentPlayerId = if (gameStatus == GameStatus.IN_PROGRESS) nextPlayer else playerId,
                 moveCount = newMoveCount,
                 playersHasMoved = newPlayersHasMoved,
-                player1Score = p1Score,
-                player2Score = p2Score,
+                capturedCells = capturedCells,
                 gameStatus = gameStatus,
                 winnerId = winner ?: 0,
                 isAnimating = false,

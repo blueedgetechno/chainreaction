@@ -20,21 +20,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blueedge.chainreaction.data.GameConfig
+import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.ui.components.Raised3DButton
+import com.blueedge.chainreaction.ui.theme.PlayerColorNames
 import com.blueedge.chainreaction.ui.theme.PlayerColors
 
 @Composable
 fun GameEndScreen(
     winnerId: Int,
-    player1Score: Int,
-    player2Score: Int,
+    capturedCells: Int,
     totalMoves: Int,
     durationSeconds: Long,
     onPlayAgain: () -> Unit,
@@ -42,21 +42,19 @@ fun GameEndScreen(
 ) {
     val players = GameConfig.getPlayers()
     val winner = players.firstOrNull { it.id == winnerId }
-    val winnerName = winner?.name ?: "Player $winnerId"
+    val isBotMode = GameConfig.gameMode == GameMode.VS_BOT
+    val winnerName = if (isBotMode) {
+        if (winner?.isBot == true) "Bot" else "You"
+    } else {
+        PlayerColorNames.getOrElse(winner?.colorIndex ?: 0) { "Player $winnerId" }
+    }
+    val winsText = if (isBotMode) "Won!" else "Wins!"
     val winnerColor = PlayerColors.getOrElse((winner?.colorIndex ?: 0)) { PlayerColors[0] }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        winnerColor.copy(alpha = 0.25f),
-                        MaterialTheme.colorScheme.background,
-                        winnerColor.copy(alpha = 0.1f)
-                    )
-                )
-            )
+            .background(winnerColor)
     ) {
         Column(
             modifier = Modifier
@@ -67,17 +65,17 @@ fun GameEndScreen(
         ) {
             // Victory emoji
             Text(
-                text = "👑",
+                text = "\uD83C\uDFC6",
                 fontSize = 72.sp
             )
 
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "$winnerName\nWins!",
+                text = "$winnerName\n$winsText",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Black,
-                color = winnerColor,
+                color = Color.White,
                 textAlign = TextAlign.Center,
                 lineHeight = 44.sp
             )
@@ -118,7 +116,7 @@ fun GameEndScreen(
 
                     StatRow(
                         label = "Final Score",
-                        value = "${GameConfig.player1Name}: $player1Score  |  ${GameConfig.player2Name}: $player2Score"
+                        value = "$capturedCells"
                     )
                     StatRow(
                         label = "Total Moves",
@@ -130,7 +128,7 @@ fun GameEndScreen(
                     )
                     StatRow(
                         label = "Grid Size",
-                        value = "${GameConfig.gridSize}×${GameConfig.gridSize}"
+                        value = "${GameConfig.gridSize} x ${GameConfig.gridSize}"
                     )
                     if (GameConfig.gameMode == com.blueedge.chainreaction.data.GameMode.VS_BOT) {
                         StatRow(
@@ -149,8 +147,9 @@ fun GameEndScreen(
             Raised3DButton(
                 text = "Play Again",
                 onClick = onPlayAgain,
-                mainColor = Color(0xFF41AFD4),
-                shadowColor = Color(0xFF2E8DAD),
+                mainColor = Color.White,
+                shadowColor = Color(0xFFDDDDDD),
+                textColor = winnerColor,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -162,6 +161,7 @@ fun GameEndScreen(
                 onClick = onMainMenu,
                 mainColor = Color(0xFFD4956B),
                 shadowColor = Color(0xFFB07A52),
+                textColor = Color.White,
                 modifier = Modifier.fillMaxWidth()
             )
         }

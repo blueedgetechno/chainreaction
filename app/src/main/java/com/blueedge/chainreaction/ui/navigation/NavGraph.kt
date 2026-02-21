@@ -23,15 +23,15 @@ object Routes {
     const val MAIN_MENU = "main_menu"
     const val GAME_SETUP = "game_setup/{mode}"
     const val GAME = "game"
-    const val GAME_END = "game_end/{winnerId}/{p1Score}/{p2Score}/{moves}/{duration}"
+    const val GAME_END = "game_end/{winnerId}/{capturedCells}/{moves}/{duration}"
     const val SETTINGS = "settings"
     const val HOW_TO_PLAY = "how_to_play"
     const val IN_GAME_SETTINGS = "in_game_settings"
     const val IN_GAME_HOW_TO_PLAY = "in_game_how_to_play"
 
     fun gameSetup(mode: String) = "game_setup/$mode"
-    fun gameEnd(winnerId: Int, p1Score: Int, p2Score: Int, moves: Int, duration: Long) =
-        "game_end/$winnerId/$p1Score/$p2Score/$moves/$duration"
+    fun gameEnd(winnerId: Int, capturedCells: Int, moves: Int, duration: Long) =
+        "game_end/$winnerId/$capturedCells/$moves/$duration"
 }
 
 @Composable
@@ -119,9 +119,9 @@ fun ChainReactionNavGraph(navController: NavHostController) {
             popExitTransition = { popExitTransition }
         ) {
             GameBoardScreen(
-                onGameEnd = { winnerId, p1Score, p2Score, moves, duration ->
+                onGameEnd = { winnerId, capturedCells, moves, duration ->
                     navController.navigate(
-                        Routes.gameEnd(winnerId, p1Score, p2Score, moves, duration)
+                        Routes.gameEnd(winnerId, capturedCells, moves, duration)
                     ) {
                         popUpTo(Routes.MAIN_MENU)
                     }
@@ -172,8 +172,7 @@ fun ChainReactionNavGraph(navController: NavHostController) {
             route = Routes.GAME_END,
             arguments = listOf(
                 navArgument("winnerId") { type = NavType.IntType },
-                navArgument("p1Score") { type = NavType.IntType },
-                navArgument("p2Score") { type = NavType.IntType },
+                navArgument("capturedCells") { type = NavType.IntType },
                 navArgument("moves") { type = NavType.IntType },
                 navArgument("duration") { type = NavType.LongType }
             ),
@@ -185,8 +184,7 @@ fun ChainReactionNavGraph(navController: NavHostController) {
             val args = backStackEntry.arguments!!
             GameEndScreen(
                 winnerId = args.getInt("winnerId"),
-                player1Score = args.getInt("p1Score"),
-                player2Score = args.getInt("p2Score"),
+                capturedCells = args.getInt("capturedCells"),
                 totalMoves = args.getInt("moves"),
                 durationSeconds = args.getLong("duration"),
                 onPlayAgain = {

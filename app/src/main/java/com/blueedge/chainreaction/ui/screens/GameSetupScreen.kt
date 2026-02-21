@@ -59,8 +59,9 @@ fun GameSetupScreen(
     onStartGame: () -> Unit,
     onBack: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var localGridSize by remember { mutableIntStateOf(GameConfig.gridSize) }
-    var numPlayers by remember { mutableIntStateOf(2) }  // New: number of players (2-8)
+    var numPlayers by remember { mutableIntStateOf(GameConfig.numPlayers.coerceIn(2, 6)) }
     var botDifficulty by remember { mutableStateOf(GameConfig.botDifficulty) }
 
     Column(
@@ -158,6 +159,7 @@ fun GameSetupScreen(
                             this.player2ColorIndex = 1
                         }
                     }
+                    GameConfig.save(context)
                     onStartGame()
                 },
                 modifier = Modifier.weight(2f),

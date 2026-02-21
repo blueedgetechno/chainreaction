@@ -86,12 +86,12 @@ fun HowToPlayScreen(
                         InstructionItem(
                             emoji = "🎯",
                             title = "Objective",
-                            description = "Capture all squares on the grid to win the game!"
+                            description = "Capture all opponents cells on the grid to win the game!"
                         )
                         InstructionItem(
                             emoji = "👆",
                             title = "Place Dots",
-                            description = "Tap on empty cells or your own cells to add dots."
+                            description = "Tap on empty cell (on first move) or your own cells to add dots."
                         )
                         InstructionItem(
                             emoji = "💥",
@@ -141,7 +141,7 @@ private fun InstructionItem(
 ) {
     Column {
         Text(
-            text = "$emoji  $title",
+            text = "$title",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary

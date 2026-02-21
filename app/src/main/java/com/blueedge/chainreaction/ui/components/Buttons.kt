@@ -44,8 +44,8 @@ import androidx.compose.ui.unit.sp
 fun Raised3DButton(
     text: String,
     onClick: () -> Unit,
-    mainColor: Color,
-    shadowColor: Color,
+    mainColor: Color = Color(0xFFE8E8E8),
+    shadowColor: Color = Color(0xFFBBBBBB),
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     topText: String = "",
