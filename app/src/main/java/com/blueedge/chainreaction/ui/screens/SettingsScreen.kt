@@ -54,6 +54,7 @@ import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.data.AppFont
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.ui.components.Raised3DButton
+import com.blueedge.chainreaction.ui.components.SmallRaised3DButton
 
 @Composable
 fun SettingsScreen(
@@ -263,17 +264,13 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text(
+                    SmallRaised3DButton(
                         text = "Terms of Service",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { }
+                        onClick = { }
                     )
-                    Text(
+                    SmallRaised3DButton(
                         text = "Privacy Policy",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { }
+                        onClick = { }
                     )
                 }
 

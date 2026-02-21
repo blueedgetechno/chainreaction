@@ -1,9 +1,11 @@
 package com.blueedge.chainreaction.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,10 +14,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,12 +27,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.ui.components.Raised3DButton
+import com.blueedge.chainreaction.ui.components.SmallRaised3DButton
+
 @Composable
 fun MainMenuScreen(
     onLocalMultiplayer: () -> Unit,
@@ -37,26 +47,38 @@ fun MainMenuScreen(
     onHowToPlay: () -> Unit
 ) {
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        MaterialTheme.colorScheme.background
-                    )
-                )
-            )
+            .background(Color(0xFFD4956B))
     ) {
-        // Settings icon top-right
+        val painter = painterResource(id = R.drawable.banner)
+        val imageAspectRatio = painter.intrinsicSize.width / painter.intrinsicSize.height
+        val imageDisplayHeight = with(LocalDensity.current) {
+            (maxWidth / imageAspectRatio)
+        }
+        val cardOverlap = 32.dp
+        val cardHeight = maxHeight - imageDisplayHeight + cardOverlap
+
+        // Banner image at the top — sized to fit width
+        Image(
+            painter = painter,
+            contentDescription = "Chain Reaction Banner",
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+        )
+
+        // Settings icon top-right (above the card)
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 48.dp, end = 20.dp)
                 .size(44.dp)
+                .shadow(elevation = 6.dp, shape = CircleShape)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                .background(MaterialTheme.colorScheme.surface)
                 .clickable { onSettings() },
             contentAlignment = Alignment.Center
         ) {
@@ -68,10 +90,15 @@ fun MainMenuScreen(
             )
         }
 
+        // White card with rounded top corners — height = screen - image + overlap
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
+                .fillMaxWidth()
+                .height(cardHeight)
+                .align(Alignment.BottomCenter)
+                .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
+                .background(Color.White)
+                .padding(horizontal = 24.dp, vertical = 36.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -91,26 +118,20 @@ fun MainMenuScreen(
                 letterSpacing = 2.sp
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // How to Play button
-            Raised3DButton(
+            SmallRaised3DButton(
                 text = "HOW TO PLAY",
                 onClick = onHowToPlay,
-                mainColor = Color(0xFFD4956B),
-                shadowColor = Color(0xFFB07A52),
-                modifier = Modifier.fillMaxWidth()
+                icon = Icons.Default.SportsEsports
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Description removed (moved to How to Play page)
-
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Local Multiplayer button
             Raised3DButton(
-                text = "FRIEND",
+                text = "FRIENDS",
                 topText = "PLAY VS.",
                 onClick = onLocalMultiplayer,
                 mainColor = MaterialTheme.colorScheme.primary,
@@ -131,6 +152,8 @@ fun MainMenuScreen(
                 modifier = Modifier.fillMaxWidth(),
                 icon = Icons.Default.SmartToy
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

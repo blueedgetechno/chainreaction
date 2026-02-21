@@ -138,3 +138,90 @@ fun Raised3DButton(
         }
     }
 }
+
+/**
+ * A compact raised 3D button for secondary actions (e.g. "How to Play", "Terms", "Privacy Policy").
+ * Uses the same shadow-layer + press-animation pattern as [Raised3DButton].
+ */
+@Composable
+fun SmallRaised3DButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    mainColor: Color = Color(0xFFE8E8E8),
+    shadowColor: Color = Color(0xFFBBBBBB),
+    textColor: Color = Color(0xFF5A5A5A),
+    icon: ImageVector? = null,
+    iconTint: Color = textColor
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val shadowHeight = 4.dp
+    val yOffset by animateDpAsState(
+        targetValue = if (isPressed) shadowHeight else 0.dp,
+        animationSpec = tween(durationMillis = 80),
+        label = "smallButtonPress"
+    )
+    val cornerRadius = 12.dp
+    val buttonHeight = 40.dp
+    val totalHeight = buttonHeight + shadowHeight
+
+    Box(
+        modifier = modifier
+            .height(totalHeight)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        // Shadow layer
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .height(buttonHeight)
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(shadowColor)
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Spacer(modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.Transparent
+            )
+        }
+        // Main layer
+        Row(
+            modifier = Modifier
+                .height(buttonHeight)
+                .offset(y = yOffset)
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(mainColor)
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            )
+        }
+    }
+}
