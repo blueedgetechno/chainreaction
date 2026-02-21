@@ -16,7 +16,6 @@ import com.blueedge.chainreaction.ui.screens.GameBoardScreen
 import com.blueedge.chainreaction.ui.screens.GameEndScreen
 import com.blueedge.chainreaction.ui.screens.GameSetupScreen
 import com.blueedge.chainreaction.ui.screens.HowToPlayScreen
-import com.blueedge.chainreaction.ui.screens.InGameSettingsScreen
 import com.blueedge.chainreaction.ui.screens.MainMenuScreen
 import com.blueedge.chainreaction.ui.screens.SettingsScreen
 
@@ -143,7 +142,9 @@ fun ChainReactionNavGraph(navController: NavHostController) {
             popEnterTransition = { popEnterTransition },
             popExitTransition = { popExitTransition }
         ) {
-            InGameSettingsScreen(
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                isInGame = true,
                 onHowToPlay = {
                     navController.navigate(Routes.IN_GAME_HOW_TO_PLAY)
                 },
@@ -153,9 +154,6 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                 },
                 onExitToMenu = {
                     navController.popBackStack(Routes.MAIN_MENU, inclusive = false)
-                },
-                onBack = {
-                    navController.popBackStack()
                 }
             )
         }

@@ -165,9 +165,21 @@ fun GridCell(
 ) {
     // Always use light cell color (forced light mode)
     val baseColor = CellEmptyLight
-    // If cell is owned by the current player, tint with a very faint hint of their color
+    // If cell is owned by the current player, use a brighter, less saturated version of their color
     val targetColor = if (!cellState.isEmpty && isCurrentPlayer) {
-        androidx.compose.ui.graphics.lerp(baseColor, currentPlayerColor, 0.08f)
+        val hsl = FloatArray(3)
+        android.graphics.Color.colorToHSV(
+            android.graphics.Color.argb(
+                (currentPlayerColor.alpha * 255).toInt(),
+                (currentPlayerColor.red * 255).toInt(),
+                (currentPlayerColor.green * 255).toInt(),
+                (currentPlayerColor.blue * 255).toInt()
+            ),
+            hsl
+        )
+        hsl[1] = (hsl[1] * 0.42f).coerceIn(0f, 1f)  // reduce saturation
+        hsl[2] = (hsl[2] + (1f - hsl[2]) * 0.75f).coerceIn(0f, 1f)  // push brightness up
+        Color(android.graphics.Color.HSVToColor(hsl))
     } else {
         baseColor
     }

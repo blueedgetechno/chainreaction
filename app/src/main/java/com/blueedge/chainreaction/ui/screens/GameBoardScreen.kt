@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blueedge.chainreaction.data.GameStatus
 import com.blueedge.chainreaction.ui.components.GameGrid
+import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.game.GameViewModel
 import com.blueedge.chainreaction.ui.theme.PlayerColors
 import kotlin.math.sqrt
@@ -121,7 +122,11 @@ fun GameBoardScreen(
                 .padding(top = 8.dp, end = 12.dp)
                 .size(40.dp)
                 .background(Color.White.copy(alpha = 0.85f), CircleShape)
-                .clickable { onOpenSettings() },
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { onOpenSettings() }
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -212,7 +217,7 @@ fun GameBoardScreen(
                 Spacer(modifier = Modifier.height(40.dp))
 
                 // Play Again button
-                VictoryRaisedButton(
+                Raised3DButton(
                     text = "Play Again",
                     mainColor = Color.White.copy(alpha = 0.98f),
                     shadowColor = Color.Black.copy(alpha = 0.25f),
@@ -232,7 +237,7 @@ fun GameBoardScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Stats button
-                VictoryRaisedButton(
+                Raised3DButton(
                     text = "View Stats",
                     mainColor = Color.White.copy(alpha = 0.5f),
                     shadowColor = Color.Black.copy(alpha = 0.25f),
@@ -252,7 +257,7 @@ fun GameBoardScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Menu button
-                VictoryRaisedButton(
+                Raised3DButton(
                     text = "Menu",
                     mainColor = Color.White.copy(alpha = 0.3f),
                     shadowColor = Color.Black.copy(alpha = 0.25f),
@@ -391,62 +396,6 @@ fun GameBoardScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-/**
- * A 3D raised button used on the victory overlay.
- */
-@Composable
-private fun VictoryRaisedButton(
-    text: String,
-    mainColor: Color,
-    shadowColor: Color,
-    textColor: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val shadowHeight = 6.dp
-    val yOffset by animateDpAsState(
-        targetValue = if (isPressed) shadowHeight else 0.dp,
-        animationSpec = tween(durationMillis = 80),
-        label = "victoryButtonPress"
-    )
-
-    Box(modifier = modifier.height(76.dp)) {
-        // Shadow layer (static, always at bottom)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .offset(y = shadowHeight)
-                .clip(RoundedCornerShape(20.dp))
-                .background(shadowColor)
-        )
-        // Main button layer (moves down on press)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .offset(y = yOffset)
-                .clip(RoundedCornerShape(20.dp))
-                .background(mainColor)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 24.sp,
-                color = textColor
-            )
         }
     }
 }

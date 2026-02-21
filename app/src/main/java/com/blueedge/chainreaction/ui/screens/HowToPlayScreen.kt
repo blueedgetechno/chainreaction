@@ -1,11 +1,6 @@
 package com.blueedge.chainreaction.ui.screens
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +16,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.blueedge.chainreaction.ui.components.Raised3DButton
 
 @Composable
 fun HowToPlayScreen(
@@ -127,9 +120,11 @@ fun HowToPlayScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Back button
-            HowToPlayButton(
+            Raised3DButton(
                 text = "Got it!",
                 onClick = onBack,
+                mainColor = Color(0xFF41AFD4),
+                shadowColor = Color(0xFF2E8DAD),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -161,57 +156,4 @@ private fun InstructionItem(
     }
 }
 
-@Composable
-private fun HowToPlayButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val shadowHeight = 6.dp
-    val yOffset by animateDpAsState(
-        targetValue = if (isPressed) shadowHeight else 0.dp,
-        animationSpec = tween(durationMillis = 80),
-        label = "buttonPress"
-    )
 
-    Box(
-        modifier = modifier
-            .height(66.dp)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        // Shadow / bottom layer
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .align(Alignment.BottomCenter)
-                .clip(RoundedCornerShape(18.dp))
-                .background(Color(0xFF2E8DAD))
-        )
-
-        // Main button layer
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .offset(y = yOffset)
-                .clip(RoundedCornerShape(18.dp))
-                .background(Color(0xFF41AFD4)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-    }
-}

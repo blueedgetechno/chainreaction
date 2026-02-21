@@ -11,8 +11,8 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 // Player colors
-val GameBlue = Color(0xFF58BFEA)
-val GameRed = Color(0xFFEA695E)
+val GameBlue = Color(0xFF5CC0EB)
+val GameRed = Color(0xFFEB685C)
 val GameGreen = Color(0xFF4CAF50)
 val GameOrange = Color(0xFFFF9800)
 val GamePurple = Color(0xFF9C27B0)

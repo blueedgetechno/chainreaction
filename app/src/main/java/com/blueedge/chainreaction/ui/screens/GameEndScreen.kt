@@ -1,11 +1,6 @@
 package com.blueedge.chainreaction.ui.screens
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +17,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,10 +24,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blueedge.chainreaction.data.GameConfig
+import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.theme.PlayerColors
 
 @Composable
@@ -91,15 +84,25 @@ fun GameEndScreen(
 
             Spacer(Modifier.height(36.dp))
 
-            // Stats card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+            // Stats card with shadow
+            Box(modifier = Modifier.fillMaxWidth()) {
+                // Shadow layer
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .offset(y = 5.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFFD0D0D0))
                 )
-            ) {
+                // Main card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -137,6 +140,7 @@ fun GameEndScreen(
                         )
                     }
                 }
+                }
             }
 
             Spacer(Modifier.height(40.dp))
@@ -145,8 +149,8 @@ fun GameEndScreen(
             Raised3DButton(
                 text = "Play Again",
                 onClick = onPlayAgain,
-                mainColor = winnerColor,
-                shadowColor = winnerColor.copy(alpha = 0.65f),
+                mainColor = Color(0xFF41AFD4),
+                shadowColor = Color(0xFF2E8DAD),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -164,60 +168,7 @@ fun GameEndScreen(
     }
 }
 
-@Composable
-private fun Raised3DButton(
-    text: String,
-    onClick: () -> Unit,
-    mainColor: Color,
-    shadowColor: Color,
-    modifier: Modifier = Modifier,
-    shadowHeight: Dp = 6.dp
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val yOffset by animateDpAsState(
-        targetValue = if (isPressed) shadowHeight else 0.dp,
-        animationSpec = tween(durationMillis = 80),
-        label = "buttonPress"
-    )
 
-    Box(
-        modifier = modifier.height(66.dp),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        // Shadow layer
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .align(Alignment.BottomCenter)
-                .clip(RoundedCornerShape(18.dp))
-                .background(shadowColor)
-        )
-        // Main button layer
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .offset(y = yOffset)
-                .clip(RoundedCornerShape(18.dp))
-                .background(mainColor)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-    }
-}
 
 @Composable
 private fun StatRow(label: String, value: String) {
