@@ -3,7 +3,10 @@ name: Build & Distribute to Firebase
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [
+      main,
+      'feat/*'
+    ]
 
 jobs:
   build:

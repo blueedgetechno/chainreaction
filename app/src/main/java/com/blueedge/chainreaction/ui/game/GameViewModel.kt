@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blueedge.chainreaction.ai.BotStrategy
 import com.blueedge.chainreaction.ai.createBot
+import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
@@ -71,6 +72,9 @@ class GameViewModel : ViewModel() {
 
         _state.update { it.copy(isAnimating = true, lastMovedCell = Pair(row, col)) }
 
+        // Play bop sound on cell tap
+        SoundManager.playBop()
+
         // Execute the move in the game engine
         val (newBoard, explosionWaveData) = engine.executeMove(currentState.board, row, col, playerId, isFirstMove)
 
@@ -91,6 +95,9 @@ class GameViewModel : ViewModel() {
         for (waveData in explosionWaveData) {
             // Pause before each split to show the 4-dot state
             delay(200)
+
+            // Play pop sound for each explosion wave
+            SoundManager.playPop()
 
             // Phase 1: Show board with exploding cells emptied (cells disappear)
             _state.update {
