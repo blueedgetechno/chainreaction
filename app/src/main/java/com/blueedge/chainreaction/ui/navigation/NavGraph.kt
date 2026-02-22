@@ -126,6 +126,10 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                         popUpTo(Routes.MAIN_MENU)
                     }
                 },
+                onPlayAgain = {
+                    navController.popBackStack(Routes.GAME, inclusive = true)
+                    navController.navigate(Routes.GAME)
+                },
                 onExit = {
                     navController.popBackStack(Routes.MAIN_MENU, inclusive = false)
                 },

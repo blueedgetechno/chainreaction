@@ -66,6 +66,7 @@ import kotlin.math.sqrt
 @Composable
 fun GameBoardScreen(
     onGameEnd: (winnerId: Int, capturedCells: Int, moves: Int, duration: Long) -> Unit,
+    onPlayAgain: () -> Unit,
     onExit: () -> Unit,
     onOpenSettings: () -> Unit,
     viewModel: GameViewModel = viewModel()
@@ -265,14 +266,7 @@ fun GameBoardScreen(
                     mainColor = Color.White,
                     shadowColor = Color(0xFFDDDDDD),
                     textColor = winnerColor,
-                    onClick = {
-                        onGameEnd(
-                            state.winnerId,
-                            state.capturedCells,
-                            state.moveCount,
-                            viewModel.getGameDurationSeconds()
-                        )
-                    },
+                    onClick = { onPlayAgain() },
                     modifier = Modifier.fillMaxWidth()
                 )
 
