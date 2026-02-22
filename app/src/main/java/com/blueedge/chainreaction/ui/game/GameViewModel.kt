@@ -96,8 +96,9 @@ class GameViewModel : ViewModel() {
             // Pause before each split to show the 4-dot state
             delay(200)
 
-            // Play pop sound for each explosion wave
+            // Play pop sound and vibrate for each explosion wave
             SoundManager.playPop()
+            SoundManager.vibrate()
 
             // Phase 1: Show board with exploding cells emptied (cells disappear)
             _state.update {

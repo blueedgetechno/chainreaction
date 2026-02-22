@@ -23,4 +23,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        SoundManager.resumeMusic()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        SoundManager.pauseMusic()
+        GameConfig.save(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        SoundManager.release()
+    }
 }

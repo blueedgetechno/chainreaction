@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.blueedge.chainreaction.audio.SoundManager
 
 /**
  * A raised 3D button used throughout the app.
@@ -71,7 +72,10 @@ fun Raised3DButton(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = onClick
+                onClick = {
+                    SoundManager.playBop()
+                    onClick()
+                }
             ),
         contentAlignment = Alignment.TopCenter
     ) {
@@ -172,7 +176,10 @@ fun SmallRaised3DButton(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = onClick
+                onClick = {
+                    SoundManager.playBop()
+                    onClick()
+                }
             ),
         contentAlignment = Alignment.TopCenter
     ) {
