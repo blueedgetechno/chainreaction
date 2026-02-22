@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blueedge.chainreaction.R
+import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.AppFont
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.ui.components.Raised3DButton
@@ -105,7 +106,10 @@ fun SettingsScreen(
                     iconDisabled = Icons.Rounded.MusicOff,
                     label = "Music",
                     enabled = GameConfig.musicEnabled,
-                    onToggle = { GameConfig.musicEnabled = !GameConfig.musicEnabled }
+                    onToggle = {
+                        GameConfig.musicEnabled = !GameConfig.musicEnabled
+                        SoundManager.onMusicToggled()
+                    }
                 )
                 SoundToggleButton(
                     iconEnabled = Icons.Rounded.VolumeUp,

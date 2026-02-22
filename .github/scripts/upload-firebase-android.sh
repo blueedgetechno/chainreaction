@@ -6,6 +6,6 @@ npm install -g firebase-tools
 firebase appdistribution:distribute app-release.apk \
   --app "$ANDROID_APP_ID" \
   --token "$FIREBASE_TOKEN" \
-  --release-notes "Automated build from GitHub Actions" \
+  --release-notes "$RELEASE_NOTES" \
   --groups "phase1"
 echo "✅ Upload complete."
