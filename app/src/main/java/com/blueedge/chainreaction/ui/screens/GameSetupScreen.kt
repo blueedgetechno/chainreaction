@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.Card
@@ -71,7 +72,8 @@ import com.blueedge.chainreaction.utils.Constants
 fun GameSetupScreen(
     gameMode: GameMode,
     onStartGame: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onHowToPlay: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var localGridSize by remember { mutableIntStateOf(GameConfig.gridSize) }
@@ -122,7 +124,28 @@ fun GameSetupScreen(
         SectionCard(
             title = "Mode:",
             animatedValue = gameVariant.name.lowercase().replaceFirstChar { it.uppercase() },
-            valueColor = if (gameVariant == GameVariant.SIMPLE) MaterialTheme.colorScheme.primary else Color(0xFFE09B40)
+            valueColor = if (gameVariant == GameVariant.SIMPLE) MaterialTheme.colorScheme.primary else Color(0xFFE09B40),
+            trailingAction = {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onHowToPlay
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = "How to play",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         ) {
             val simpleColor = MaterialTheme.colorScheme.primary
             val classicColor = Color(0xFFE09B40)
@@ -289,6 +312,7 @@ private fun SectionCard(
     title: String,
     animatedValue: String,
     valueColor: Color = MaterialTheme.colorScheme.primary,
+    trailingAction: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val shadowOffset = 5.dp
@@ -314,7 +338,10 @@ private fun SectionCard(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 // Animated "Title: Value" header
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge,
@@ -338,6 +365,10 @@ private fun SectionCard(
                             fontWeight = FontWeight.Bold,
                             color = valueColor
                         )
+                    }
+                    if (trailingAction != null) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        trailingAction()
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))

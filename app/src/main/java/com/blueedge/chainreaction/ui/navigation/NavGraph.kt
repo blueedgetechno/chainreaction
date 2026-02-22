@@ -28,6 +28,7 @@ object Routes {
     const val HOW_TO_PLAY = "how_to_play"
     const val IN_GAME_SETTINGS = "in_game_settings"
     const val IN_GAME_HOW_TO_PLAY = "in_game_how_to_play"
+    const val SETUP_HOW_TO_PLAY = "setup_how_to_play"
 
     fun gameSetup(mode: String) = "game_setup/$mode"
     fun gameEnd(winnerId: Int, capturedCells: Int, moves: Int, duration: Long) =
@@ -107,8 +108,21 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                         popUpTo(Routes.MAIN_MENU)
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onHowToPlay = {
+                    navController.navigate(Routes.SETUP_HOW_TO_PLAY)
+                }
             )
+        }
+
+        composable(
+            Routes.SETUP_HOW_TO_PLAY,
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
+        ) {
+            HowToPlayScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
