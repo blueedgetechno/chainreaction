@@ -33,10 +33,17 @@ class GameEngineTest {
     }
 
     @Test
-    fun `isValidMove on empty cell returns true for any player`() {
+    fun `isValidMove on empty cell returns true for first move`() {
         val board = engine.createEmptyBoard(5)
-        assertTrue(engine.isValidMove(board, 0, 0, 1))
-        assertTrue(engine.isValidMove(board, 0, 0, 2))
+        assertTrue(engine.isValidMove(board, 0, 0, 1, isFirstMove = true))
+        assertTrue(engine.isValidMove(board, 0, 0, 2, isFirstMove = true))
+    }
+
+    @Test
+    fun `isValidMove on empty cell returns false for non-first move in simple mode`() {
+        val board = engine.createEmptyBoard(5)
+        assertFalse(engine.isValidMove(board, 0, 0, 1, isFirstMove = false))
+        assertFalse(engine.isValidMove(board, 0, 0, 2, isFirstMove = false))
     }
 
     @Test
@@ -234,7 +241,7 @@ class GameEngineTest {
     }
 
     @Test
-    fun `getValidMoves returns all valid cells for player`() {
+    fun `getValidMoves returns only owned cells for player in simple mode`() {
         val board = engine.createEmptyBoard(3).toMutableList().apply {
             this[0] = this[0].toMutableList().apply {
                 this[0] = CellState(ownerId = 1, dots = 1)
@@ -244,10 +251,44 @@ class GameEngineTest {
             }
         }
         val moves = engine.getValidMoves(board, 1)
-        // Player 1 can click: own cell (0,0) + all empty cells (8-1=7 empty)
-        // Cannot click player 2's cell (1,1)
-        assertEquals(8, moves.size) // 1 owned + 7 empty = 8
+        // Simple mode (non-first move): Player 1 can only click own cell (0,0)
+        assertEquals(1, moves.size)
+        assertTrue(moves.any { it.row == 0 && it.col == 0 })
         assertFalse(moves.any { it.row == 1 && it.col == 1 })
+    }
+
+    @Test
+    fun `getValidMoves returns owned and empty cells in classic mode`() {
+        val classicEngine = GameEngine(com.blueedge.chainreaction.data.GameVariant.CLASSIC)
+        val board = classicEngine.createEmptyBoard(3).toMutableList().apply {
+            this[0] = this[0].toMutableList().apply {
+                this[0] = CellState(ownerId = 1, dots = 1)
+            }
+            this[1] = this[1].toMutableList().apply {
+                this[1] = CellState(ownerId = 2, dots = 1)
+            }
+        }
+        val moves = classicEngine.getValidMoves(board, 1)
+        // Classic mode: Player 1 can click own cell (0,0) + all 7 empty cells = 8
+        assertEquals(8, moves.size)
+        assertFalse(moves.any { it.row == 1 && it.col == 1 })
+    }
+
+    @Test
+    fun `simple mode first move places 3 dots`() {
+        val board = engine.createEmptyBoard(5)
+        val (newBoard, _) = engine.executeMove(board, 2, 2, 1, isFirstMove = true)
+        assertEquals(3, newBoard[2][2].dots)
+        assertEquals(1, newBoard[2][2].ownerId)
+    }
+
+    @Test
+    fun `classic mode first move places 1 dot`() {
+        val classicEngine = GameEngine(com.blueedge.chainreaction.data.GameVariant.CLASSIC)
+        val board = classicEngine.createEmptyBoard(5)
+        val (newBoard, _) = classicEngine.executeMove(board, 2, 2, 1, isFirstMove = true)
+        assertEquals(1, newBoard[2][2].dots)
+        assertEquals(1, newBoard[2][2].ownerId)
     }
 
     @Test

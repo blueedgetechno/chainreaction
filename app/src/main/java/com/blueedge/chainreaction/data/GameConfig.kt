@@ -15,6 +15,7 @@ enum class AppFont(val displayName: String) {
 
 object GameConfig {
     var gameMode: GameMode = GameMode.LOCAL_MULTIPLAYER
+    var gameVariant: GameVariant = GameVariant.SIMPLE
     var gridSize: Int = 6
     var numPlayers: Int = 2
     var player1Name: String = "Player 1"
@@ -35,6 +36,9 @@ object GameConfig {
         gameMode = try {
             GameMode.valueOf(prefs.getString("gameMode", gameMode.name)!!)
         } catch (_: Exception) { gameMode }
+        gameVariant = try {
+            GameVariant.valueOf(prefs.getString("gameVariant", gameVariant.name)!!)
+        } catch (_: Exception) { gameVariant }
         gridSize = prefs.getInt("gridSize", gridSize)
         numPlayers = prefs.getInt("numPlayers", numPlayers)
         botDifficulty = try {
@@ -52,6 +56,7 @@ object GameConfig {
     fun save(context: Context) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().apply {
             putString("gameMode", gameMode.name)
+            putString("gameVariant", gameVariant.name)
             putInt("gridSize", gridSize)
             putInt("numPlayers", numPlayers)
             putString("botDifficulty", botDifficulty.name)

@@ -27,6 +27,12 @@ fun DotCircle(
         Animatable(if (needsAnimation) 0f else 1f)
     }
 
+    // Separate fade-in alpha for 0→1 transition (dot appearing on empty cell)
+    val isFadeIn = previousDots == 0 && dotCount > 0
+    val fadeAlpha = remember(dotCount, previousDots) {
+        Animatable(if (isFadeIn) 0f else 1f)
+    }
+
     LaunchedEffect(dotCount) {
         if (needsAnimation) {
             animProgress.animateTo(
@@ -36,7 +42,17 @@ fun DotCircle(
         }
     }
 
+    LaunchedEffect(dotCount, previousDots) {
+        if (isFadeIn) {
+            fadeAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 250)
+            )
+        }
+    }
+
     val progress = animProgress.value
+    val alpha = fadeAlpha.value
 
     Canvas(
         modifier = modifier
@@ -52,7 +68,7 @@ fun DotCircle(
             center = center
         )
 
-        // Draw white dots with animated positions
+        // Draw white dots with animated positions (fade-in for 0→N)
         val dotRadius = circleRadius * 0.2f
         val spread = circleRadius * 0.45f
         val animatedPositions = getAnimatedDotPositions(
@@ -65,7 +81,7 @@ fun DotCircle(
 
         for (pos in animatedPositions) {
             drawCircle(
-                color = Color.White,
+                color = Color.White.copy(alpha = alpha),
                 radius = dotRadius,
                 center = pos
             )
@@ -81,6 +97,7 @@ fun DotCircle(
  * - 1→2: One dot splits from center into two horizontal positions
  * - 2→3: Third dot emerges from center of two, moves up; existing two slide down to form triangle
  * - 3→4: Fourth dot copies from top position, 3rd and 4th repel horizontally to form square top edge
+ * - 4→5: Fifth dot appears at center between the four square-corner dots
  * - 0→3 (first move): Dots appear from center and spread to triangle positions
  */
 private fun getAnimatedDotPositions(
@@ -177,6 +194,24 @@ private fun getAnimatedDotPositions(
             listOf(dot1, dot2, dot3, dot4)
         }
 
+        // 4→5: Fifth dot appears at center from between the four square corners
+        previousCount == 4 && targetCount == 5 -> {
+            val prevPositions = getDotPositions(4, center, spread)
+            // Four corner dots stay in place
+            val corners = prevPositions.mapIndexed { i, prev ->
+                Offset(
+                    x = prev.x + (target[i].x - prev.x) * progress,
+                    y = prev.y + (target[i].y - prev.y) * progress
+                )
+            }
+            // Fifth dot emerges from center
+            val dot5 = Offset(
+                x = center.x + (target[4].x - center.x) * progress,
+                y = center.y + (target[4].y - center.y) * progress
+            )
+            corners + dot5
+        }
+
         // Default: just show target positions
         else -> target
     }
@@ -194,11 +229,18 @@ private fun getDotPositions(count: Int, center: Offset, spread: Float): List<Off
             Offset(center.x + spread * 0.85f, center.y + spread * 0.55f),
             Offset(center.x, center.y - spread * 0.8f)
         )
-        else -> listOf(
+        4 -> listOf(
             Offset(center.x - spread * 0.85f, center.y - spread * 0.85f),
             Offset(center.x + spread * 0.85f, center.y - spread * 0.85f),
             Offset(center.x - spread * 0.85f, center.y + spread * 0.85f),
             Offset(center.x + spread * 0.85f, center.y + spread * 0.85f)
+        )
+        else -> listOf(  // 5+ dots: four corners + center
+            Offset(center.x - spread * 0.85f, center.y - spread * 0.85f),
+            Offset(center.x + spread * 0.85f, center.y - spread * 0.85f),
+            Offset(center.x - spread * 0.85f, center.y + spread * 0.85f),
+            Offset(center.x + spread * 0.85f, center.y + spread * 0.85f),
+            center  // center dot
         )
     }
 }

@@ -56,7 +56,7 @@ fun MainMenuScreen(
             (maxWidth / imageAspectRatio)
         }
         val cardOverlap = 32.dp
-        val cardHeight = maxHeight - imageDisplayHeight + cardOverlap
+        val cardHeight = (maxHeight - imageDisplayHeight + cardOverlap).coerceAtLeast(0.dp)
 
         // Banner image at the top — sized to fit width
         Image(

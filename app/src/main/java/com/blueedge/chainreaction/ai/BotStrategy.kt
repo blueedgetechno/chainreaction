@@ -2,6 +2,7 @@ package com.blueedge.chainreaction.ai
 
 import com.blueedge.chainreaction.data.BotDifficulty
 import com.blueedge.chainreaction.data.CellState
+import com.blueedge.chainreaction.data.GameVariant
 import com.blueedge.chainreaction.data.Move
 import com.blueedge.chainreaction.domain.GameEngine
 import kotlinx.coroutines.delay
@@ -242,7 +243,7 @@ class HardBot : BotStrategy {
     }
 }
 
-fun createBot(difficulty: BotDifficulty): BotStrategy {
+fun createBot(difficulty: BotDifficulty, variant: GameVariant = GameVariant.SIMPLE): BotStrategy {
     return when (difficulty) {
         BotDifficulty.EASY -> EasyBot()
         BotDifficulty.MEDIUM -> MediumBot()

@@ -3,6 +3,9 @@ package com.blueedge.chainreaction.ui.screens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeIn
@@ -10,6 +13,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +24,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -46,12 +52,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blueedge.chainreaction.data.BotDifficulty
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
+import com.blueedge.chainreaction.data.GameVariant
 import com.blueedge.chainreaction.ui.components.CustomSlider
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.theme.PlayerColors
@@ -69,6 +77,7 @@ fun GameSetupScreen(
     var localGridSize by remember { mutableIntStateOf(GameConfig.gridSize) }
     var numPlayers by remember { mutableIntStateOf(GameConfig.numPlayers.coerceIn(2, 6)) }
     var botDifficulty by remember { mutableStateOf(GameConfig.botDifficulty) }
+    var gameVariant by remember { mutableStateOf(GameConfig.gameVariant) }
 
     Column(
         modifier = Modifier
@@ -108,6 +117,79 @@ fun GameSetupScreen(
         }
 
         Spacer(modifier = Modifier.size(6.dp))
+
+        // Game Variant Tab Switch (Simple / Classic)
+        SectionCard(
+            title = "Mode:",
+            animatedValue = gameVariant.name.lowercase().replaceFirstChar { it.uppercase() },
+            valueColor = if (gameVariant == GameVariant.SIMPLE) MaterialTheme.colorScheme.primary else Color(0xFFE09B40)
+        ) {
+            val simpleColor = MaterialTheme.colorScheme.primary
+            val classicColor = Color(0xFFE09B40)
+            val isSimple = gameVariant == GameVariant.SIMPLE
+
+            // Animate pill position (0f = left/Simple, 1f = right/Classic)
+            val pillPosition by animateFloatAsState(
+                targetValue = if (isSimple) 0f else 1f,
+                animationSpec = tween(durationMillis = 300),
+                label = "pill_slide"
+            )
+            // Animate pill color
+            val pillColor by animateColorAsState(
+                targetValue = if (isSimple) simpleColor else classicColor,
+                animationSpec = tween(durationMillis = 300),
+                label = "pill_color"
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(4.dp)
+            ) {
+                // Sliding pill indicator
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .fillMaxHeight()
+                        .graphicsLayer {
+                            translationX = pillPosition * size.width
+                        }
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(pillColor)
+                )
+                // Text labels on top
+                Row(modifier = Modifier.fillMaxSize()) {
+                    GameVariant.entries.forEach { variant ->
+                        val textColor by animateColorAsState(
+                            targetValue = if (gameVariant == variant) Color.White
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                            animationSpec = tween(durationMillis = 300),
+                            label = "text_color_${variant.name}"
+                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) { gameVariant = variant },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = variant.name.lowercase()
+                                    .replaceFirstChar { it.uppercase() },
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         // Grid Size Section (shared by both modes)
         SectionCard(
@@ -172,6 +254,7 @@ fun GameSetupScreen(
                 onClick = {
                     GameConfig.apply {
                         this.gameMode = gameMode
+                        this.gameVariant = gameVariant
                         this.gridSize = localGridSize
                         if (gameMode == GameMode.VS_BOT) {
                             this.numPlayers = 2

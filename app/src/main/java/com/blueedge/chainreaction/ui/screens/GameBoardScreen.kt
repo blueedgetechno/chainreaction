@@ -49,7 +49,10 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
@@ -72,6 +75,16 @@ fun GameBoardScreen(
     viewModel: GameViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // Resume game when returning from settings (lifecycle becomes RESUMED)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            if (viewModel.state.value.isPaused) {
+                viewModel.resumeGame()
+            }
+        }
+    }
 
     val playerColors = state.players.map { player ->
         PlayerColors.getOrElse(player.colorIndex) { PlayerColors[player.id - 1] }
@@ -132,7 +145,10 @@ fun GameBoardScreen(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = { onOpenSettings() }
+                    onClick = {
+                        viewModel.pauseGame()
+                        onOpenSettings()
+                    }
                 ),
             contentAlignment = Alignment.Center
         ) {

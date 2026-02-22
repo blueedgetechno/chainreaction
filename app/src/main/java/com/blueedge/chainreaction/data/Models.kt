@@ -5,6 +5,11 @@ enum class GameMode {
     VS_BOT
 }
 
+enum class GameVariant {
+    SIMPLE,
+    CLASSIC
+}
+
 enum class BotDifficulty {
     EASY,
     MEDIUM,
@@ -45,8 +50,6 @@ data class ExplosionWaveData(
 
 enum class GameStatus {
     IN_PROGRESS,
-    PLAYER1_WINS,
-    PLAYER2_WINS,
     GAME_OVER
 }
 
@@ -54,8 +57,6 @@ data class GameUiState(
     val board: List<List<CellState>> = emptyList(),
     val gridSize: Int = 6,
     val currentPlayerId: Int = 1,
-    val player1: PlayerInfo = PlayerInfo(1, "Player 1", 0),
-    val player2: PlayerInfo = PlayerInfo(2, "Player 2", 1),
     val players: List<PlayerInfo> = listOf(PlayerInfo(1, "Player 1", 0), PlayerInfo(2, "Player 2", 1)),
     val numPlayers: Int = 2,
     val capturedCells: Int = 0,
@@ -69,6 +70,8 @@ data class GameUiState(
     val explodingCells: Set<Pair<Int, Int>> = emptySet(),
     val explosionMoves: List<ExplosionMove> = emptyList(),
     val lastMovedCell: Pair<Int, Int>? = null,
+    val isPaused: Boolean = false,
     val gameMode: GameMode = GameMode.LOCAL_MULTIPLAYER,
+    val gameVariant: GameVariant = GameVariant.SIMPLE,
     val botDifficulty: BotDifficulty = BotDifficulty.MEDIUM
 )

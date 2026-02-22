@@ -1,9 +1,12 @@
 package com.blueedge.chainreaction.ui.screens
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.AppFont
@@ -79,6 +84,9 @@ fun SettingsScreen(
                 )
             )
     ) {
+        var showRestartConfirmation by remember { mutableStateOf(false) }
+        var showExitConfirmation by remember { mutableStateOf(false) }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -189,7 +197,7 @@ fun SettingsScreen(
                             selectedValue = GameConfig.appFont.displayName,
                             options = AppFont.entries.map { it.displayName },
                             onSelected = { selected ->
-                                GameConfig.appFont = AppFont.entries.first { it.displayName == selected }
+                                GameConfig.appFont = AppFont.entries.firstOrNull { it.displayName == selected } ?: AppFont.DEFAULT
                             }
                         )
 
@@ -220,7 +228,7 @@ fun SettingsScreen(
                 onRestart?.let {
                     Raised3DButton(
                         text = "Restart Game",
-                        onClick = it,
+                        onClick = { showRestartConfirmation = true },
                         mainColor = Color(0xFF41AFD4),
                         shadowColor = Color(0xFF2E8DAD),
                         modifier = Modifier.fillMaxWidth()
@@ -231,7 +239,7 @@ fun SettingsScreen(
                 onExitToMenu?.let {
                     Raised3DButton(
                         text = "Exit to Menu",
-                        onClick = it,
+                        onClick = { showExitConfirmation = true },
                         mainColor = Color(0xFFEA695E),
                         shadowColor = Color(0xFFC55550),
                         modifier = Modifier.fillMaxWidth()
@@ -292,6 +300,38 @@ fun SettingsScreen(
             }
 
             Spacer(modifier = Modifier.height(28.dp))
+        }
+
+        // Restart confirmation dialog
+        if (showRestartConfirmation) {
+            SettingsConfirmationDialog(
+                title = "Restart Game?",
+                message = "Are you sure you want to restart? Your current game progress will be lost.",
+                confirmText = "Restart",
+                confirmColor = Color(0xFF41AFD4),
+                confirmShadowColor = Color(0xFF2E8DAD),
+                onConfirm = {
+                    showRestartConfirmation = false
+                    onRestart?.invoke()
+                },
+                onDismiss = { showRestartConfirmation = false }
+            )
+        }
+
+        // Exit to menu confirmation dialog
+        if (showExitConfirmation) {
+            SettingsConfirmationDialog(
+                title = "Exit to Menu?",
+                message = "Are you sure you want to exit? Your game progress will be lost.",
+                confirmText = "Exit",
+                confirmColor = Color(0xFFEA695E),
+                confirmShadowColor = Color(0xFFC55550),
+                onConfirm = {
+                    showExitConfirmation = false
+                    onExitToMenu?.invoke()
+                },
+                onDismiss = { showExitConfirmation = false }
+            )
         }
     }
 }
@@ -416,3 +456,133 @@ private fun SettingsDropdownRow(
     }
 }
 
+@Composable
+private fun SettingsConfirmationDialog(
+    title: String,
+    message: String,
+    confirmText: String,
+    confirmColor: Color,
+    confirmShadowColor: Color,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color.White)
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFF666666)
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Cancel button with shadow
+                    val cancelInteractionSource = remember { MutableInteractionSource() }
+                    val isCancelPressed by cancelInteractionSource.collectIsPressedAsState()
+                    val cancelShadowHeight = 4.dp
+                    val cancelYOffset by animateDpAsState(
+                        targetValue = if (isCancelPressed) cancelShadowHeight else 0.dp,
+                        animationSpec = tween(durationMillis = 80),
+                        label = "cancelPress"
+                    )
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .offset(y = cancelShadowHeight)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFB0B0B0))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .offset(y = cancelYOffset)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFE0E0E0))
+                                .clickable(
+                                    interactionSource = cancelInteractionSource,
+                                    indication = null,
+                                    onClick = onDismiss
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF333333)
+                            )
+                        }
+                    }
+
+                    // Confirm button with shadow
+                    val confirmInteractionSource = remember { MutableInteractionSource() }
+                    val isConfirmPressed by confirmInteractionSource.collectIsPressedAsState()
+                    val confirmShadowHeight = 4.dp
+                    val confirmYOffset by animateDpAsState(
+                        targetValue = if (isConfirmPressed) confirmShadowHeight else 0.dp,
+                        animationSpec = tween(durationMillis = 80),
+                        label = "confirmPress"
+                    )
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .offset(y = confirmShadowHeight)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(confirmShadowColor)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .offset(y = confirmYOffset)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(confirmColor)
+                                .clickable(
+                                    interactionSource = confirmInteractionSource,
+                                    indication = null,
+                                    onClick = onConfirm
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = confirmText,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

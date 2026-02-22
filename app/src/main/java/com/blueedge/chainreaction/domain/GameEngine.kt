@@ -3,12 +3,25 @@ package com.blueedge.chainreaction.domain
 import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.ExplosionMove
 import com.blueedge.chainreaction.data.ExplosionWaveData
+import com.blueedge.chainreaction.data.GameVariant
 import com.blueedge.chainreaction.data.Move
 
-class GameEngine {
+class GameEngine(private val variant: GameVariant = GameVariant.SIMPLE) {
 
     companion object {
         const val CRITICAL_MASS = 4
+    }
+
+    val isClassic: Boolean get() = variant == GameVariant.CLASSIC
+
+    /**
+     * Returns the critical mass for a cell at the given position.
+     * - Simple mode: always 4
+     * - Classic mode: equals number of orthogonal neighbors (corner=2, edge=3, interior=4)
+     */
+    fun getCriticalMass(row: Int, col: Int, rows: Int, cols: Int): Int {
+        if (!isClassic) return CRITICAL_MASS
+        return getNeighbors(row, col, rows, cols).size
     }
 
     fun isValidMove(
@@ -22,6 +35,8 @@ class GameEngine {
         val cell = board[row][col]
         return if (isFirstMove) {
             cell.isEmpty
+        } else if (isClassic) {
+            cell.isEmpty || cell.ownerId == playerId
         } else {
             cell.ownerId == playerId
         }
@@ -37,8 +52,9 @@ class GameEngine {
         val mutableBoard = board.map { it.toMutableList() }.toMutableList()
 
         if (isFirstMove) {
-            // First move places 3 dots
-            mutableBoard[row][col] = CellState(ownerId = playerId, dots = 3, previousDots = 0)
+            // First move: 3 dots in Simple, 1 dot in Classic
+            val firstMoveDots = if (isClassic) 1 else 3
+            mutableBoard[row][col] = CellState(ownerId = playerId, dots = firstMoveDots, previousDots = 0)
         } else {
             val currentCell = mutableBoard[row][col]
             mutableBoard[row][col] = CellState(ownerId = playerId, dots = currentCell.dots + 1, previousDots = currentCell.dots)
@@ -55,7 +71,9 @@ class GameEngine {
         playerId: Int,
         allWaveData: MutableList<ExplosionWaveData>
     ) {
-        val maxIterations = board.size * board[0].size * 4
+        val rows = board.size
+        val cols = board[0].size
+        val maxIterations = rows * cols * 4
         var iterations = 0
 
         while (iterations < maxIterations) {
@@ -64,7 +82,7 @@ class GameEngine {
             val explodingCells = mutableListOf<Move>()
             for (r in board.indices) {
                 for (c in board[r].indices) {
-                    if (board[r][c].dots >= CRITICAL_MASS) {
+                    if (board[r][c].dots >= getCriticalMass(r, c, rows, cols)) {
                         explodingCells.add(Move(r, c))
                     }
                 }
@@ -75,7 +93,7 @@ class GameEngine {
             // Build explosion move data for animation
             val waveMoves = mutableListOf<ExplosionMove>()
             for (cell in explodingCells) {
-                val neighbors = getNeighbors(cell.row, cell.col, board.size, board[0].size)
+                val neighbors = getNeighbors(cell.row, cell.col, rows, cols)
                 for (neighbor in neighbors) {
                     waveMoves.add(
                         ExplosionMove(
@@ -89,24 +107,38 @@ class GameEngine {
                 }
             }
 
-            // Step 1: Empty all exploding cells
+            // Step 1: Empty all exploding cells (leave remainder for classic mode)
             for (cell in explodingCells) {
-                board[cell.row][cell.col] = CellState(ownerId = 0, dots = 0)
+                val critMass = getCriticalMass(cell.row, cell.col, rows, cols)
+                val currentDots = board[cell.row][cell.col].dots
+                val remainingDots = if (isClassic) currentDots - critMass else 0
+                if (remainingDots > 0) {
+                    board[cell.row][cell.col] = CellState(ownerId = playerId, dots = remainingDots)
+                } else {
+                    board[cell.row][cell.col] = CellState(ownerId = 0, dots = 0)
+                }
             }
 
             // Snapshot board after emptying (before adding to neighbors)
             val boardBeforeSplit = board.map { it.toList() }
 
-            // Step 2: Add dots to neighbors of each exploding cell (cap at 4)
+            // Step 2: Add dots to neighbors of each exploding cell
             for (cell in explodingCells) {
-                val neighbors = getNeighbors(cell.row, cell.col, board.size, board[0].size)
+                val neighbors = getNeighbors(cell.row, cell.col, rows, cols)
                 for (neighbor in neighbors) {
                     val current = board[neighbor.row][neighbor.col]
-                    val newDots = minOf(current.dots + 1, CRITICAL_MASS)
+                    // Classic mode: allow dots to exceed critical mass (they'll explode next wave)
+                    // Simple mode: cap at CRITICAL_MASS
+                    val newDots = if (isClassic) {
+                        current.dots + 1
+                    } else {
+                        minOf(current.dots + 1, CRITICAL_MASS)
+                    }
                     board[neighbor.row][neighbor.col] = CellState(
                         ownerId = playerId,
                         dots = newDots,
-                        previousDots = current.dots
+                        // Use -1 for previously empty cells to signal "no fade-in" to DotCircle
+                        previousDots = if (current.dots == 0) -1 else current.dots
                     )
                 }
             }
