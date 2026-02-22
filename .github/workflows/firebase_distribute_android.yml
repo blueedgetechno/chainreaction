@@ -44,10 +44,10 @@ jobs:
       - name: 🔑 Decode Release Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
-      - name: 📝 Get Last 3 Commits
+      - name: 📝 Get Last 2 Commits
         id: get_commits
         run: |
-          COMMITS=$(git log -3 --pretty=format:"- %s")
+          COMMITS=$(git log -2 --pretty=format:"- %s")
           echo "Fetched commits:"
           echo "$COMMITS"
 
