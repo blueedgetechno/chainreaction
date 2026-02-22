@@ -30,6 +30,10 @@ val PlayerColorNames = listOf(
     "Purple", "Teal", "Pink", "Brown"
 )
 
+// Secondary action button colors
+val SecondaryActionColor = Color(0xFFD4956B)
+val SecondaryActionShadow = Color(0xFFB07A52)
+
 // Cell colors
 val CellEmptyLight = Color(0xFFFFF3E0)
 val CellEmptyDark = Color(0xFF3A3A3A)

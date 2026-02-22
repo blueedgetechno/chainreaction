@@ -30,6 +30,8 @@ import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.theme.PlayerColorNames
 import com.blueedge.chainreaction.ui.theme.PlayerColors
+import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
+import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 
 @Composable
 fun GameEndScreen(
@@ -159,8 +161,8 @@ fun GameEndScreen(
             Raised3DButton(
                 text = "Main Menu",
                 onClick = onMainMenu,
-                mainColor = Color(0xFFD4956B),
-                shadowColor = Color(0xFFB07A52),
+                mainColor = SecondaryActionColor,
+                shadowColor = SecondaryActionShadow,
                 textColor = Color.White,
                 modifier = Modifier.fillMaxWidth()
             )

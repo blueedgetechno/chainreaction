@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.blueedge.chainreaction.ui.components.Raised3DButton
+import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
+import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 
 @Composable
 fun HowToPlayScreen(
@@ -123,8 +125,8 @@ fun HowToPlayScreen(
             Raised3DButton(
                 text = "Got it!",
                 onClick = onBack,
-                mainColor = Color(0xFF41AFD4),
-                shadowColor = Color(0xFF2E8DAD),
+                mainColor = SecondaryActionColor,
+                shadowColor = SecondaryActionShadow,
                 modifier = Modifier.fillMaxWidth()
             )
 

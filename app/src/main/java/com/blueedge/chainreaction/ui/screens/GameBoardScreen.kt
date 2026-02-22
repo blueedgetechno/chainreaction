@@ -59,6 +59,8 @@ import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.game.GameViewModel
 import com.blueedge.chainreaction.ui.theme.PlayerColorNames
 import com.blueedge.chainreaction.ui.theme.PlayerColors
+import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
+import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 import kotlin.math.sqrt
 
 @Composable
@@ -280,8 +282,8 @@ fun GameBoardScreen(
                 Raised3DButton(
                     text = "Menu",
                     textColor = Color.White,
-                    mainColor = Color(0xFFD4956B),
-                    shadowColor = Color(0xFFB07A52),
+                    mainColor = SecondaryActionColor,
+                    shadowColor = SecondaryActionShadow,
                     onClick = { onExit() },
                     modifier = Modifier.fillMaxWidth()
                 )

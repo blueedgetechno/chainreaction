@@ -51,6 +51,8 @@ import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.ui.components.CustomSlider
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.theme.PlayerColors
+import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
+import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 import com.blueedge.chainreaction.utils.Constants
 
 @Composable
@@ -109,7 +111,7 @@ fun GameSetupScreen(
                 title = "Difficulty:",
                 animatedValue = botDifficulty.name.lowercase().replaceFirstChar { it.uppercase() },
                 valueColor = when (botDifficulty) {
-                    BotDifficulty.EASY -> Color(0xFFD4956B)
+                    BotDifficulty.EASY -> SecondaryActionColor
                     BotDifficulty.MEDIUM -> MaterialTheme.colorScheme.primary
                     BotDifficulty.HARD -> Color(0xFFE05555)
                 }
@@ -135,8 +137,8 @@ fun GameSetupScreen(
                 text = "Back",
                 onClick = onBack,
                 modifier = Modifier.weight(1f),
-                mainColor = Color(0xFFD4956B),
-                shadowColor = Color(0xFFB07A52)
+                mainColor = SecondaryActionColor,
+                shadowColor = SecondaryActionShadow
             )
             Raised3DButton(
                 text = "Play",

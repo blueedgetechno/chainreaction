@@ -2,6 +2,7 @@ package com.blueedge.chainreaction.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,7 +48,7 @@ fun MainMenuScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFD4956B))
+            .background(SecondaryActionColor)
     ) {
         val painter = painterResource(id = R.drawable.banner)
         val imageAspectRatio = painter.intrinsicSize.width / painter.intrinsicSize.height

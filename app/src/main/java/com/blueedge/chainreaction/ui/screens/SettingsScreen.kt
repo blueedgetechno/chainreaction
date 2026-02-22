@@ -53,6 +53,8 @@ import androidx.compose.ui.unit.sp
 import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.AppFont
+import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
+import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.components.SmallRaised3DButton
@@ -208,8 +210,8 @@ fun SettingsScreen(
                     Raised3DButton(
                         text = "Resume Game",
                         onClick = it,
-                        mainColor = Color(0xFFD4956B),
-                        shadowColor = Color(0xFFB07A52),
+                        mainColor = SecondaryActionColor,
+                        shadowColor = SecondaryActionShadow,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -254,8 +256,8 @@ fun SettingsScreen(
                         text = "Back",
                         onClick = it,
                         modifier = Modifier.fillMaxWidth(),
-                        mainColor = Color(0xFFD4956B),
-                        shadowColor = Color(0xFFB07A52)
+                        mainColor = SecondaryActionColor,
+                        shadowColor = SecondaryActionShadow
                     )
                 }
             }
