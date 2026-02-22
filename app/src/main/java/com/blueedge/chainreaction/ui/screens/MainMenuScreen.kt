@@ -121,7 +121,7 @@ fun MainMenuScreen(
             // Local Multiplayer button
             Raised3DButton(
                 text = "FRIENDS",
-                topText = "PLAY VS.",
+                topText = "PLAY W/",
                 onClick = onLocalMultiplayer,
                 mainColor = MaterialTheme.colorScheme.primary,
                 shadowColor = Color(0xFF2E8DAD),
@@ -134,7 +134,7 @@ fun MainMenuScreen(
             // Play vs Bot button
             Raised3DButton(
                 text = "BOT",
-                topText = "PLAY VS.",
+                topText = "PLAY W/",
                 onClick = onPlayVsBot,
                 mainColor = MaterialTheme.colorScheme.tertiary,
                 shadowColor = Color(0xFFA8524E),
