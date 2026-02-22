@@ -75,6 +75,10 @@ class GameEngine(private val variant: GameVariant = GameVariant.SIMPLE) {
         val cols = board[0].size
         val maxIterations = rows * cols * 4
         var iterations = 0
+        // Once a single player owns all non-empty cells, allow at most 5 more waves
+        val maxWavesAfterDomination = 5
+        var wavesAfterDomination = 0
+        var dominated = false
 
         while (iterations < maxIterations) {
             iterations++
@@ -89,6 +93,12 @@ class GameEngine(private val variant: GameVariant = GameVariant.SIMPLE) {
             }
 
             if (explodingCells.isEmpty()) break
+
+            // If we already detected domination, count down remaining waves
+            if (dominated) {
+                wavesAfterDomination++
+                if (wavesAfterDomination > maxWavesAfterDomination) break
+            }
 
             // Build explosion move data for animation
             val waveMoves = mutableListOf<ExplosionMove>()
@@ -154,6 +164,21 @@ class GameEngine(private val variant: GameVariant = GameVariant.SIMPLE) {
                     boardAfterSplit = boardAfterSplit
                 )
             )
+
+            // Check if one player now dominates all non-empty cells
+            if (!dominated) {
+                val owners = mutableSetOf<Int>()
+                for (r in board.indices) {
+                    for (c in board[r].indices) {
+                        if (!board[r][c].isEmpty) {
+                            owners.add(board[r][c].ownerId)
+                        }
+                    }
+                }
+                if (owners.size == 1) {
+                    dominated = true
+                }
+            }
         }
     }
 

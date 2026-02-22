@@ -111,7 +111,7 @@ fun GameSetupScreen(
             )
             Spacer(modifier = Modifier.size(16.dp))
             Text(
-                text = if (gameMode == GameMode.LOCAL_MULTIPLAYER) "Friends Mode" else "Solo Mode",
+                text = if (gameMode == GameMode.LOCAL_MULTIPLAYER) "Play with Friends" else "Play Solo",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary

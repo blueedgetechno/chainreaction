@@ -23,8 +23,8 @@ object GameConfig {
     var player2Name: String = "Player 2"
     var player2ColorIndex: Int = 1
     var botDifficulty: BotDifficulty = BotDifficulty.MEDIUM
-    var soundEnabled by mutableStateOf(false)
-    var vibrationEnabled by mutableStateOf(true)
+    var soundEnabled by mutableStateOf(true)
+    var vibrationEnabled by mutableStateOf(false)
     var musicEnabled by mutableStateOf(true)
     var appFont by mutableStateOf(AppFont.COMIC_RELIEF)
     var language by mutableStateOf("English")
