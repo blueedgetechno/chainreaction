@@ -36,6 +36,13 @@ jobs:
             echo "Error: FIREBASE_TOKEN is not set."
             exit 1
           fi
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "Error: KEYSTORE_BASE64 is not set."
+            exit 1
+          fi
+
+      - name: 🔑 Decode Release Keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
       - name: 📝 Get Last 3 Commits
         id: get_commits
@@ -87,6 +94,11 @@ jobs:
 
       - name: 🛠️ Build Android APK (Release)
         run: .github/scripts/build-android.sh
+        env:
+          KEYSTORE_FILE: release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Package .apk
         run: .github/scripts/package-app-android.sh

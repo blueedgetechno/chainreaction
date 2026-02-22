@@ -1,9 +1,22 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
 }
+
+// Load keystore credentials from keystore.properties (local) or environment variables (CI)
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+fun keystoreProp(key: String, envVar: String): String =
+    keystoreProperties.getProperty(key) ?: System.getenv(envVar) ?: ""
 
 android {
     namespace = "com.blueedge.chainreaction"
@@ -19,10 +32,19 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(rootProject.projectDir.resolve(keystoreProp("storeFile", "KEYSTORE_FILE")))
+            storePassword = keystoreProp("storePassword", "KEYSTORE_PASSWORD")
+            keyAlias = keystoreProp("keyAlias", "KEY_ALIAS")
+            keyPassword = keystoreProp("keyPassword", "KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
