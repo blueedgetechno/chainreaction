@@ -14,35 +14,36 @@ interface BotStrategy {
         botPlayerId: Int,
         opponentId: Int,
         isFirstMove: Boolean = false
-    ): Move
+    ): Move?
 }
 
-class EasyBot : BotStrategy {
-    private val engine = GameEngine()
+class EasyBot(variant: GameVariant) : BotStrategy {
+    private val engine = GameEngine(variant)
 
     override suspend fun calculateMove(
         board: List<List<CellState>>,
         botPlayerId: Int,
         opponentId: Int,
         isFirstMove: Boolean
-    ): Move {
+    ): Move? {
         delay(800)
         val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
-        return validMoves[Random.nextInt(validMoves.size)]
+        return validMoves.randomOrNull()
     }
 }
 
-class MediumBot : BotStrategy {
-    private val engine = GameEngine()
+class MediumBot(variant: GameVariant) : BotStrategy {
+    private val engine = GameEngine(variant)
 
     override suspend fun calculateMove(
         board: List<List<CellState>>,
         botPlayerId: Int,
         opponentId: Int,
         isFirstMove: Boolean
-    ): Move {
+    ): Move? {
         delay(1200)
         val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
+        if (validMoves.isEmpty()) return null
         val gridRows = board.size
         val gridCols = board[0].size
 
@@ -52,7 +53,8 @@ class MediumBot : BotStrategy {
         // Priority 1: Moves that cause explosions capturing opponent cells
         val explosionCaptures = validMoves.filter { move ->
             val cell = board[move.row][move.col]
-            if (cell.ownerId == botPlayerId && cell.dots == GameEngine.CRITICAL_MASS - 1) {
+            val critMass = engine.getCriticalMass(move.row, move.col, gridRows, gridCols)
+            if (cell.ownerId == botPlayerId && cell.dots == critMass - 1) {
                 val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
                 neighbors.any { n -> board[n.row][n.col].ownerId == opponentId }
             } else false
@@ -63,8 +65,9 @@ class MediumBot : BotStrategy {
         val blockingMoves = validMoves.filter { move ->
             val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
             neighbors.any { n ->
+                val nCritMass = engine.getCriticalMass(n.row, n.col, gridRows, gridCols)
                 board[n.row][n.col].ownerId == opponentId &&
-                        board[n.row][n.col].dots == GameEngine.CRITICAL_MASS - 1
+                        board[n.row][n.col].dots == nCritMass - 1
             }
         }.filter { move ->
             board[move.row][move.col].ownerId == botPlayerId
@@ -90,17 +93,18 @@ class MediumBot : BotStrategy {
     }
 }
 
-class HardBot : BotStrategy {
-    private val engine = GameEngine()
+class HardBot(variant: GameVariant) : BotStrategy {
+    private val engine = GameEngine(variant)
 
     override suspend fun calculateMove(
         board: List<List<CellState>>,
         botPlayerId: Int,
         opponentId: Int,
         isFirstMove: Boolean
-    ): Move {
+    ): Move? {
         delay(1500)
         val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
+        if (validMoves.isEmpty()) return null
 
         // If first move, pick a random empty cell
         if (isFirstMove) return validMoves.random()
@@ -181,8 +185,9 @@ class HardBot : BotStrategy {
     ): List<Move> {
         return moves.sortedByDescending { move ->
             val cell = board[move.row][move.col]
+            val critMass = engine.getCriticalMass(move.row, move.col, board.size, board[0].size)
             var priority = 0
-            if (cell.ownerId == playerId && cell.dots == GameEngine.CRITICAL_MASS - 1) {
+            if (cell.ownerId == playerId && cell.dots == critMass - 1) {
                 priority += 100 // About to explode
             }
             if (cell.ownerId == playerId) {
@@ -204,13 +209,14 @@ class HardBot : BotStrategy {
                     botPlayerId -> {
                         score += 10 // Territory
                         score += cell.dots * 3 // Dot count
+                        val critMass = engine.getCriticalMass(r, c, gridRows, gridCols)
                         // Bonus for cells about to explode near opponent
-                        if (cell.dots == GameEngine.CRITICAL_MASS - 1) {
+                        if (cell.dots == critMass - 1) {
                             val neighbors = getNeighbors(r, c, gridRows, gridCols)
                             val opponentNeighbors = neighbors.count { board[it.row][it.col].ownerId == opponentId }
                             score += opponentNeighbors * 8
                         }
-                        // Corner and edge bonus (harder to attack)
+                        // Corner and edge bonus (harder to attack in simple, easier to explode in classic)
                         val neighborCount = getNeighbors(r, c, gridRows, gridCols).size
                         if (neighborCount == 2) score += 5 // Corner
                         else if (neighborCount == 3) score += 3 // Edge
@@ -218,7 +224,8 @@ class HardBot : BotStrategy {
                     opponentId -> {
                         score -= 10
                         score -= cell.dots * 3
-                        if (cell.dots == GameEngine.CRITICAL_MASS - 1) {
+                        val critMass = engine.getCriticalMass(r, c, gridRows, gridCols)
+                        if (cell.dots == critMass - 1) {
                             val neighbors = getNeighbors(r, c, gridRows, gridCols)
                             val botNeighbors = neighbors.count { board[it.row][it.col].ownerId == botPlayerId }
                             score -= botNeighbors * 8
@@ -245,8 +252,8 @@ class HardBot : BotStrategy {
 
 fun createBot(difficulty: BotDifficulty, variant: GameVariant = GameVariant.SIMPLE): BotStrategy {
     return when (difficulty) {
-        BotDifficulty.EASY -> EasyBot()
-        BotDifficulty.MEDIUM -> MediumBot()
-        BotDifficulty.HARD -> HardBot()
+        BotDifficulty.EASY -> EasyBot(variant)
+        BotDifficulty.MEDIUM -> MediumBot(variant)
+        BotDifficulty.HARD -> HardBot(variant)
     }
 }
