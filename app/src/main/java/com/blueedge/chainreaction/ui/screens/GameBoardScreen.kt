@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -35,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -107,28 +109,8 @@ fun GameBoardScreen(
 
     var showExitConfirmation by remember { mutableStateOf(false) }
 
-    // Turn indicator animation state (used only in VS_BOT / solo mode)
+    // Turn indicator animation state
     val isSoloMode = GameConfig.gameMode == GameMode.VS_BOT
-    val turnIndicatorScale = remember { Animatable(0f) }
-    val turnIndicatorAlpha = remember { Animatable(0f) }
-
-    LaunchedEffect(state.currentPlayerId, state.gameStatus) {
-        if (isSoloMode && state.gameStatus == GameStatus.IN_PROGRESS) {
-            turnIndicatorScale.snapTo(0f)
-            turnIndicatorAlpha.snapTo(0f)
-            // Animate in: scale + fade run in parallel
-            coroutineScope {
-                launch { turnIndicatorAlpha.animateTo(1f, animationSpec = tween(300)) }
-                turnIndicatorScale.animateTo(1f, animationSpec = tween(300))
-            }
-            delay(1200)
-            // Animate out: scale + fade run in parallel
-            coroutineScope {
-                launch { turnIndicatorAlpha.animateTo(0f, animationSpec = tween(300)) }
-                turnIndicatorScale.animateTo(0f, animationSpec = tween(300))
-            }
-        }
-    }
 
     // Handle back button press
     BackHandler(enabled = state.gameStatus == GameStatus.IN_PROGRESS) {
@@ -190,17 +172,55 @@ fun GameBoardScreen(
             )
         }
 
-        // Turn indicator semicircles — solo (VS_BOT) mode only
-        if (isSoloMode && state.gameStatus == GameStatus.IN_PROGRESS) {
-            val botPlayer = state.players.firstOrNull { it.isBot }
-            val isBotTurn = state.currentPlayerId == botPlayer?.id
-            val indicatorText = if (!isBotTurn) "Your turn" else "Bot's turn"
-            val indicatorAlignment = if (!isBotTurn) Alignment.BottomCenter else Alignment.TopCenter
-            val originY = if (!isBotTurn) 1f else 0f
+        // Turn indicator semicircles
+        if (state.gameStatus == GameStatus.IN_PROGRESS) {
+            key(state.currentPlayerId) {
+                val turnIndicatorScale = remember { Animatable(0f) }
+                val turnIndicatorAlpha = remember { Animatable(0f) }
+
+                LaunchedEffect(Unit) {
+                    // Animate in: scale + fade run in parallel
+                    coroutineScope {
+                        launch { turnIndicatorAlpha.animateTo(1f, animationSpec = tween(300)) }
+                        turnIndicatorScale.animateTo(1f, animationSpec = tween(300))
+                    }
+                    delay(1200)
+                    // Animate out: scale + fade run in parallel
+                    coroutineScope {
+                        launch { turnIndicatorAlpha.animateTo(0f, animationSpec = tween(300)) }
+                        turnIndicatorScale.animateTo(0f, animationSpec = tween(300))
+                    }
+                }
+
+                val currentPlayer = state.players.firstOrNull { it.id == state.currentPlayerId }
+                val colorIndex = currentPlayer?.colorIndex ?: (state.currentPlayerId - 1)
+                val colorName = PlayerColorNames.getOrElse(colorIndex) { "Player ${state.currentPlayerId}" }
+
+                val indicatorText: String
+                val showAtBottom: Boolean
+
+                if (isSoloMode) {
+                    val botPlayer = state.players.firstOrNull { it.isBot }
+                    val isBotTurn = state.currentPlayerId == botPlayer?.id
+                    indicatorText = if (!isBotTurn) "Your turn" else "Bot's turn"
+                    showAtBottom = !isBotTurn
+                } else {
+                    indicatorText = "$colorName's turn"
+                    // Alternate position based on move count: even → bottom, odd → top
+                    showAtBottom = (state.moveCount % 2 == 0)
+                }
+
+                val indicatorAlignment = if (showAtBottom) Alignment.BottomCenter else Alignment.TopCenter
+                val originY = if (showAtBottom) 1f else 0f
+
+            // Offset pushes the flat edge off-screen so only the arc border is visible
+            val borderWidth = 8.dp
+            val edgeOffset = if (showAtBottom) borderWidth else -borderWidth
 
             BoxWithConstraints(
                 modifier = Modifier
                     .align(indicatorAlignment)
+                    .offset(y = edgeOffset)
                     .fillMaxWidth(0.85f)
                     .aspectRatio(2f)
                     .graphicsLayer {
@@ -213,23 +233,26 @@ fun GameBoardScreen(
             ) {
                 // cornerRadius = maxWidth/2 = height (aspectRatio 2:1), making a perfect semicircle
                 val cornerRadius = maxWidth / 2
-                val shape = if (!isBotTurn)
+                val shape = if (showAtBottom)
                     RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)
                 else
                     RoundedCornerShape(bottomStart = cornerRadius, bottomEnd = cornerRadius)
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.White, shape),
+                        .background(Color.Transparent, shape)
+                        .border(borderWidth, Color.White, shape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = indicatorText,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = currentPlayerColor
+                        fontSize = 36.sp,
+                        color = Color.White
                     )
                 }
+            }
             }
         }
     }

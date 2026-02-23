@@ -203,7 +203,7 @@ fun HowToPlayScreen(
 
             // Back button
             Raised3DButton(
-                text = "Got it!",
+                text = "Back",
                 onClick = onBack,
                 mainColor = SecondaryActionColor,
                 shadowColor = SecondaryActionShadow,

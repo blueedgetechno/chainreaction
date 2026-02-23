@@ -114,7 +114,7 @@ fun GameEndScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    HorizontalDivider()
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
 
                     StatRow(
                         label = "Final Score",
