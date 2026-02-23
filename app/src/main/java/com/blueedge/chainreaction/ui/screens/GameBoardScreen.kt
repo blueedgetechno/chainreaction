@@ -12,9 +12,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,6 +44,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,6 +69,9 @@ import com.blueedge.chainreaction.ui.theme.PlayerColors
 import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
 import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 import kotlin.math.sqrt
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun GameBoardScreen(
@@ -99,6 +106,29 @@ fun GameBoardScreen(
     )
 
     var showExitConfirmation by remember { mutableStateOf(false) }
+
+    // Turn indicator animation state (used only in VS_BOT / solo mode)
+    val isSoloMode = GameConfig.gameMode == GameMode.VS_BOT
+    val turnIndicatorScale = remember { Animatable(0f) }
+    val turnIndicatorAlpha = remember { Animatable(0f) }
+
+    LaunchedEffect(state.currentPlayerId, state.gameStatus) {
+        if (isSoloMode && state.gameStatus == GameStatus.IN_PROGRESS) {
+            turnIndicatorScale.snapTo(0f)
+            turnIndicatorAlpha.snapTo(0f)
+            // Animate in: scale + fade run in parallel
+            coroutineScope {
+                launch { turnIndicatorAlpha.animateTo(1f, animationSpec = tween(300)) }
+                turnIndicatorScale.animateTo(1f, animationSpec = tween(300))
+            }
+            delay(1200)
+            // Animate out: scale + fade run in parallel
+            coroutineScope {
+                launch { turnIndicatorAlpha.animateTo(0f, animationSpec = tween(300)) }
+                turnIndicatorScale.animateTo(0f, animationSpec = tween(300))
+            }
+        }
+    }
 
     // Handle back button press
     BackHandler(enabled = state.gameStatus == GameStatus.IN_PROGRESS) {
@@ -139,7 +169,7 @@ fun GameBoardScreen(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .statusBarsPadding()
-                .padding(top = 8.dp, end = 12.dp)
+                .padding(top = 16.dp, end = 12.dp)
                 .size(40.dp)
                 .background(Color.White.copy(alpha = 0.85f), CircleShape)
                 .clickable(
@@ -158,6 +188,49 @@ fun GameBoardScreen(
                 tint = Color(0xFF333333),
                 modifier = Modifier.size(22.dp)
             )
+        }
+
+        // Turn indicator semicircles — solo (VS_BOT) mode only
+        if (isSoloMode && state.gameStatus == GameStatus.IN_PROGRESS) {
+            val botPlayer = state.players.firstOrNull { it.isBot }
+            val isBotTurn = state.currentPlayerId == botPlayer?.id
+            val indicatorText = if (!isBotTurn) "Your turn" else "Bot's turn"
+            val indicatorAlignment = if (!isBotTurn) Alignment.BottomCenter else Alignment.TopCenter
+            val originY = if (!isBotTurn) 1f else 0f
+
+            BoxWithConstraints(
+                modifier = Modifier
+                    .align(indicatorAlignment)
+                    .fillMaxWidth(0.85f)
+                    .aspectRatio(2f)
+                    .graphicsLayer {
+                        scaleX = turnIndicatorScale.value
+                        scaleY = turnIndicatorScale.value
+                        alpha = turnIndicatorAlpha.value
+                        transformOrigin = TransformOrigin(0.5f, originY)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                // cornerRadius = maxWidth/2 = height (aspectRatio 2:1), making a perfect semicircle
+                val cornerRadius = maxWidth / 2
+                val shape = if (!isBotTurn)
+                    RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)
+                else
+                    RoundedCornerShape(bottomStart = cornerRadius, bottomEnd = cornerRadius)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White, shape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = indicatorText,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = currentPlayerColor
+                    )
+                }
+            }
         }
     }
 
@@ -219,7 +292,7 @@ fun GameBoardScreen(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .statusBarsPadding()
-                    .padding(top = 8.dp, end = 12.dp)
+                    .padding(top = 16.dp, end = 12.dp)
                     .size(40.dp)
                     .background(Color.White.copy(alpha = 0.85f), CircleShape)
                     .alpha(contentAlpha.value)
