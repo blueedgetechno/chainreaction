@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chain Reaction – Multiplayer Puzzle Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'float-slow': 'floatY 6s ease-in-out infinite',
+            'float-mid': 'floatY 4s ease-in-out infinite',
+            'drift-1': 'drift1 8s ease-in-out infinite',
+            'drift-2': 'drift2 10s ease-in-out infinite',
+            'drift-3': 'drift3 7s ease-in-out infinite',
+            'sparkle': 'sparkle 3s ease-in-out infinite',
+            'sparkle-d': 'sparkle 3s 1.5s ease-in-out infinite',
+            'pulse-soft': 'pulseSoft 4s ease-in-out infinite',
+          },
+          keyframes: {
+            floatY: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-18px)' },
+            },
+            drift1: {
+              '0%, 100%': { transform: 'translate(0,0) scale(1)' },
+              '33%': { transform: 'translate(12px,-16px) scale(1.05)' },
+              '66%': { transform: 'translate(-8px,-10px) scale(.97)' },
+            },
+            drift2: {
+              '0%, 100%': { transform: 'translate(0,0) scale(1)' },
+              '50%': { transform: 'translate(-14px,-20px) scale(1.04)' },
+            },
+            drift3: {
+              '0%, 100%': { transform: 'translate(0,0) rotate(0deg)' },
+              '50%': { transform: 'translate(10px,-14px) rotate(6deg)' },
+            },
+            sparkle: {
+              '0%, 100%': { opacity: 0.3, transform: 'scale(1)' },
+              '50%': { opacity: 1, transform: 'scale(1.5)' },
+            },
+            pulseSoft: {
+              '0%, 100%': { opacity: 0.7, transform: 'scale(1)' },
+              '50%': { opacity: 1, transform: 'scale(1.06)' },
+            },
+          },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-b from-orange-400 via-orange-500 to-orange-600 text-gray-800 font-sans min-h-screen">
+
+  <!-- ══════════ CONFETTI DOTS (decorative) ══════════ -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+    <div class="absolute top-[5%]  left-[8%]  w-2 h-2   rounded-full bg-yellow-300  opacity-60 animate-sparkle"></div>
+    <div class="absolute top-[12%] right-[12%] w-1.5 h-1.5 rounded-full bg-white      opacity-50 animate-sparkle-d"></div>
+    <div class="absolute top-[20%] left-[25%]  w-1 h-1   rounded-full bg-pink-300    opacity-40 animate-sparkle"></div>
+    <div class="absolute top-[30%] right-[30%] w-2.5 h-2.5 rounded-full bg-cyan-300  opacity-50 animate-sparkle-d"></div>
+    <div class="absolute top-[18%] right-[5%]  w-1.5 h-1.5 rounded-full bg-green-300 opacity-60 animate-sparkle"></div>
+    <div class="absolute top-[45%] left-[5%]   w-2 h-2   rounded-full bg-blue-300   opacity-40 animate-sparkle-d"></div>
+    <div class="absolute top-[55%] right-[8%]  w-1 h-1   rounded-full bg-yellow-200 opacity-50 animate-sparkle"></div>
+    <div class="absolute top-[65%] left-[15%]  w-2 h-2   rounded-full bg-purple-300 opacity-40 animate-sparkle-d"></div>
+    <div class="absolute top-[75%] right-[20%] w-1.5 h-1.5 rounded-full bg-red-300   opacity-50 animate-sparkle"></div>
+    <div class="absolute top-[85%] left-[40%]  w-1 h-1   rounded-full bg-white      opacity-60 animate-sparkle-d"></div>
+    <div class="absolute top-[10%] left-[50%]  w-1.5 h-1.5 rounded-full bg-orange-200 opacity-50 animate-sparkle"></div>
+    <div class="absolute top-[40%] right-[45%] w-2 h-2   rounded-full bg-emerald-300 opacity-30 animate-sparkle"></div>
+    <div class="absolute top-[60%] left-[60%]  w-1 h-1   rounded-full bg-pink-200   opacity-60 animate-sparkle-d"></div>
+    <div class="absolute top-[92%] left-[70%]  w-2 h-2   rounded-full bg-blue-200   opacity-40 animate-sparkle"></div>
+    <div class="absolute top-[35%] left-[85%]  w-1.5 h-1.5 rounded-full bg-amber-200 opacity-50 animate-sparkle-d"></div>
+    <div class="absolute top-[50%] left-[92%]  w-1 h-1   rounded-full bg-lime-300   opacity-40 animate-sparkle"></div>
+  </div>
+
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <nav class="bg-white/10 backdrop-blur-md sticky top-0 z-50 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2">
+        <div class="w-9 h-9 bg-white rounded-xl shadow-md flex items-center justify-center">
+          <div class="grid grid-cols-2 gap-0.5">
+            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+          </div>
+        </div>
+        <span class="text-xl font-extrabold text-white drop-shadow-sm hidden sm:inline">Chain Reaction</span>
+      </a>
+
+      <!-- Menu Items -->
+      <div class="hidden md:flex items-center gap-8 text-sm font-semibold text-white/90">
+        <a href="#home" class="hover:text-white transition">Home</a>
+        <a href="#features" class="hover:text-white transition">Features</a>
+        <a href="#how-to-play" class="hover:text-white transition">How to Play</a>
+      </div>
+
+      <!-- Download Button -->
+      <a href="#download" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-6 py-2 text-sm font-bold shadow-lg shadow-blue-500/30 transition transform hover:scale-105">
+        Download
+      </a>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ HERO SECTION ═══════════════ -->
+  <section id="home" class="relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 flex flex-col lg:flex-row items-center gap-10 lg:gap-16 relative z-10">
+
+      <!-- Text Column -->
+      <div class="flex-1 text-center lg:text-left">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">
+          Chain&#8209;Reaction Fun&nbsp;with&nbsp;Friends!
+        </h1>
+        <p class="mt-5 text-lg sm:text-xl text-orange-100/90 max-w-xl mx-auto lg:mx-0 drop-shadow">
+          Download and play this addictive multiplayer puzzle game. Start your chain reaction today!
+        </p>
+
+        <!-- CTA Button -->
+        <div class="mt-8 flex justify-center lg:justify-start">
+          <a href="#download" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-8 py-3.5 text-base font-bold shadow-xl shadow-blue-500/30 transition transform hover:scale-105 uppercase tracking-wide">
+            Download Now
+          </a>
+        </div>
+      </div>
+
+      <!-- Game Board Mockup + Floating Avatars -->
+      <div class="flex-1 flex justify-center lg:justify-end relative">
+        <!-- Floating player avatars -->
+        <div class="absolute -top-4 left-0 lg:-left-6 animate-drift-1 z-20">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-lg shadow-blue-500/40 flex items-center justify-center border-2 border-white/40">
+            <svg class="w-7 h-7 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          </div>
+        </div>
+        <div class="absolute -top-2 right-2 lg:-right-4 animate-drift-2 z-20">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-lg shadow-green-500/40 flex items-center justify-center border-2 border-white/40">
+            <svg class="w-6 h-6 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          </div>
+        </div>
+        <div class="absolute top-1/3 -right-4 lg:-right-10 animate-drift-3 z-20">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-lg shadow-red-500/40 flex items-center justify-center border-2 border-white/40">
+            <svg class="w-7 h-7 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          </div>
+        </div>
+        <div class="absolute bottom-4 left-4 lg:-left-2 animate-drift-2 z-20">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 shadow-lg shadow-purple-500/40 flex items-center justify-center border-2 border-white/40">
+            <svg class="w-6 h-6 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          </div>
+        </div>
+        <div class="absolute bottom-0 right-6 lg:right-0 animate-drift-1 z-20">
+          <div class="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-500/40 flex items-center justify-center border-2 border-white/40">
+            <svg class="w-7 h-7 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          </div>
+        </div>
+        <div class="absolute top-2/3 -left-6 lg:-left-12 animate-drift-3 z-20 hidden sm:block">
+          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-orange-500 shadow-lg shadow-orange-400/40 flex items-center justify-center border-2 border-white/40">
+            <svg class="w-7 h-7 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          </div>
+        </div>
+
+        <!-- Game board image -->
+        <img
+          src="assets/gen0.png"
+          alt="Chain Reaction game board"
+          class="w-64 sm:w-72 lg:w-[380px] rounded-3xl shadow-2xl relative z-10 animate-float-slow ring-4 ring-white/20"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ WAVE DIVIDER ═══════════ -->
+  <div class="relative -mt-1">
+    <svg viewBox="0 0 1440 100" class="w-full block" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0 40 C360 100, 1080 0, 1440 60 L1440 100 L0 100 Z" fill="#fff7ed"/>
+    </svg>
+  </div>
+
+  <!-- ═══════════════ FEATURES SECTION ═══════════════ -->
+  <section id="features" class="bg-orange-50 py-16 lg:py-24 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Bring Everyone In</h2>
+      <p class="mt-3 text-lg text-orange-500 font-semibold">Supports up to 6 Players</p>
+
+      <!-- Feature Cards — alternating layout -->
+      <div class="mt-14 flex flex-col gap-10 max-w-5xl mx-auto">
+
+        <!-- Card 1: text left, image right -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 sm:p-10 flex flex-col md:flex-row items-center gap-8 transition hover:shadow-xl">
+          <div class="flex-1 text-center md:text-left relative">
+            <div class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white font-extrabold text-lg shadow-md mb-4">1</div>
+            <h3 class="text-2xl font-bold text-gray-900">Match Colors</h3>
+            <p class="mt-3 text-gray-500 leading-relaxed text-base">
+              Place your orbs on the board strategically. Each cell can only hold orbs of one color — yours!
+            </p>
+          </div>
+          <div class="flex-shrink-0">
+            <img src="assets/gen1.png" alt="Match Colors" class="w-52 h-52 sm:w-60 sm:h-60 object-contain rounded-2xl" />
+          </div>
+        </div>
+
+        <!-- Card 2: image left, text right (reversed) -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 sm:p-10 flex flex-col md:flex-row-reverse items-center gap-8 transition hover:shadow-xl">
+          <div class="flex-1 text-center md:text-left relative">
+            <div class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white font-extrabold text-lg shadow-md mb-4">2</div>
+            <h3 class="text-2xl font-bold text-gray-900">Trigger Reactions</h3>
+            <p class="mt-3 text-gray-500 leading-relaxed text-base">
+              Overload a cell and watch it explode into neighboring cells, capturing enemy orbs in a cascade.
+            </p>
+          </div>
+          <div class="flex-shrink-0">
+            <img src="assets/gen2.png" alt="Trigger Reactions" class="w-52 h-52 sm:w-60 sm:h-60 object-contain rounded-2xl" />
+          </div>
+        </div>
+
+        <!-- Card 3: text left, image right -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 sm:p-10 flex flex-col md:flex-row items-center gap-8 transition hover:shadow-xl">
+          <div class="flex-1 text-center md:text-left relative">
+            <div class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white font-extrabold text-lg shadow-md mb-4">3</div>
+            <h3 class="text-2xl font-bold text-gray-900">Win the Game</h3>
+            <p class="mt-3 text-gray-500 leading-relaxed text-base">
+              Be the last player standing by eliminating every opponent's orbs from the board.
+            </p>
+          </div>
+          <div class="flex-shrink-0">
+            <img src="assets/gen3.png" alt="Win the Game" class="w-52 h-52 sm:w-60 sm:h-60 object-contain rounded-2xl" />
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ WAVE DIVIDER ═══════════ -->
+  <div class="relative -mt-1">
+    <svg viewBox="0 0 1440 80" class="w-full block" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0 30 C480 80, 960 0, 1440 50 L1440 80 L0 80 Z" fill="white"/>
+    </svg>
+  </div>
+
+  <!-- ═══════════════ HOW IT WORKS SECTION ═══════════════ -->
+  <section id="how-to-play" class="py-16 lg:py-24 bg-white relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">How to Play</h2>
+      <p class="mt-3 text-lg text-gray-500">Three simple steps to start having fun</p>
+
+      <!-- Steps -->
+      <div class="mt-14 grid grid-cols-1 md:grid-cols-3 gap-10">
+        <!-- Step 1 -->
+        <div class="flex flex-col items-center group">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-lg shadow-orange-400/40 transition transform group-hover:scale-110 animate-pulse-soft">
+            1
+          </div>
+          <h3 class="mt-6 text-lg font-bold text-gray-900">Download the App</h3>
+          <p class="mt-2 text-gray-500 max-w-xs">
+            Grab Chain Reaction from Google Play or the App Store — it's free!
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex flex-col items-center group">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-lg shadow-orange-400/40 transition transform group-hover:scale-110 animate-pulse-soft" style="animation-delay:.5s">
+            2
+          </div>
+          <h3 class="mt-6 text-lg font-bold text-gray-900">Invite Your Friends</h3>
+          <p class="mt-2 text-gray-500 max-w-xs">
+            Add up to 6 players and customize the board size to your liking.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex flex-col items-center group">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-lg shadow-orange-400/40 transition transform group-hover:scale-110 animate-pulse-soft" style="animation-delay:1s">
+            3
+          </div>
+          <h3 class="mt-6 text-lg font-bold text-gray-900">Start a Chain Reaction</h3>
+          <p class="mt-2 text-gray-500 max-w-xs">
+            Take turns, plan your moves, and set off explosive chain reactions to win!
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ WAVE DIVIDER ═══════════ -->
+  <div class="relative -mt-1">
+    <svg viewBox="0 0 1440 80" class="w-full block" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0 50 C360 0, 1080 80, 1440 20 L1440 80 L0 80 Z" fill="#ea580c"/>
+    </svg>
+  </div>
+
+  <!-- ═══════════════ CTA SECTION ═══════════════ -->
+  <section id="download" class="bg-gradient-to-br from-orange-500 to-orange-700 py-20 lg:py-28 relative overflow-hidden z-10">
+    <!-- Background glow -->
+    <div class="absolute top-10 left-10 w-40 h-40 bg-orange-400/20 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-10 right-10 w-56 h-56 bg-orange-300/20 rounded-full blur-3xl"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center relative z-10">
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white drop-shadow-lg">Ready to Play?</h2>
+      <p class="mt-4 text-lg text-orange-100/90 max-w-md">
+        Join thousands of players and start your chain reaction now.
+      </p>
+
+      <!-- Store Buttons -->
+      <div class="mt-10 flex flex-col sm:flex-row items-center gap-4">
+        <a href="#" class="bg-black text-white rounded-xl px-6 py-3.5 flex items-center gap-3 hover:bg-gray-900 transition transform hover:scale-105 shadow-xl w-56">
+          <svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.609 1.814a1.07 1.07 0 0 0-.39.904v18.564a1.07 1.07 0 0 0 .39.904l.048.03 10.394-10.394v-.244L3.657 1.784l-.048.03z"/>
+            <path d="m14.051 15.278-3.463-3.462v-.244l3.463-3.462.078.045 4.103 2.331c1.172.666 1.172 1.756 0 2.422l-4.103 2.325-.078.045z"/>
+            <path d="m14.129 15.233-3.511-3.511L3.609 18.73c.387.408 1.027.458 1.476.104l9.044-3.601"/>
+            <path d="M14.129 8.155 5.085 4.554c-.449-.354-1.089-.304-1.476.104l7.009 7.008 3.511-3.511z"/>
+          </svg>
+          <div class="text-left leading-tight">
+            <span class="block text-xs text-gray-400 uppercase tracking-wide">Get it on</span>
+            <span class="block text-base font-semibold">Google Play</span>
+          </div>
+        </a>
+        <a href="#" class="bg-black text-white rounded-xl px-6 py-3.5 flex items-center gap-3 hover:bg-gray-900 transition transform hover:scale-105 shadow-xl w-56">
+          <svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          <div class="text-left leading-tight">
+            <span class="block text-xs text-gray-400 uppercase tracking-wide">Download on the</span>
+            <span class="block text-base font-semibold">App Store</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="bg-gray-900 py-8 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+      <p>&copy; 2026 Chain Reaction. All rights reserved.</p>
+      <div class="flex gap-6">
+        <a href="privacy.html" class="hover:text-white transition">Privacy Policy</a>
+        <a href="terms.html" class="hover:text-white transition">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
