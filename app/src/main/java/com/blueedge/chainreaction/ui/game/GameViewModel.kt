@@ -31,6 +31,9 @@ class GameViewModel : ViewModel() {
     private var moveJob: Job? = null
     private val pauseMutex = Mutex()
 
+    // Undo: snapshot of state before the last human move
+    private var undoSnapshot: GameUiState? = null
+
     private val _state = MutableStateFlow(createInitialState())
     val state: StateFlow<GameUiState> = _state.asStateFlow()
 
@@ -98,6 +101,17 @@ class GameViewModel : ViewModel() {
         val isFirstMove = !currentState.playersHasMoved.contains(playerId)
 
         _state.update { it.copy(isAnimating = true, lastMovedCell = Pair(row, col)) }
+
+        // Save snapshot for undo before any changes (only for human moves)
+        val isHumanMove = !(currentState.gameMode == GameMode.VS_BOT && playerId == 2)
+        if (isHumanMove) {
+            undoSnapshot = currentState.copy(
+                isAnimating = false,
+                lastMovedCell = null,
+                explodingCells = emptySet(),
+                explosionMoves = emptyList()
+            )
+        }
 
         // Play bop sound on cell tap
         SoundManager.playBop()
@@ -182,7 +196,8 @@ class GameViewModel : ViewModel() {
                 gameStatus = gameStatus,
                 winnerId = winner ?: 0,
                 isAnimating = false,
-                lastMovedCell = null
+                lastMovedCell = null,
+                canUndo = undoSnapshot != null && gameStatus == GameStatus.IN_PROGRESS
             )
         }
 
@@ -247,6 +262,19 @@ class GameViewModel : ViewModel() {
         return (System.currentTimeMillis() - _state.value.gameStartTimeMs) / 1000
     }
 
+    /** Reverts to the state before the last human move. */
+    fun undo() {
+        val snapshot = undoSnapshot ?: return
+        if (_state.value.isAnimating || _state.value.botThinking) return
+
+        // Cancel any in-flight move coroutine
+        moveJob?.cancel()
+        moveJob = null
+
+        _state.value = snapshot.copy(canUndo = false)
+        undoSnapshot = null
+    }
+
     fun resetGame() {
         // Cancel any in-flight move/animation coroutine before resetting
         moveJob?.cancel()
@@ -255,6 +283,7 @@ class GameViewModel : ViewModel() {
         if (pauseMutex.isLocked) {
             try { pauseMutex.unlock() } catch (_: Exception) {}
         }
+        undoSnapshot = null
         _state.value = createInitialState()
     }
 

@@ -1,5 +1,6 @@
 package com.blueedge.chainreaction.ui.screens
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -40,6 +42,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -60,6 +63,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.blueedge.chainreaction.ads.InterstitialAdManager
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameStatus
@@ -84,6 +88,27 @@ fun GameBoardScreen(
     viewModel: GameViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Preload interstitial ad so it's ready when the game ends.
+    // Suspends until SDK is initialized, then fires the load request.
+    LaunchedEffect(Unit) {
+        InterstitialAdManager.load(context)
+    }
+
+    // Show interstitial ad 2 seconds after victory screen appears
+    LaunchedEffect(state.gameStatus) {
+        if (state.gameStatus == GameStatus.GAME_OVER) {
+            // If the ad still hasn't loaded, try loading again and give it time
+            if (!InterstitialAdManager.isReady()) {
+                InterstitialAdManager.load(context)
+            }
+            delay(2000)
+            (context as? Activity)?.let { activity ->
+                InterstitialAdManager.show(activity)
+            }
+        }
+    }
 
     // Resume game when returning from settings (lifecycle becomes RESUMED)
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -171,6 +196,31 @@ fun GameBoardScreen(
                 modifier = Modifier.size(22.dp)
             )
         }
+
+        // Undo icon — top left, below status bar
+        // if (state.canUndo && state.gameStatus == GameStatus.IN_PROGRESS) {
+        //     Box(
+        //         modifier = Modifier
+        //             .align(Alignment.TopStart)
+        //             .statusBarsPadding()
+        //             .padding(top = 16.dp, start = 12.dp)
+        //             .size(40.dp)
+        //             .background(Color.White.copy(alpha = 0.85f), CircleShape)
+        //             .clickable(
+        //                 interactionSource = remember { MutableInteractionSource() },
+        //                 indication = null,
+        //                 onClick = { viewModel.undo() }
+        //             ),
+        //         contentAlignment = Alignment.Center
+        //     ) {
+        //         Icon(
+        //             imageVector = Icons.AutoMirrored.Filled.Undo,
+        //             contentDescription = "Undo",
+        //             tint = Color(0xFF333333),
+        //             modifier = Modifier.size(22.dp)
+        //         )
+        //     }
+        // }
 
         // Turn indicator semicircles
         if (state.gameStatus == GameStatus.IN_PROGRESS) {

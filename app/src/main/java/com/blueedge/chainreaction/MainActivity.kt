@@ -8,6 +8,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
+import com.blueedge.chainreaction.ads.InterstitialAdManager
 import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.ui.navigation.ChainReactionNavGraph
@@ -18,6 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         GameConfig.load(this)
         SoundManager.init(this)
+        InterstitialAdManager.initializeSdk(this)
         enableEdgeToEdge()
         hideSystemBars()
         setContent {
