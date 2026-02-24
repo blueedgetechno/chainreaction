@@ -71,6 +71,7 @@ data class GameUiState(
     val explosionMoves: List<ExplosionMove> = emptyList(),
     val lastMovedCell: Pair<Int, Int>? = null,
     val isPaused: Boolean = false,
+    val canUndo: Boolean = false,
     val gameMode: GameMode = GameMode.LOCAL_MULTIPLAYER,
     val gameVariant: GameVariant = GameVariant.SIMPLE,
     val botDifficulty: BotDifficulty = BotDifficulty.MEDIUM

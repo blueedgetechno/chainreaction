@@ -132,6 +132,10 @@ class GameEngine(private val variant: GameVariant = GameVariant.SIMPLE) {
             // Snapshot board after emptying (before adding to neighbors)
             val boardBeforeSplit = board.map { it.toList() }
 
+            // Snapshot each cell's dot count before adding neighbors,
+            // so previousDots reflects the state before the entire wave.
+            val dotsBeforeWave = Array(rows) { r -> IntArray(cols) { c -> board[r][c].dots } }
+
             // Step 2: Add dots to neighbors of each exploding cell
             for (cell in explodingCells) {
                 val neighbors = getNeighbors(cell.row, cell.col, rows, cols)
@@ -144,11 +148,12 @@ class GameEngine(private val variant: GameVariant = GameVariant.SIMPLE) {
                     } else {
                         minOf(current.dots + 1, CRITICAL_MASS)
                     }
+                    val prevDots = dotsBeforeWave[neighbor.row][neighbor.col]
                     board[neighbor.row][neighbor.col] = CellState(
                         ownerId = playerId,
                         dots = newDots,
                         // Use -1 for previously empty cells to signal "no fade-in" to DotCircle
-                        previousDots = if (current.dots == 0) -1 else current.dots
+                        previousDots = if (prevDots == 0) -1 else prevDots
                     )
                 }
             }

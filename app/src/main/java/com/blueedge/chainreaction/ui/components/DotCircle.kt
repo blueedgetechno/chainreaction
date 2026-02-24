@@ -22,12 +22,14 @@ fun DotCircle(
 ) {
     // Animation progress from 0 (previous positions) to 1 (final positions)
     // Initialize to 0 if animation needed, to avoid snap-then-animate flicker
-    val needsAnimation = previousDots != dotCount && previousDots >= 0
+    // previousDots == -1 means explosion arrival on empty cell: animate positions, skip fade
+    val needsAnimation = previousDots != dotCount
     val animProgress = remember(dotCount, previousDots) {
         Animatable(if (needsAnimation) 0f else 1f)
     }
 
-    // Separate fade-in alpha for 0→1 transition (dot appearing on empty cell)
+    // Separate fade-in alpha for 0→1 transition (dot appearing on empty cell via user tap)
+    // Skip fade for explosion arrivals (-1) since movement overlay handles the visual
     val isFadeIn = previousDots == 0 && dotCount > 0
     val fadeAlpha = remember(dotCount, previousDots) {
         Animatable(if (isFadeIn) 0f else 1f)
@@ -93,12 +95,15 @@ fun DotCircle(
  * Computes animated dot positions that transition from the previous layout to the new layout.
  *
  * Transition rules:
- * - 0→1 or 1→1: Single dot at center
+ * - 0→N: All dots emerge from center (fade-in handled separately)
  * - 1→2: One dot splits from center into two horizontal positions
- * - 2→3: Third dot emerges from center of two, moves up; existing two slide down to form triangle
- * - 3→4: Fourth dot copies from top position, 3rd and 4th repel horizontally to form square top edge
- * - 4→5: Fifth dot appears at center between the four square-corner dots
- * - 0→3 (first move): Dots appear from center and spread to triangle positions
+ * - 1→4: Center dot splits into 4 corners
+ * - 2→3: Third dot emerges from center; existing two slide down to triangle
+ * - 2→4: Each horizontal dot splits vertically into 2 corners
+ * - 2→5: Each horizontal dot splits to corners + center emerges
+ * - 3→4: Triangle bottom→square bottom, triangle top splits into square top edge
+ * - 3→5: Triangle bottom→square bottom, top splits to top corners, center emerges
+ * - 3→6: Triangle maps to die-6 layout with middle dots emerging from center
  */
 private fun getAnimatedDotPositions(
     previousCount: Int,
@@ -114,106 +119,120 @@ private fun getAnimatedDotPositions(
         return target
     }
 
-    return when {
-        // 0→1: Dot fades in at center (no position animation needed)
-        previousCount == 0 && targetCount == 1 -> target
+    fun lerp(from: Offset, to: Offset): Offset = Offset(
+        x = from.x + (to.x - from.x) * progress,
+        y = from.y + (to.y - from.y) * progress
+    )
 
-        // 0→3 (first move): All dots emerge from center
-        previousCount == 0 && targetCount == 3 -> {
-            target.map { targetPos ->
-                Offset(
-                    x = center.x + (targetPos.x - center.x) * progress,
-                    y = center.y + (targetPos.y - center.y) * progress
-                )
-            }
+    return when {
+        // 0→N or -1→N (explosion arrival on empty cell): All dots emerge from center
+        previousCount <= 0 -> {
+            target.map { targetPos -> lerp(center, targetPos) }
         }
 
         // 1→2: One dot in center duplicates and two dots repel horizontally
         previousCount == 1 && targetCount == 2 -> {
-            val leftTarget = target[0]
-            val rightTarget = target[1]
             listOf(
-                Offset(
-                    x = center.x + (leftTarget.x - center.x) * progress,
-                    y = center.y
-                ),
-                Offset(
-                    x = center.x + (rightTarget.x - center.x) * progress,
-                    y = center.y
-                )
+                Offset(x = center.x + (target[0].x - center.x) * progress, y = center.y),
+                Offset(x = center.x + (target[1].x - center.x) * progress, y = center.y)
             )
+        }
+
+        // 1→3: Center dot splits into triangle positions
+        previousCount == 1 && targetCount == 3 -> {
+            target.map { targetPos -> lerp(center, targetPos) }
+        }
+
+        // 1→4: Center dot splits into 4 corners
+        previousCount == 1 && targetCount == 4 -> {
+            target.map { targetPos -> lerp(center, targetPos) }
         }
 
         // 2→3: Third dot appears from center of two dots and moves up,
         // while the two dots slide down to form triangle
         previousCount == 2 && targetCount == 3 -> {
-            val prevPositions = getDotPositions(2, center, spread)
-            // Two existing dots slide from horizontal to triangle bottom
-            val dot1 = Offset(
-                x = prevPositions[0].x + (target[0].x - prevPositions[0].x) * progress,
-                y = prevPositions[0].y + (target[0].y - prevPositions[0].y) * progress
+            val prev = getDotPositions(2, center, spread)
+            listOf(
+                lerp(prev[0], target[0]),
+                lerp(prev[1], target[1]),
+                lerp(center, target[2])
             )
-            val dot2 = Offset(
-                x = prevPositions[1].x + (target[1].x - prevPositions[1].x) * progress,
-                y = prevPositions[1].y + (target[1].y - prevPositions[1].y) * progress
-            )
-            // Third dot emerges from center and moves up
-            val dot3 = Offset(
-                x = center.x + (target[2].x - center.x) * progress,
-                y = center.y + (target[2].y - center.y) * progress
-            )
-            listOf(dot1, dot2, dot3)
         }
 
-        // 3→4: Fourth dot copies from top of triangle (position of dot 3),
-        // then 3rd and 4th repel horizontally to form top edge of square
-        // Mapping: triangle bottom-left → square bottom-left (target[2]),
-        //          triangle bottom-right → square bottom-right (target[3]),
-        //          triangle top → splits into square top-left (target[0]) + top-right (target[1])
+        // 2→4: Left dot splits to top-left & bottom-left,
+        //       right dot splits to top-right & bottom-right
+        previousCount == 2 && targetCount == 4 -> {
+            val prev = getDotPositions(2, center, spread)
+            listOf(
+                lerp(prev[0], target[0]),  // left → top-left
+                lerp(prev[1], target[1]),  // right → top-right
+                lerp(prev[0], target[2]),  // left → bottom-left
+                lerp(prev[1], target[3])   // right → bottom-right
+            )
+        }
+
+        // 2→5: Left/right each split to two corners + center emerges
+        previousCount == 2 && targetCount == 5 -> {
+            val prev = getDotPositions(2, center, spread)
+            listOf(
+                lerp(prev[0], target[0]),  // left → top-left
+                lerp(prev[1], target[1]),  // right → top-right
+                lerp(prev[0], target[2]),  // left → bottom-left
+                lerp(prev[1], target[3]),  // right → bottom-right
+                lerp(center, target[4])    // center emerges
+            )
+        }
+
+        // 3→4: Triangle bottom-left → square bottom-left,
+        //       triangle bottom-right → square bottom-right,
+        //       triangle top splits into square top-left + top-right
         previousCount == 3 && targetCount == 4 -> {
-            val prevPositions = getDotPositions(3, center, spread)
-            // Bottom two dots slide from triangle bottom to square bottom
-            val dot1 = Offset(
-                x = prevPositions[0].x + (target[2].x - prevPositions[0].x) * progress,
-                y = prevPositions[0].y + (target[2].y - prevPositions[0].y) * progress
+            val prev = getDotPositions(3, center, spread)
+            listOf(
+                lerp(prev[2], target[0]),  // top → top-left
+                lerp(prev[2], target[1]),  // top → top-right
+                lerp(prev[0], target[2]),  // bottom-left → bottom-left
+                lerp(prev[1], target[3])   // bottom-right → bottom-right
             )
-            val dot2 = Offset(
-                x = prevPositions[1].x + (target[3].x - prevPositions[1].x) * progress,
-                y = prevPositions[1].y + (target[3].y - prevPositions[1].y) * progress
-            )
-            // Top dot of triangle (prevPositions[2]) splits into two top dots of square
-            val topCenter = prevPositions[2]
-            val dot3 = Offset(
-                x = topCenter.x + (target[0].x - topCenter.x) * progress,
-                y = topCenter.y + (target[0].y - topCenter.y) * progress
-            )
-            val dot4 = Offset(
-                x = topCenter.x + (target[1].x - topCenter.x) * progress,
-                y = topCenter.y + (target[1].y - topCenter.y) * progress
-            )
-            listOf(dot1, dot2, dot3, dot4)
         }
 
-        // 4→5: Fifth dot appears at center from between the four square corners
-        previousCount == 4 && targetCount == 5 -> {
-            val prevPositions = getDotPositions(4, center, spread)
-            // Four corner dots stay in place
-            val corners = prevPositions.mapIndexed { i, prev ->
-                Offset(
-                    x = prev.x + (target[i].x - prev.x) * progress,
-                    y = prev.y + (target[i].y - prev.y) * progress
-                )
+        // 3→5: Triangle bottom stays as bottom corners, top splits to top corners, center emerges
+        previousCount == 3 && targetCount == 5 -> {
+            val prev = getDotPositions(3, center, spread)
+            listOf(
+                lerp(prev[2], target[0]),  // top → top-left
+                lerp(prev[2], target[1]),  // top → top-right
+                lerp(prev[0], target[2]),  // bottom-left → bottom-left
+                lerp(prev[1], target[3]),  // bottom-right → bottom-right
+                lerp(center, target[4])    // center emerges
+            )
+        }
+
+        // 3→6: Triangle maps to die-6 (3 left, 3 right)
+        //       bottom-left → left-bottom, bottom-right → right-bottom,
+        //       top splits into left-top + right-top,
+        //       middle dots emerge from center
+        previousCount == 3 && targetCount == 6 -> {
+            val prev = getDotPositions(3, center, spread)
+            listOf(
+                lerp(prev[2], target[0]),   // top → left-top
+                lerp(center, target[1]),    // center → left-mid
+                lerp(prev[0], target[2]),   // bottom-left → left-bottom
+                lerp(prev[2], target[3]),   // top → right-top
+                lerp(center, target[4]),    // center → right-mid
+                lerp(prev[1], target[5])    // bottom-right → right-bottom
+            )
+        }
+
+        // Default: generic lerp from previous positions to target
+        // Existing dots move to their new positions, extra dots emerge from center
+        else -> {
+            val prev = getDotPositions(previousCount, center, spread)
+            target.mapIndexed { i, targetPos ->
+                val from = if (i < prev.size) prev[i] else center
+                lerp(from, targetPos)
             }
-            // Fifth dot emerges from center
-            val dot5 = Offset(
-                x = center.x + (target[4].x - center.x) * progress,
-                y = center.y + (target[4].y - center.y) * progress
-            )
-            corners + dot5
         }
-
-        // Default: just show target positions
-        else -> target
     }
 }
 
@@ -235,12 +254,20 @@ private fun getDotPositions(count: Int, center: Offset, spread: Float): List<Off
             Offset(center.x - spread * 0.85f, center.y + spread * 0.85f),
             Offset(center.x + spread * 0.85f, center.y + spread * 0.85f)
         )
-        else -> listOf(  // 5+ dots: four corners + center
+        5 -> listOf(  // four corners + center (die face 5)
             Offset(center.x - spread * 0.85f, center.y - spread * 0.85f),
             Offset(center.x + spread * 0.85f, center.y - spread * 0.85f),
             Offset(center.x - spread * 0.85f, center.y + spread * 0.85f),
             Offset(center.x + spread * 0.85f, center.y + spread * 0.85f),
-            center  // center dot
+            center
+        )
+        else -> listOf(  // 6+ dots: die face 6 (3 left column, 3 right column)
+            Offset(center.x - spread * 0.85f, center.y - spread * 1.125f),
+            Offset(center.x - spread * 0.85f, center.y),
+            Offset(center.x - spread * 0.85f, center.y + spread * 1.125f),
+            Offset(center.x + spread * 0.85f, center.y - spread * 1.125f),
+            Offset(center.x + spread * 0.85f, center.y),
+            Offset(center.x + spread * 0.85f, center.y + spread * 1.125f)
         )
     }
 }
