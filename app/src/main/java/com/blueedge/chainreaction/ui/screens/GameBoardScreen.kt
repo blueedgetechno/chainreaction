@@ -103,7 +103,7 @@ fun GameBoardScreen(
             if (!InterstitialAdManager.isReady()) {
                 InterstitialAdManager.load(context)
             }
-            delay(2000)
+            
             (context as? Activity)?.let { activity ->
                 InterstitialAdManager.show(activity)
             }
