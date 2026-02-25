@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import androidx.compose.ui.graphics.drawscope.withTransform
 import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.ExplosionMove
 import com.blueedge.chainreaction.ui.theme.CellEmptyLight
@@ -119,7 +118,7 @@ fun GameGrid(
                     val dotRadius = circleRadius * 0.2f
                     val spread = circleRadius * 0.45f
 
-                    // Pass 1: Draw all travelling circles with flip animation
+                    // Pass 1: Draw all travelling circles (simple translate)
                     for (move in explosionMoves) {
                         val fromCenter = Offset(
                             x = (move.fromCol + 0.5f) * cellSizePx,
@@ -136,26 +135,16 @@ fun GameGrid(
 
                         val moveColor = playerColors.getOrElse(move.playerId - 1) { Color.Gray }
 
-                        // Flip animation: circle flattens to 0 at the cell boundary (50% of travel),
-                        // then expands again at the target. Horizontal moves squish on X-axis,
-                        // vertical moves squish on Y-axis.
-                        val isHorizontal = move.fromRow == move.toRow
-                        val flipFactor = kotlin.math.abs(1f - 2f * progress)
-                        val scaleX = if (isHorizontal) flipFactor else 1f
-                        val scaleY = if (!isHorizontal) flipFactor else 1f
-
-                        withTransform({ scale(scaleX, scaleY, currentPos) }) {
-                            drawCircle(
-                                color = moveColor,
-                                radius = circleRadius,
-                                center = currentPos
-                            )
-                            drawCircle(
-                                color = Color.White,
-                                radius = dotRadius,
-                                center = currentPos
-                            )
-                        }
+                        drawCircle(
+                            color = moveColor,
+                            radius = circleRadius,
+                            center = currentPos
+                        )
+                        drawCircle(
+                            color = Color.White,
+                            radius = dotRadius,
+                            center = currentPos
+                        )
                     }
 
                     // Pass 2: Re-draw each target cell's existing white dots on top of any
