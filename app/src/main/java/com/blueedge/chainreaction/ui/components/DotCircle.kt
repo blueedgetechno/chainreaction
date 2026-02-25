@@ -299,22 +299,22 @@ internal fun getDotPositions(count: Int, center: Offset, spread: Float): List<Of
             Offset(center.x + spread * 0.85f, center.y + spread * 0.85f),
             center
         )
-        7 -> listOf(  // hexagon shape (6 vertices) + center dot
-            Offset(center.x, center.y - spread * 1.125f),                             // top
-            Offset(center.x + spread * 0.974f, center.y - spread * 0.5625f),          // top-right
-            Offset(center.x + spread * 0.974f, center.y + spread * 0.5625f),          // bottom-right
-            Offset(center.x, center.y + spread * 1.125f),                             // bottom
-            Offset(center.x - spread * 0.974f, center.y + spread * 0.5625f),          // bottom-left
-            Offset(center.x - spread * 0.974f, center.y - spread * 0.5625f),          // top-left
-            center                                                                     // center
-        )
-        else -> listOf(  // 6+ dots: die face 6 (3 left column, 3 right column)
+        6 -> listOf(  // die face 6 (3 left column, 3 right column)
             Offset(center.x - spread * 0.85f, center.y - spread * 1.125f),
             Offset(center.x - spread * 0.85f, center.y),
             Offset(center.x - spread * 0.85f, center.y + spread * 1.125f),
             Offset(center.x + spread * 0.85f, center.y - spread * 1.125f),
             Offset(center.x + spread * 0.85f, center.y),
             Offset(center.x + spread * 0.85f, center.y + spread * 1.125f)
+        )
+        else -> listOf(  // 7+ dots: hexagon shape (6 vertices) + center dot
+            Offset(center.x, center.y - spread * 1.125f),                             // top
+            Offset(center.x + spread * 0.974f, center.y - spread * 0.5625f),          // top-right
+            Offset(center.x + spread * 0.974f, center.y + spread * 0.5625f),          // bottom-right
+            Offset(center.x, center.y + spread * 1.125f),                             // bottom
+            Offset(center.x - spread * 0.974f, center.y + spread * 0.5625f),          // bottom-left
+            Offset(center.x - spread * 0.974f, center.y - spread * 0.5625f),          // top-left
+            center                                                                    // center
         )
     }
 }
