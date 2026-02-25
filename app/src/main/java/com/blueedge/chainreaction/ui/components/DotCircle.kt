@@ -300,12 +300,12 @@ private fun getDotPositions(count: Int, center: Offset, spread: Float): List<Off
             center
         )
         7 -> listOf(  // hexagon shape (6 vertices) + center dot
-            Offset(center.x, center.y - spread * 0.9f),                              // top
-            Offset(center.x + spread * 0.779f, center.y - spread * 0.45f),           // top-right
-            Offset(center.x + spread * 0.779f, center.y + spread * 0.45f),           // bottom-right
-            Offset(center.x, center.y + spread * 0.9f),                              // bottom
-            Offset(center.x - spread * 0.779f, center.y + spread * 0.45f),           // bottom-left
-            Offset(center.x - spread * 0.779f, center.y - spread * 0.45f),           // top-left
+            Offset(center.x, center.y - spread * 1.1f),                              // top
+            Offset(center.x + spread * 0.953f, center.y - spread * 0.55f),           // top-right
+            Offset(center.x + spread * 0.953f, center.y + spread * 0.55f),           // bottom-right
+            Offset(center.x, center.y + spread * 1.1f),                              // bottom
+            Offset(center.x - spread * 0.953f, center.y + spread * 0.55f),           // bottom-left
+            Offset(center.x - spread * 0.953f, center.y - spread * 0.55f),           // top-left
             center                                                                     // center
         )
         else -> listOf(  // 6+ dots: die face 6 (3 left column, 3 right column)
