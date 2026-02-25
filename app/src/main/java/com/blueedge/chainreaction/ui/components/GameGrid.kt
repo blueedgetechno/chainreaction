@@ -115,7 +115,10 @@ fun GameGrid(
                 ) {
                     val progress = moveProgress.value
                     val circleRadius = cellSizePx * 0.38f
+                    val dotRadius = circleRadius * 0.2f
+                    val spread = circleRadius * 0.45f
 
+                    // Pass 1: Draw all travelling circles (simple translate)
                     for (move in explosionMoves) {
                         val fromCenter = Offset(
                             x = (move.fromCol + 0.5f) * cellSizePx,
@@ -132,18 +135,36 @@ fun GameGrid(
 
                         val moveColor = playerColors.getOrElse(move.playerId - 1) { Color.Gray }
 
-                        // Draw moving circle
                         drawCircle(
                             color = moveColor,
                             radius = circleRadius,
                             center = currentPos
                         )
-                        // Draw white dot inside
                         drawCircle(
                             color = Color.White,
-                            radius = circleRadius * 0.2f,
+                            radius = dotRadius,
                             center = currentPos
                         )
+                    }
+
+                    // Pass 2: Re-draw each target cell's existing white dots on top of any
+                    // travelling circle, so the original dot count is never obscured.
+                    for (move in explosionMoves) {
+                        val targetCell = board[move.toRow][move.toCol]
+                        if (!targetCell.isEmpty) {
+                            val targetCenter = Offset(
+                                x = (move.toCol + 0.5f) * cellSizePx,
+                                y = (move.toRow + 0.5f) * cellSizePx
+                            )
+                            val dotPositions = getDotPositions(targetCell.dots, targetCenter, spread)
+                            for (pos in dotPositions) {
+                                drawCircle(
+                                    color = Color.White,
+                                    radius = dotRadius,
+                                    center = pos
+                                )
+                            }
+                        }
                     }
                 }
             }
