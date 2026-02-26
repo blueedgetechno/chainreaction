@@ -17,5 +17,6 @@ local.properties
 .kotlin
 keystore.properties
 release.keystore
+google-services.json
 *.kt.copy
 HISTORY.md
