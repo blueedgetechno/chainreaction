@@ -1,5 +1,7 @@
 package com.blueedge.chainreaction.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -48,6 +50,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.blueedge.chainreaction.BuildConfig
 import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.AppFont
@@ -72,6 +76,8 @@ fun SettingsScreen(
     onRestart: (() -> Unit)? = null,
     onExitToMenu: (() -> Unit)? = null
 ) {
+    val context = LocalContext.current
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -280,18 +286,24 @@ fun SettingsScreen(
                 ) {
                     SmallRaised3DButton(
                         text = "Terms of Service",
-                        onClick = { }
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://chainreaction.blueedge.me/terms.html"))
+                            context.startActivity(intent)
+                        }
                     )
                     SmallRaised3DButton(
                         text = "Privacy Policy",
-                        onClick = { }
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://chainreaction.blueedge.me/privacy.html"))
+                            context.startActivity(intent)
+                        }
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Version 1.0",
+                    text = "Version ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
