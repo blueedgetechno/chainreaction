@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "676100558866",
-    "project_id": "chainreaction-8e4ec",
-    "storage_bucket": "chainreaction-8e4ec.firebasestorage.app"
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "YOUR_PROJECT_ID",
+    "storage_bucket": "YOUR_PROJECT_ID.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:676100558866:android:6dbe5829c949993f2608cb",
+        "mobilesdk_app_id": "YOUR_MOBILESDK_APP_ID",
         "android_client_info": {
           "package_name": "com.blueedge.chainreaction"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC4DCO3Ap2TkXvfCBTI_Ysl4RVIyZGt2Ps"
+          "current_key": "YOUR_FIREBASE_API_KEY"
         }
       ],
       "services": {
