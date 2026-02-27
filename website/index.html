@@ -1,317 +1,507 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chain Reaction – Multiplayer Puzzle Game</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          animation: {
-            'float-slow': 'floatY 6s ease-in-out infinite',
-            'float-mid': 'floatY 4s ease-in-out infinite',
-            'drift-1': 'drift1 8s ease-in-out infinite',
-            'drift-2': 'drift2 10s ease-in-out infinite',
-            'drift-3': 'drift3 7s ease-in-out infinite',
-            'sparkle': 'sparkle 3s ease-in-out infinite',
-            'sparkle-d': 'sparkle 3s 1.5s ease-in-out infinite',
-            'pulse-soft': 'pulseSoft 4s ease-in-out infinite',
-          },
-          keyframes: {
-            floatY: {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-18px)' },
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chain Reaction – Multiplayer Puzzle Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            animation: {
+              "float-slow": "floatY 6s ease-in-out infinite",
+              "float-mid": "floatY 4s ease-in-out infinite",
+              "drift-1": "drift1 8s ease-in-out infinite",
+              "drift-2": "drift2 10s ease-in-out infinite",
+              "drift-3": "drift3 7s ease-in-out infinite",
+              sparkle: "sparkle 3s ease-in-out infinite",
+              "sparkle-d": "sparkle 3s 1.5s ease-in-out infinite",
+              "pulse-soft": "pulseSoft 4s ease-in-out infinite",
             },
-            drift1: {
-              '0%, 100%': { transform: 'translate(0,0) scale(1)' },
-              '33%': { transform: 'translate(12px,-16px) scale(1.05)' },
-              '66%': { transform: 'translate(-8px,-10px) scale(.97)' },
-            },
-            drift2: {
-              '0%, 100%': { transform: 'translate(0,0) scale(1)' },
-              '50%': { transform: 'translate(-14px,-20px) scale(1.04)' },
-            },
-            drift3: {
-              '0%, 100%': { transform: 'translate(0,0) rotate(0deg)' },
-              '50%': { transform: 'translate(10px,-14px) rotate(6deg)' },
-            },
-            sparkle: {
-              '0%, 100%': { opacity: 0.3, transform: 'scale(1)' },
-              '50%': { opacity: 1, transform: 'scale(1.5)' },
-            },
-            pulseSoft: {
-              '0%, 100%': { opacity: 0.7, transform: 'scale(1)' },
-              '50%': { opacity: 1, transform: 'scale(1.06)' },
+            keyframes: {
+              floatY: {
+                "0%, 100%": { transform: "translateY(0px)" },
+                "50%": { transform: "translateY(-18px)" },
+              },
+              drift1: {
+                "0%, 100%": { transform: "translate(0,0) scale(1)" },
+                "33%": { transform: "translate(12px,-16px) scale(1.05)" },
+                "66%": { transform: "translate(-8px,-10px) scale(.97)" },
+              },
+              drift2: {
+                "0%, 100%": { transform: "translate(0,0) scale(1)" },
+                "50%": { transform: "translate(-14px,-20px) scale(1.04)" },
+              },
+              drift3: {
+                "0%, 100%": { transform: "translate(0,0) rotate(0deg)" },
+                "50%": { transform: "translate(10px,-14px) rotate(6deg)" },
+              },
+              sparkle: {
+                "0%, 100%": { opacity: 0.3, transform: "scale(1)" },
+                "50%": { opacity: 1, transform: "scale(1.5)" },
+              },
+              pulseSoft: {
+                "0%, 100%": { opacity: 0.7, transform: "scale(1)" },
+                "50%": { opacity: 1, transform: "scale(1.06)" },
+              },
             },
           },
         },
-      },
-    }
-  </script>
-</head>
-<body class="bg-gradient-to-b from-orange-400 via-orange-500 to-orange-600 text-gray-800 font-sans min-h-screen">
+      }
+    </script>
+  </head>
+  <body
+    class="bg-gradient-to-b from-orange-400 via-orange-500 to-orange-600 text-gray-800 min-h-screen"
+    style="font-family: 'Comic Relief', 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">
+    <!-- ══════════ CONFETTI DOTS (decorative) ══════════ -->
+    <div
+      class="fixed inset-0 overflow-hidden pointer-events-none z-0"
+      aria-hidden="true">
+      <div
+        class="absolute top-[5%] left-[8%] w-2 h-2 rounded-full bg-yellow-300 opacity-60 animate-sparkle"></div>
+      <div
+        class="absolute top-[12%] right-[12%] w-1.5 h-1.5 rounded-full bg-white opacity-50 animate-sparkle-d"></div>
+      <div
+        class="absolute top-[20%] left-[25%] w-1 h-1 rounded-full bg-pink-300 opacity-40 animate-sparkle"></div>
+      <div
+        class="absolute top-[30%] right-[30%] w-2.5 h-2.5 rounded-full bg-cyan-300 opacity-50 animate-sparkle-d"></div>
+      <div
+        class="absolute top-[18%] right-[5%] w-1.5 h-1.5 rounded-full bg-green-300 opacity-60 animate-sparkle"></div>
+      <div
+        class="absolute top-[45%] left-[5%] w-2 h-2 rounded-full bg-blue-300 opacity-40 animate-sparkle-d"></div>
+      <div
+        class="absolute top-[55%] right-[8%] w-1 h-1 rounded-full bg-yellow-200 opacity-50 animate-sparkle"></div>
+      <div
+        class="absolute top-[65%] left-[15%] w-2 h-2 rounded-full bg-purple-300 opacity-40 animate-sparkle-d"></div>
+      <div
+        class="absolute top-[75%] right-[20%] w-1.5 h-1.5 rounded-full bg-red-300 opacity-50 animate-sparkle"></div>
+      <div
+        class="absolute top-[85%] left-[40%] w-1 h-1 rounded-full bg-white opacity-60 animate-sparkle-d"></div>
+      <div
+        class="absolute top-[10%] left-[50%] w-1.5 h-1.5 rounded-full bg-orange-200 opacity-50 animate-sparkle"></div>
+      <div
+        class="absolute top-[40%] right-[45%] w-2 h-2 rounded-full bg-emerald-300 opacity-30 animate-sparkle"></div>
+      <div
+        class="absolute top-[60%] left-[60%] w-1 h-1 rounded-full bg-pink-200 opacity-60 animate-sparkle-d"></div>
+      <div
+        class="absolute top-[92%] left-[70%] w-2 h-2 rounded-full bg-blue-200 opacity-40 animate-sparkle"></div>
+      <div
+        class="absolute top-[35%] left-[85%] w-1.5 h-1.5 rounded-full bg-amber-200 opacity-50 animate-sparkle-d"></div>
+      <div
+        class="absolute top-[50%] left-[92%] w-1 h-1 rounded-full bg-lime-300 opacity-40 animate-sparkle"></div>
+    </div>
 
-  <!-- ══════════ CONFETTI DOTS (decorative) ══════════ -->
-  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-    <div class="absolute top-[5%]  left-[8%]  w-2 h-2   rounded-full bg-yellow-300  opacity-60 animate-sparkle"></div>
-    <div class="absolute top-[12%] right-[12%] w-1.5 h-1.5 rounded-full bg-white      opacity-50 animate-sparkle-d"></div>
-    <div class="absolute top-[20%] left-[25%]  w-1 h-1   rounded-full bg-pink-300    opacity-40 animate-sparkle"></div>
-    <div class="absolute top-[30%] right-[30%] w-2.5 h-2.5 rounded-full bg-cyan-300  opacity-50 animate-sparkle-d"></div>
-    <div class="absolute top-[18%] right-[5%]  w-1.5 h-1.5 rounded-full bg-green-300 opacity-60 animate-sparkle"></div>
-    <div class="absolute top-[45%] left-[5%]   w-2 h-2   rounded-full bg-blue-300   opacity-40 animate-sparkle-d"></div>
-    <div class="absolute top-[55%] right-[8%]  w-1 h-1   rounded-full bg-yellow-200 opacity-50 animate-sparkle"></div>
-    <div class="absolute top-[65%] left-[15%]  w-2 h-2   rounded-full bg-purple-300 opacity-40 animate-sparkle-d"></div>
-    <div class="absolute top-[75%] right-[20%] w-1.5 h-1.5 rounded-full bg-red-300   opacity-50 animate-sparkle"></div>
-    <div class="absolute top-[85%] left-[40%]  w-1 h-1   rounded-full bg-white      opacity-60 animate-sparkle-d"></div>
-    <div class="absolute top-[10%] left-[50%]  w-1.5 h-1.5 rounded-full bg-orange-200 opacity-50 animate-sparkle"></div>
-    <div class="absolute top-[40%] right-[45%] w-2 h-2   rounded-full bg-emerald-300 opacity-30 animate-sparkle"></div>
-    <div class="absolute top-[60%] left-[60%]  w-1 h-1   rounded-full bg-pink-200   opacity-60 animate-sparkle-d"></div>
-    <div class="absolute top-[92%] left-[70%]  w-2 h-2   rounded-full bg-blue-200   opacity-40 animate-sparkle"></div>
-    <div class="absolute top-[35%] left-[85%]  w-1.5 h-1.5 rounded-full bg-amber-200 opacity-50 animate-sparkle-d"></div>
-    <div class="absolute top-[50%] left-[92%]  w-1 h-1   rounded-full bg-lime-300   opacity-40 animate-sparkle"></div>
-  </div>
+    <!-- ═══════════════ NAVBAR ═══════════════ -->
+    <nav
+      class="bg-white/10 backdrop-blur-md sticky top-0 z-50 border-b border-white/10">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-2">
+          <div
+            class="w-9 h-9 bg-white rounded-xl flex items-center justify-center">
+            <div class="grid grid-cols-2 gap-0.5">
+              <div class="w-2 h-2 rounded-full bg-red-500"></div>
+              <div class="w-2 h-2 rounded-full bg-green-500"></div>
+              <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+              <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+          <span
+            class="text-xl font-extrabold text-white drop-shadow-sm hidden sm:inline"
+            >Chain Reaction</span
+          >
+        </a>
 
-  <!-- ═══════════════ NAVBAR ═══════════════ -->
-  <nav class="bg-white/10 backdrop-blur-md sticky top-0 z-50 border-b border-white/10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      <!-- Logo -->
-      <a href="#" class="flex items-center gap-2">
-        <div class="w-9 h-9 bg-white rounded-xl flex items-center justify-center">
-          <div class="grid grid-cols-2 gap-0.5">
-            <div class="w-2 h-2 rounded-full bg-red-500"></div>
-            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+        <!-- Menu Items -->
+        <div
+          class="hidden md:flex items-center gap-8 text-sm font-semibold text-white/90">
+          <a href="#home" class="hover:text-white transition">Home</a>
+          <a href="#features" class="hover:text-white transition">Features</a>
+          <a href="#how-to-play" class="hover:text-white transition"
+            >How to Play</a
+          >
+        </div>
+
+        <!-- Download Button -->
+        <a
+          href="#download"
+          class="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-6 py-2 text-sm font-bold transition transform hover:scale-105">
+          Download
+        </a>
+      </div>
+    </nav>
+
+    <!-- ═══════════════ HERO SECTION ═══════════════ -->
+    <section id="home" class="relative overflow-hidden">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 flex flex-col lg:flex-row items-center gap-10 lg:gap-16 relative z-10">
+        <!-- Text Column -->
+        <div class="flex-1 text-center lg:text-left">
+          <h1
+            class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">
+            Chain&#8209;Reaction Fun&nbsp;with&nbsp;Friends!
+          </h1>
+          <p
+            class="mt-5 text-lg sm:text-xl text-orange-100/90 max-w-xl mx-auto lg:mx-0 drop-shadow">
+            Download and play this multiplayer puzzle game. Start your
+            chain reaction today!
+          </p>
+
+          <!-- CTA Button -->
+          <div class="mt-8 flex justify-center lg:justify-start">
+            <a
+              href="#download"
+              class="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-8 py-3.5 text-base font-bold transition transform hover:scale-105 uppercase tracking-wide">
+              Download Now
+            </a>
           </div>
         </div>
-        <span class="text-xl font-extrabold text-white drop-shadow-sm hidden sm:inline">Chain Reaction</span>
-      </a>
 
-      <!-- Menu Items -->
-      <div class="hidden md:flex items-center gap-8 text-sm font-semibold text-white/90">
-        <a href="#home" class="hover:text-white transition">Home</a>
-        <a href="#features" class="hover:text-white transition">Features</a>
-        <a href="#how-to-play" class="hover:text-white transition">How to Play</a>
+        <!-- Game Board Mockup + Floating Avatars -->
+        <div class="flex-1 flex justify-center lg:justify-end relative">
+          <!-- Floating player avatars -->
+          <div class="absolute -top-4 left-0 lg:-left-6 animate-drift-1 z-20">
+            <div
+              class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center border-2 border-white/40">
+              <svg
+                class="w-7 h-7 text-white/80"
+                fill="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+              </svg>
+            </div>
+          </div>
+          <div class="absolute -top-2 right-2 lg:-right-4 animate-drift-2 z-20">
+            <div
+              class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center border-2 border-white/40">
+              <svg
+                class="w-6 h-6 text-white/80"
+                fill="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+              </svg>
+            </div>
+          </div>
+          <div
+            class="absolute top-1/3 -right-4 lg:-right-10 animate-drift-3 z-20">
+            <div
+              class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center border-2 border-white/40">
+              <svg
+                class="w-7 h-7 text-white/80"
+                fill="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+              </svg>
+            </div>
+          </div>
+          <div class="absolute bottom-4 left-4 lg:-left-2 animate-drift-2 z-20">
+            <div
+              class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center border-2 border-white/40">
+              <svg
+                class="w-6 h-6 text-white/80"
+                fill="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+              </svg>
+            </div>
+          </div>
+          <div
+            class="absolute bottom-0 right-6 lg:right-0 animate-drift-1 z-20">
+            <div
+              class="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center border-2 border-white/40">
+              <svg
+                class="w-7 h-7 text-white/80"
+                fill="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+              </svg>
+            </div>
+          </div>
+          <div
+            class="absolute top-2/3 -left-6 lg:-left-12 animate-drift-3 z-20 hidden sm:block">
+            <div
+              class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-orange-500 flex items-center justify-center border-2 border-white/40">
+              <svg
+                class="w-7 h-7 text-white/80"
+                fill="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Game board image -->
+          <img
+            src="assets/gen0.png"
+            alt="Chain Reaction game board"
+            class="w-64 sm:w-72 lg:w-[380px] rounded-3xl relative z-10 animate-float-slow ring-4 ring-white/20" />
+        </div>
       </div>
+    </section>
 
-      <!-- Download Button -->
-      <a href="#download" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-6 py-2 text-sm font-bold transition transform hover:scale-105">
-        Download
-      </a>
+    <!-- ═══════════ WAVE DIVIDER ═══════════ -->
+    <div class="relative -mt-1">
+      <svg
+        viewBox="0 0 1440 100"
+        class="w-full block"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none">
+        <path
+          d="M0 40 C360 100, 1080 0, 1440 60 L1440 100 L0 100 Z"
+          fill="#fff7ed" />
+      </svg>
     </div>
-  </nav>
 
-  <!-- ═══════════════ HERO SECTION ═══════════════ -->
-  <section id="home" class="relative overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 flex flex-col lg:flex-row items-center gap-10 lg:gap-16 relative z-10">
-
-      <!-- Text Column -->
-      <div class="flex-1 text-center lg:text-left">
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">
-          Chain&#8209;Reaction Fun&nbsp;with&nbsp;Friends!
-        </h1>
-        <p class="mt-5 text-lg sm:text-xl text-orange-100/90 max-w-xl mx-auto lg:mx-0 drop-shadow">
-          Download and play this addictive multiplayer puzzle game. Start your chain reaction today!
+    <!-- ═══════════════ FEATURES SECTION ═══════════════ -->
+    <section id="features" class="bg-orange-50 py-16 lg:py-24 relative z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">
+          Bring Everyone In
+        </h2>
+        <p class="mt-3 text-lg text-orange-500 font-semibold">
+          Supports up to 6 Players
         </p>
 
-        <!-- CTA Button -->
-        <div class="mt-8 flex justify-center lg:justify-start">
-          <a href="#download" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-8 py-3.5 text-base font-bold transition transform hover:scale-105 uppercase tracking-wide">
-            Download Now
+        <!-- Feature Cards — image backgrounds -->
+        <div
+          class="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <!-- Card 1 -->
+          <article
+            class="relative rounded-3xl overflow-hidden min-h-[320px] flex flex-col justify-end">
+            <img
+              src="assets/gen1.png"
+              alt=""
+              aria-hidden="true"
+              class="absolute inset-0 w-full h-full object-cover" />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent"></div>
+            <div class="relative z-10 p-7 text-left text-white">
+              <div
+                class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-extrabold text-base mb-3">
+                1
+              </div>
+              <h3 class="text-xl font-bold">Match Colors</h3>
+              <p class="mt-2 text-white/80 text-sm leading-relaxed">
+                Place your orbs strategically. Each cell can only hold orbs of
+                one color — yours!
+              </p>
+            </div>
+          </article>
+
+          <!-- Card 2 -->
+          <article
+            class="relative rounded-3xl overflow-hidden min-h-[320px] flex flex-col justify-end">
+            <img
+              src="assets/gen2.png"
+              alt=""
+              aria-hidden="true"
+              class="absolute inset-0 w-full h-full object-cover" />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent"></div>
+            <div class="relative z-10 p-7 text-left text-white">
+              <div
+                class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-extrabold text-base mb-3">
+                2
+              </div>
+              <h3 class="text-xl font-bold">Trigger Reactions</h3>
+              <p class="mt-2 text-white/80 text-sm leading-relaxed">
+                Overload a cell and watch it explode into neighbors, capturing
+                enemy orbs in a cascade.
+              </p>
+            </div>
+          </article>
+
+          <!-- Card 3 -->
+          <article
+            class="relative rounded-3xl overflow-hidden min-h-[320px] flex flex-col justify-end">
+            <img
+              src="assets/gen3.png"
+              alt=""
+              aria-hidden="true"
+              class="absolute inset-0 w-full h-full object-cover" />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent"></div>
+            <div class="relative z-10 p-7 text-left text-white">
+              <div
+                class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-extrabold text-base mb-3">
+                3
+              </div>
+              <h3 class="text-xl font-bold">Win the Game</h3>
+              <p class="mt-2 text-white/80 text-sm leading-relaxed">
+                Be the last player standing by eliminating every opponent's orbs
+                from the board.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ WAVE DIVIDER ═══════════ -->
+    <div class="relative -mt-1">
+      <svg
+        viewBox="0 0 1440 80"
+        class="w-full block"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none">
+        <path d="M0 30 C480 80, 960 0, 1440 50 L1440 80 L0 80 Z" fill="white" />
+      </svg>
+    </div>
+
+    <!-- ═══════════════ HOW IT WORKS SECTION ═══════════════ -->
+    <section id="how-to-play" class="py-16 lg:py-24 bg-white relative z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">
+          How to Play
+        </h2>
+        <p class="mt-3 text-lg text-gray-500">
+          Three simple steps to start having fun
+        </p>
+
+        <!-- Steps -->
+        <div class="mt-14 grid grid-cols-1 md:grid-cols-3 gap-10">
+          <!-- Step 1 -->
+          <div class="flex flex-col items-center group">
+            <div
+              class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold transition transform group-hover:scale-110 animate-pulse-soft">
+              1
+            </div>
+            <h3 class="mt-6 text-lg font-bold text-gray-900">
+              Download the App
+            </h3>
+            <p class="mt-2 text-gray-500 max-w-xs">
+              Grab Chain Reaction from Google Play or the App Store — it's free!
+            </p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="flex flex-col items-center group">
+            <div
+              class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold transition transform group-hover:scale-110 animate-pulse-soft"
+              style="animation-delay: 0.5s">
+              2
+            </div>
+            <h3 class="mt-6 text-lg font-bold text-gray-900">
+              Invite Your Friends
+            </h3>
+            <p class="mt-2 text-gray-500 max-w-xs">
+              Add up to 6 players and customize the board size to your liking.
+            </p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="flex flex-col items-center group">
+            <div
+              class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold transition transform group-hover:scale-110 animate-pulse-soft"
+              style="animation-delay: 1s">
+              3
+            </div>
+            <h3 class="mt-6 text-lg font-bold text-gray-900">
+              Start a Chain Reaction
+            </h3>
+            <p class="mt-2 text-gray-500 max-w-xs">
+              Take turns, plan your moves, and set off explosive chain reactions
+              to win!
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ WAVE DIVIDER ═══════════ -->
+    <div class="relative -mt-1">
+      <svg
+        viewBox="0 0 1440 80"
+        class="w-full block"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none">
+        <path
+          d="M0 50 C360 0, 1080 80, 1440 20 L1440 80 L0 80 Z"
+          fill="#ea580c" />
+      </svg>
+    </div>
+
+    <!-- ═══════════════ CTA SECTION ═══════════════ -->
+    <section
+      id="download"
+      class="bg-gradient-to-br from-orange-500 to-orange-700 py-20 lg:py-28 relative overflow-hidden z-10">
+      <!-- Background glow -->
+      <div
+        class="absolute top-10 left-10 w-40 h-40 bg-orange-400/20 rounded-full blur-3xl"></div>
+      <div
+        class="absolute bottom-10 right-10 w-56 h-56 bg-orange-300/20 rounded-full blur-3xl"></div>
+
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center relative z-10">
+        <h2
+          class="text-3xl sm:text-5xl font-extrabold text-white drop-shadow-lg">
+          Ready to Play?
+        </h2>
+        <p class="mt-4 text-lg text-orange-100/90 max-w-md">
+          Join thousands of players and start your chain reaction now.
+        </p>
+
+        <!-- Store Buttons -->
+        <div class="mt-10 flex flex-col sm:flex-row items-center gap-4">
+          <a
+            href="https://play.google.com/store/apps/details?id=com.blueedge.chainreaction"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Download Chain Reaction on Google Play (opens in new tab)"
+            class="flex items-center gap-3 transition transform hover:scale-105">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="200"
+              viewBox="0 0 135 40"
+              fill="none">
+              <g clip-path="url(#clip0_438_8461)">
+                <path
+                  d="M129.998 40.0002H5.0028C2.25285 40.0002 0.00292969 37.7503 0.00292969 35.0003V5.00088C0.00292969 2.25092 2.25285 0.000976562 5.0028 0.000976562H129.998C132.748 0.000976562 134.998 2.25092 134.998 5.00088V35.0003C134.998 37.7503 132.748 40.0002 129.998 40.0002Z"
+                  fill="black" />
+                <path
+                  d="M129.998 0.000976562H5.0028C2.25285 0.000976562 0.00292969 2.25092 0.00292969 5.00088V35.0003C0.00292969 37.7503 2.25285 40.0002 5.0028 40.0002H129.998C132.748 40.0002 134.998 37.7503 134.998 35.0003V5.00088C134.998 2.25092 132.748 0.000976562 129.998 0.000976562ZM129.998 0.800557C132.314 0.800557 134.198 2.68494 134.198 5.00088V35.0003C134.198 37.3163 132.314 39.2006 129.998 39.2006H5.0028C2.68688 39.2006 0.80333 37.3163 0.80333 35.0003V5.00088C0.80333 2.68494 2.68688 0.800557 5.0028 0.800557H129.998Z"
+                  fill="#606A73" />
+                <path
+                  d="M106.935 30.0002H108.801V17.4983H106.935V30.0002ZM123.742 22.0021L121.603 27.422H121.539L119.319 22.0021H117.309L120.639 29.5772L118.74 33.7911H120.686L125.817 22.0025L123.742 22.0021ZM113.159 28.5801C112.549 28.5801 111.696 28.2742 111.696 27.5184C111.696 26.5535 112.758 26.1836 113.674 26.1836C114.494 26.1836 114.881 26.3602 115.379 26.6016C115.234 27.7598 114.237 28.5801 113.159 28.5801L113.159 28.5801ZM113.385 21.7287C112.034 21.7287 110.635 22.324 110.056 23.6428L111.712 24.3341C112.066 23.6428 112.725 23.4178 113.417 23.4178C114.382 23.4178 115.363 23.9963 115.379 25.0259V25.1544C115.041 24.9614 114.317 24.6721 113.433 24.6721C111.647 24.6721 109.83 25.6528 109.83 27.4864C109.83 29.159 111.294 30.2367 112.934 30.2367C114.188 30.2367 114.881 29.6738 115.314 29.0141H115.379V29.9797H117.181V25.1864C117.181 22.9669 115.523 21.7287 113.385 21.7287V21.7287ZM101.853 23.524H99.1992V19.239H101.853C103.248 19.239 104.04 20.3937 104.04 21.3814C104.04 22.3502 103.248 23.524 101.853 23.524ZM101.805 17.4986H97.3341V30.0005H99.1993V25.2643H101.805C103.873 25.2643 105.906 23.7674 105.906 21.3819C105.906 18.9968 103.873 17.4992 101.805 17.4992L101.805 17.4986ZM77.4249 28.5822C76.1358 28.5822 75.0569 27.5025 75.0569 26.0209C75.0569 24.5221 76.1358 23.4272 77.4249 23.4272C78.6976 23.4272 79.6964 24.5222 79.6964 26.0209C79.6964 27.5025 78.6976 28.5822 77.4249 28.5822ZM79.5674 22.7019H79.5029C79.0842 22.2027 78.2783 21.7515 77.264 21.7515C75.137 21.7515 73.1879 23.6206 73.1879 26.0209C73.1879 28.4049 75.137 30.2576 77.264 30.2576C78.2783 30.2576 79.0842 29.8064 79.5029 29.2912H79.5674V29.9029C79.5674 31.5306 78.6976 32.4001 77.296 32.4001C76.1526 32.4001 75.4437 31.5786 75.1535 30.886L73.5266 31.5625C73.9934 32.6898 75.2336 34.0758 77.2961 34.0758C79.4874 34.0758 81.3401 32.7867 81.3401 29.645V22.0092H79.5675L79.5674 22.7019ZM82.6291 29.9998H84.497V17.498H82.6291V29.9998ZM87.2521 25.8757C87.204 24.2323 88.5254 23.3948 89.4755 23.3948C90.2168 23.3948 90.8445 23.7655 91.0547 24.2968L87.2521 25.8757ZM93.0515 24.4577C92.6972 23.5078 91.618 21.7515 89.411 21.7515C87.2196 21.7515 85.3994 23.4753 85.3994 26.0046C85.3994 28.3889 87.204 30.2576 89.62 30.2576C91.5692 30.2576 92.6973 29.0659 93.1648 28.3729L91.7148 27.4061C91.2313 28.1151 90.5711 28.5823 89.62 28.5823C88.67 28.5823 87.9931 28.1472 87.5588 27.2933L93.2449 24.9414L93.0515 24.4577ZM47.7448 23.0566V24.8608H52.0622C51.9333 25.8757 51.595 26.6167 51.0794 27.1323C50.4509 27.7604 49.4681 28.4534 47.7447 28.4534C45.0865 28.4534 43.0085 26.3108 43.0085 23.6527C43.0085 20.9945 45.0865 18.8517 47.7447 18.8517C49.1786 18.8517 50.2255 19.4156 50.9988 20.1406L52.2719 18.8676C51.1922 17.8367 49.7586 17.0474 47.7447 17.0474C44.1033 17.0474 41.0425 20.0117 41.0425 23.6527C41.0425 27.2933 44.1033 30.2576 47.7447 30.2576C49.7099 30.2576 51.1922 29.6132 52.352 28.405C53.5442 27.2128 53.9148 25.5374 53.9148 24.184C53.9148 23.7656 53.8823 23.3789 53.8179 23.0566H47.7448ZM58.8238 28.5822C57.5347 28.5822 56.423 27.5189 56.423 26.0046C56.423 24.4741 57.5347 23.4273 58.8238 23.4273C60.1124 23.4273 61.224 24.4741 61.224 26.0046C61.224 27.5189 60.1124 28.5822 58.8238 28.5822ZM58.8238 21.7515C56.471 21.7515 54.5543 23.5397 54.5543 26.0046C54.5543 28.4534 56.471 30.2576 58.8238 30.2576C61.1756 30.2576 63.0928 28.4534 63.0928 26.0046C63.0928 23.5397 61.1756 21.7515 58.8238 21.7515ZM68.1365 28.5822C66.8483 28.5822 65.7363 27.5189 65.7363 26.0046C65.7363 24.4741 66.8484 23.4273 68.1365 23.4273C69.4256 23.4273 70.5369 24.4741 70.5369 26.0046C70.5369 27.5189 69.4256 28.5822 68.1365 28.5822ZM68.1365 21.7515C65.7847 21.7515 63.8679 23.5397 63.8679 26.0046C63.8679 28.4534 65.7847 30.2576 68.1365 30.2576C70.4893 30.2576 72.4061 28.4534 72.4061 26.0046C72.4061 23.5397 70.4893 21.7515 68.1365 21.7515Z"
+                  fill="white" />
+                <path
+                  d="M20.7163 19.4245L10.0708 30.724C10.0712 30.7263 10.072 30.7283 10.0724 30.7307C10.3989 31.9577 11.5196 32.8612 12.8496 32.8612C13.3813 32.8612 13.8805 32.7174 14.3086 32.4651L14.3426 32.4451L26.3261 25.5301L20.7168 19.4243"
+                  fill="#EB3131" />
+                <path
+                  d="M31.4872 17.5004L31.477 17.4934L26.3034 14.4941L20.4746 19.6809L26.3236 25.5292L31.47 22.5598C32.3722 22.0727 32.9848 21.1215 32.9848 20.0246C32.9848 18.9356 32.3805 17.9892 31.4872 17.5005"
+                  fill="#F6B60B" />
+                <path
+                  d="M10.0693 9.27734C10.0053 9.51334 9.97168 9.76053 9.97168 10.0172V29.9846C9.97168 30.2408 10.0049 30.4889 10.0697 30.724L21.0827 19.7132L10.0697 9.27763"
+                  fill="#5778C5" />
+                <path
+                  d="M20.7953 20.0011L26.3058 14.4922L14.3358 7.55211C13.9007 7.29151 13.3929 7.14111 12.8495 7.14111C11.5195 7.14111 10.3973 8.04622 10.0707 9.27465C10.0703 9.27585 10.0703 9.27668 10.0703 9.27773L20.7953 20.0013"
+                  fill="#3BAD49" />
+                <path
+                  d="M47.3947 9.78138H44.4776V10.5033H46.6635C46.6041 11.0924 46.3698 11.5549 45.9745 11.8908C45.5792 12.2268 45.0745 12.3955 44.4776 12.3955C43.8229 12.3955 43.2682 12.1674 42.8137 11.7143C42.3683 11.2518 42.1418 10.6799 42.1418 9.99085C42.1418 9.30187 42.3683 8.72994 42.8137 8.26749C43.2682 7.8144 43.8229 7.58781 44.4776 7.58781C44.8136 7.58781 45.1339 7.64561 45.4276 7.7722C45.7213 7.8987 45.9572 8.07529 46.1416 8.30189L46.6963 7.7472C46.4447 7.46121 46.126 7.24251 45.7306 7.08312C45.3353 6.92372 44.9229 6.84722 44.4775 6.84722C43.6041 6.84722 42.8636 7.15031 42.2589 7.75503C41.6542 8.36122 41.3511 9.10811 41.3511 9.99087C41.3511 10.8736 41.6542 11.6221 42.2589 12.2269C42.8636 12.8314 43.6041 13.1347 44.4775 13.1347C45.3947 13.1347 46.1259 12.8409 46.6884 12.244C47.1837 11.7472 47.4368 11.0753 47.4368 10.2347C47.4368 10.0925 47.4196 9.9409 47.3946 9.7815L47.3947 9.78138ZM48.5248 6.98146V13.0002H52.0387V12.2611H49.2982V10.3518H51.7701V9.62992H49.2982V7.72213H52.0387V6.98144L48.5248 6.98146ZM56.9661 7.72215V6.98146H52.8302V7.72215H54.5115V13.0002H55.2849V7.72215H56.9661ZM60.7104 6.98146H59.937V13.0002H60.7104V6.98146ZM65.8154 7.72215V6.98146H61.6796V7.72215H63.3607V13.0002H64.1341V7.72215H65.8154ZM73.6199 7.76435C73.023 7.15027 72.2918 6.84717 71.4183 6.84717C70.5434 6.84717 69.8122 7.15026 69.2153 7.75497C68.6184 8.35187 68.3247 9.10026 68.3247 9.99081C68.3247 10.8814 68.6184 11.6299 69.2153 12.2268C69.8122 12.8314 70.5434 13.1346 71.4183 13.1346C72.2839 13.1346 73.023 12.8314 73.6199 12.2268C74.2168 11.6299 74.5104 10.8814 74.5104 9.99081C74.5104 9.10806 74.2167 8.36113 73.6199 7.76435ZM69.77 8.26744C70.2153 7.81434 70.7622 7.58775 71.4183 7.58775C72.073 7.58775 72.6199 7.81435 73.0574 8.26744C73.5027 8.71273 73.7214 9.29389 73.7214 9.9908C73.7214 10.6893 73.5027 11.2689 73.0574 11.7142C72.6199 12.1673 72.073 12.3954 71.4183 12.3954C70.7622 12.3954 70.2153 12.1673 69.77 11.7142C69.334 11.2595 69.1153 10.6893 69.1153 9.9908C69.1153 9.29391 69.334 8.72209 69.77 8.26744ZM76.3479 9.25182L76.3152 8.09081H76.3479L79.4073 13.0001H80.215V6.9814H79.4416V10.5032L79.4744 11.6642H79.4416L76.5167 6.9814H75.5745V13.0001H76.3479V9.25182Z"
+                  fill="white"
+                  stroke="white"
+                  stroke-width="0.26666"
+                  stroke-miterlimit="10" />
+              </g>
+              <defs>
+                <clipPath id="clip0_438_8461">
+                  <rect width="135" height="40" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
           </a>
-        </div>
-      </div>
-
-      <!-- Game Board Mockup + Floating Avatars -->
-      <div class="flex-1 flex justify-center lg:justify-end relative">
-        <!-- Floating player avatars -->
-        <div class="absolute -top-4 left-0 lg:-left-6 animate-drift-1 z-20">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center border-2 border-white/40">
-            <svg class="w-7 h-7 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-          </div>
-        </div>
-        <div class="absolute -top-2 right-2 lg:-right-4 animate-drift-2 z-20">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center border-2 border-white/40">
-            <svg class="w-6 h-6 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-          </div>
-        </div>
-        <div class="absolute top-1/3 -right-4 lg:-right-10 animate-drift-3 z-20">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center border-2 border-white/40">
-            <svg class="w-7 h-7 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-          </div>
-        </div>
-        <div class="absolute bottom-4 left-4 lg:-left-2 animate-drift-2 z-20">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center border-2 border-white/40">
-            <svg class="w-6 h-6 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-          </div>
-        </div>
-        <div class="absolute bottom-0 right-6 lg:right-0 animate-drift-1 z-20">
-          <div class="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center border-2 border-white/40">
-            <svg class="w-7 h-7 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-          </div>
-        </div>
-        <div class="absolute top-2/3 -left-6 lg:-left-12 animate-drift-3 z-20 hidden sm:block">
-          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-orange-500 flex items-center justify-center border-2 border-white/40">
-            <svg class="w-7 h-7 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-          </div>
-        </div>
-
-        <!-- Game board image -->
-        <img
-          src="assets/gen0.png"
-          alt="Chain Reaction game board"
-          class="w-64 sm:w-72 lg:w-[380px] rounded-3xl relative z-10 animate-float-slow ring-4 ring-white/20"
-        />
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════ WAVE DIVIDER ═══════════ -->
-  <div class="relative -mt-1">
-    <svg viewBox="0 0 1440 100" class="w-full block" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-      <path d="M0 40 C360 100, 1080 0, 1440 60 L1440 100 L0 100 Z" fill="#fff7ed"/>
-    </svg>
-  </div>
-
-  <!-- ═══════════════ FEATURES SECTION ═══════════════ -->
-  <section id="features" class="bg-orange-50 py-16 lg:py-24 relative z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Bring Everyone In</h2>
-      <p class="mt-3 text-lg text-orange-500 font-semibold">Supports up to 6 Players</p>
-
-      <!-- Feature Cards — image backgrounds -->
-      <div class="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-
-        <!-- Card 1 -->
-        <article class="relative rounded-3xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-          <img src="assets/gen1.png" alt="" aria-hidden="true" class="absolute inset-0 w-full h-full object-cover" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent"></div>
-          <div class="relative z-10 p-7 text-left text-white">
-            <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-extrabold text-base mb-3">1</div>
-            <h3 class="text-xl font-bold">Match Colors</h3>
-            <p class="mt-2 text-white/80 text-sm leading-relaxed">
-              Place your orbs strategically. Each cell can only hold orbs of one color — yours!
-            </p>
-          </div>
-        </article>
-
-        <!-- Card 2 -->
-        <article class="relative rounded-3xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-          <img src="assets/gen2.png" alt="" aria-hidden="true" class="absolute inset-0 w-full h-full object-cover" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent"></div>
-          <div class="relative z-10 p-7 text-left text-white">
-            <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-extrabold text-base mb-3">2</div>
-            <h3 class="text-xl font-bold">Trigger Reactions</h3>
-            <p class="mt-2 text-white/80 text-sm leading-relaxed">
-              Overload a cell and watch it explode into neighbors, capturing enemy orbs in a cascade.
-            </p>
-          </div>
-        </article>
-
-        <!-- Card 3 -->
-        <article class="relative rounded-3xl overflow-hidden min-h-[320px] flex flex-col justify-end">
-          <img src="assets/gen3.png" alt="" aria-hidden="true" class="absolute inset-0 w-full h-full object-cover" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent"></div>
-          <div class="relative z-10 p-7 text-left text-white">
-            <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-extrabold text-base mb-3">3</div>
-            <h3 class="text-xl font-bold">Win the Game</h3>
-            <p class="mt-2 text-white/80 text-sm leading-relaxed">
-              Be the last player standing by eliminating every opponent's orbs from the board.
-            </p>
-          </div>
-        </article>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════ WAVE DIVIDER ═══════════ -->
-  <div class="relative -mt-1">
-    <svg viewBox="0 0 1440 80" class="w-full block" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-      <path d="M0 30 C480 80, 960 0, 1440 50 L1440 80 L0 80 Z" fill="white"/>
-    </svg>
-  </div>
-
-  <!-- ═══════════════ HOW IT WORKS SECTION ═══════════════ -->
-  <section id="how-to-play" class="py-16 lg:py-24 bg-white relative z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">How to Play</h2>
-      <p class="mt-3 text-lg text-gray-500">Three simple steps to start having fun</p>
-
-      <!-- Steps -->
-      <div class="mt-14 grid grid-cols-1 md:grid-cols-3 gap-10">
-        <!-- Step 1 -->
-        <div class="flex flex-col items-center group">
-          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold transition transform group-hover:scale-110 animate-pulse-soft">
-            1
-          </div>
-          <h3 class="mt-6 text-lg font-bold text-gray-900">Download the App</h3>
-          <p class="mt-2 text-gray-500 max-w-xs">
-            Grab Chain Reaction from Google Play or the App Store — it's free!
-          </p>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="flex flex-col items-center group">
-          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold transition transform group-hover:scale-110 animate-pulse-soft" style="animation-delay:.5s">
-            2
-          </div>
-          <h3 class="mt-6 text-lg font-bold text-gray-900">Invite Your Friends</h3>
-          <p class="mt-2 text-gray-500 max-w-xs">
-            Add up to 6 players and customize the board size to your liking.
-          </p>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="flex flex-col items-center group">
-          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold transition transform group-hover:scale-110 animate-pulse-soft" style="animation-delay:1s">
-            3
-          </div>
-          <h3 class="mt-6 text-lg font-bold text-gray-900">Start a Chain Reaction</h3>
-          <p class="mt-2 text-gray-500 max-w-xs">
-            Take turns, plan your moves, and set off explosive chain reactions to win!
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════ WAVE DIVIDER ═══════════ -->
-  <div class="relative -mt-1">
-    <svg viewBox="0 0 1440 80" class="w-full block" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-      <path d="M0 50 C360 0, 1080 80, 1440 20 L1440 80 L0 80 Z" fill="#ea580c"/>
-    </svg>
-  </div>
-
-  <!-- ═══════════════ CTA SECTION ═══════════════ -->
-  <section id="download" class="bg-gradient-to-br from-orange-500 to-orange-700 py-20 lg:py-28 relative overflow-hidden z-10">
-    <!-- Background glow -->
-    <div class="absolute top-10 left-10 w-40 h-40 bg-orange-400/20 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-10 right-10 w-56 h-56 bg-orange-300/20 rounded-full blur-3xl"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center relative z-10">
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-white drop-shadow-lg">Ready to Play?</h2>
-      <p class="mt-4 text-lg text-orange-100/90 max-w-md">
-        Join thousands of players and start your chain reaction now.
-      </p>
-
-      <!-- Store Buttons -->
-      <div class="mt-10 flex flex-col sm:flex-row items-center gap-4">
-        <a href="https://play.google.com/store/apps/details?id=com.blueedge.chainreaction" target="_blank" rel="noopener noreferrer" aria-label="Download Chain Reaction on Google Play (opens in new tab)" class="bg-black text-white rounded-xl px-6 py-3.5 flex items-center gap-3 hover:bg-gray-900 transition transform hover:scale-105 w-56">
-          <svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path fill="#00C3FF" d="M3.609 1.814a1.07 1.07 0 0 0-.39.904v18.564a1.07 1.07 0 0 0 .39.904l.048.03 10.394-10.394v-.244L3.657 1.784l-.048.03z"/>
-            <path fill="#FFD900" d="m14.051 15.278-3.463-3.462v-.244l3.463-3.462.078.045 4.103 2.331c1.172.666 1.172 1.756 0 2.422l-4.103 2.325-.078.045z"/>
-            <path fill="#00D171" d="m14.129 15.233-3.511-3.511L3.609 18.73c.387.408 1.027.458 1.476.104l9.044-3.601"/>
-            <path fill="#FF3A44" d="M14.129 8.155 5.085 4.554c-.449-.354-1.089-.304-1.476.104l7.009 7.008 3.511-3.511z"/>
-          </svg>
-          <div class="text-left leading-tight">
-            <span class="block text-xs text-gray-400 uppercase tracking-wide">Get it on</span>
-            <span class="block text-base font-semibold">Google Play</span>
-          </div>
-        </a>
-        <a href="#" class="bg-black text-white rounded-xl px-6 py-3.5 flex items-center gap-3 hover:bg-gray-900 transition transform hover:scale-105 w-56">
+          <!-- <a href="#" class="bg-black text-white rounded-xl px-6 py-3.5 flex items-center gap-3 hover:bg-gray-900 transition transform hover:scale-105 w-56">
           <svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor">
             <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
           </svg>
@@ -319,21 +509,25 @@
             <span class="block text-xs text-gray-400 uppercase tracking-wide">Download on the</span>
             <span class="block text-base font-semibold">App Store</span>
           </div>
-        </a>
+        </a> -->
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ═══════════════ FOOTER ═══════════════ -->
-  <footer class="bg-gray-900 py-8 relative z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-      <p>&copy; 2026 Chain Reaction. All rights reserved.</p>
-      <div class="flex gap-6">
-        <a href="privacy.html" class="hover:text-white transition">Privacy Policy</a>
-        <a href="terms.html" class="hover:text-white transition">Terms of Service</a>
+    <!-- ═══════════════ FOOTER ═══════════════ -->
+    <footer class="bg-gray-900 py-8 relative z-10">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+        <p>&copy; 2026 Chain Reaction. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="privacy.html" class="hover:text-white transition"
+            >Privacy Policy</a
+          >
+          <a href="terms.html" class="hover:text-white transition"
+            >Terms of Service</a
+          >
+        </div>
       </div>
-    </div>
-  </footer>
-
-</body>
+    </footer>
+  </body>
 </html>
