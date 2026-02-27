@@ -26,8 +26,8 @@ android {
         applicationId = "com.blueedge.chainreaction"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -92,4 +92,8 @@ dependencies {
 
     // Google AdMob
     implementation("com.google.android.gms:play-services-ads:23.6.0")
+
+    // Coil for GIF support
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-gif:2.7.0")
 }

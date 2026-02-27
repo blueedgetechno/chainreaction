@@ -15,7 +15,7 @@ enum class AppFont(val displayName: String) {
 
 object GameConfig {
     var gameMode: GameMode = GameMode.LOCAL_MULTIPLAYER
-    var gameVariant: GameVariant = GameVariant.SIMPLE
+    var gameVariant: GameVariant = GameVariant.CLASSIC
     var gridSize: Int = 6
     var numPlayers: Int = 2
     var player1Name: String = "Player 1"
