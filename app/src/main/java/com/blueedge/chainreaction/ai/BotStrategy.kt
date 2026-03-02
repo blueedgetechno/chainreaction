@@ -61,7 +61,7 @@ class MediumBot(variant: GameVariant) : BotStrategy {
         }
         if (explosionCaptures.isNotEmpty()) return explosionCaptures.random()
 
-        // Priority 2: Block opponent cells about to explode
+        // Priority 2: Block opponent cells about to explode (prefer already-owned cells, but also consider unowned)
         val blockingMoves = validMoves.filter { move ->
             val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
             neighbors.any { n ->
@@ -69,8 +69,6 @@ class MediumBot(variant: GameVariant) : BotStrategy {
                 board[n.row][n.col].ownerId == opponentId &&
                         board[n.row][n.col].dots == nCritMass - 1
             }
-        }.filter { move ->
-            board[move.row][move.col].ownerId == botPlayerId
         }
         if (blockingMoves.isNotEmpty()) return blockingMoves.random()
 
@@ -80,7 +78,18 @@ class MediumBot(variant: GameVariant) : BotStrategy {
         }.sortedByDescending { board[it.row][it.col].dots }
         if (buildMoves.isNotEmpty()) return buildMoves.first()
 
-        return validMoves.random()
+        // Priority 4: Place near opponent cells to build pressure
+        val pressureMoves = validMoves.filter { move ->
+            val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
+            neighbors.any { n -> board[n.row][n.col].ownerId == opponentId }
+        }
+        if (pressureMoves.isNotEmpty()) return pressureMoves.random()
+
+        // Priority 5: Prefer corner/edge cells (lower critical mass, strategic advantage)
+        val strategicMoves = validMoves.sortedBy { move ->
+            engine.getCriticalMass(move.row, move.col, gridRows, gridCols)
+        }
+        return strategicMoves.firstOrNull() ?: validMoves.random()
     }
 
     private fun getNeighbors(row: Int, col: Int, rows: Int, cols: Int): List<Move> {
