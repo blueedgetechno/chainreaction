@@ -17,8 +17,14 @@ interface BotStrategy {
     ): Move?
 }
 
-class EasyBot(variant: GameVariant) : BotStrategy {
-    private val engine = GameEngine(variant)
+abstract class MinimaxBot(
+    variant: GameVariant,
+    private val searchDepth: Int,
+    private val thinkingDelay: Long,
+    private val randomMoveChance: Double = 0.0,
+    private val maxCandidates: Int = 8
+) : BotStrategy {
+    protected val engine = GameEngine(variant)
 
     override suspend fun calculateMove(
         board: List<List<CellState>>,
@@ -26,97 +32,17 @@ class EasyBot(variant: GameVariant) : BotStrategy {
         opponentId: Int,
         isFirstMove: Boolean
     ): Move? {
-        delay(800)
-        val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
-        return validMoves.randomOrNull()
-    }
-}
-
-class MediumBot(variant: GameVariant) : BotStrategy {
-    private val engine = GameEngine(variant)
-
-    override suspend fun calculateMove(
-        board: List<List<CellState>>,
-        botPlayerId: Int,
-        opponentId: Int,
-        isFirstMove: Boolean
-    ): Move? {
-        delay(1200)
-        val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
-        if (validMoves.isEmpty()) return null
-        val gridRows = board.size
-        val gridCols = board[0].size
-
-        // If first move, pick a random empty cell
-        if (isFirstMove) return validMoves.random()
-
-        // Priority 1: Moves that cause explosions capturing opponent cells
-        val explosionCaptures = validMoves.filter { move ->
-            val cell = board[move.row][move.col]
-            val critMass = engine.getCriticalMass(move.row, move.col, gridRows, gridCols)
-            if (cell.ownerId == botPlayerId && cell.dots == critMass - 1) {
-                val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
-                neighbors.any { n -> board[n.row][n.col].ownerId == opponentId }
-            } else false
-        }
-        if (explosionCaptures.isNotEmpty()) return explosionCaptures.random()
-
-        // Priority 2: Block opponent cells about to explode (prefer already-owned cells, but also consider unowned)
-        val blockingMoves = validMoves.filter { move ->
-            val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
-            neighbors.any { n ->
-                val nCritMass = engine.getCriticalMass(n.row, n.col, gridRows, gridCols)
-                board[n.row][n.col].ownerId == opponentId &&
-                        board[n.row][n.col].dots == nCritMass - 1
-            }
-        }
-        if (blockingMoves.isNotEmpty()) return blockingMoves.random()
-
-        // Priority 3: Build up own cells (prefer cells with more dots)
-        val buildMoves = validMoves.filter { move ->
-            board[move.row][move.col].ownerId == botPlayerId
-        }.sortedByDescending { board[it.row][it.col].dots }
-        if (buildMoves.isNotEmpty()) return buildMoves.first()
-
-        // Priority 4: Place near opponent cells to build pressure
-        val pressureMoves = validMoves.filter { move ->
-            val neighbors = getNeighbors(move.row, move.col, gridRows, gridCols)
-            neighbors.any { n -> board[n.row][n.col].ownerId == opponentId }
-        }
-        if (pressureMoves.isNotEmpty()) return pressureMoves.random()
-
-        // Priority 5: Prefer corner/edge cells (lower critical mass, strategic advantage)
-        val strategicMoves = validMoves.sortedBy { move ->
-            engine.getCriticalMass(move.row, move.col, gridRows, gridCols)
-        }
-        return strategicMoves.firstOrNull() ?: validMoves.random()
-    }
-
-    private fun getNeighbors(row: Int, col: Int, rows: Int, cols: Int): List<Move> {
-        val neighbors = mutableListOf<Move>()
-        if (row > 0) neighbors.add(Move(row - 1, col))
-        if (row < rows - 1) neighbors.add(Move(row + 1, col))
-        if (col > 0) neighbors.add(Move(row, col - 1))
-        if (col < cols - 1) neighbors.add(Move(row, col + 1))
-        return neighbors
-    }
-}
-
-class HardBot(variant: GameVariant) : BotStrategy {
-    private val engine = GameEngine(variant)
-
-    override suspend fun calculateMove(
-        board: List<List<CellState>>,
-        botPlayerId: Int,
-        opponentId: Int,
-        isFirstMove: Boolean
-    ): Move? {
-        delay(1500)
+        delay(thinkingDelay)
         val validMoves = engine.getValidMoves(board, botPlayerId, isFirstMove)
         if (validMoves.isEmpty()) return null
 
         // If first move, pick a random empty cell
         if (isFirstMove) return validMoves.random()
+
+        // Chance of playing a random move instead of minimax
+        if (randomMoveChance > 0.0 && Random.nextDouble() < randomMoveChance) {
+            return validMoves.random()
+        }
 
         var bestScore = Int.MIN_VALUE
         var bestMove = validMoves.first()
@@ -128,7 +54,7 @@ class HardBot(variant: GameVariant) : BotStrategy {
             val winner = engine.checkWinCondition(newBoard, 100)
             if (winner == botPlayerId) return move
 
-            val score = minimax(newBoard, 3, false, botPlayerId, opponentId, Int.MIN_VALUE, Int.MAX_VALUE)
+            val score = minimax(newBoard, searchDepth, false, botPlayerId, opponentId, Int.MIN_VALUE, Int.MAX_VALUE)
             if (score > bestScore) {
                 bestScore = score
                 bestMove = move
@@ -161,7 +87,7 @@ class HardBot(variant: GameVariant) : BotStrategy {
             if (moves.isEmpty()) return evaluate(board, botPlayerId, opponentId)
 
             // Limit branching factor for performance
-            val candidates = prioritizeMoves(moves, board, botPlayerId).take(8)
+            val candidates = prioritizeMoves(moves, board, botPlayerId).take(maxCandidates)
             for (move in candidates) {
                 val (newBoard, _) = engine.executeMove(board, move.row, move.col, botPlayerId)
                 val eval = minimax(newBoard, depth - 1, false, botPlayerId, opponentId, currentAlpha, currentBeta)
@@ -175,7 +101,7 @@ class HardBot(variant: GameVariant) : BotStrategy {
             val moves = engine.getValidMoves(board, opponentId)
             if (moves.isEmpty()) return evaluate(board, botPlayerId, opponentId)
 
-            val candidates = prioritizeMoves(moves, board, opponentId).take(8)
+            val candidates = prioritizeMoves(moves, board, opponentId).take(maxCandidates)
             for (move in candidates) {
                 val (newBoard, _) = engine.executeMove(board, move.row, move.col, opponentId)
                 val eval = minimax(newBoard, depth - 1, true, botPlayerId, opponentId, currentAlpha, currentBeta)
@@ -246,6 +172,7 @@ class HardBot(variant: GameVariant) : BotStrategy {
                 }
             }
         }
+        
         return score
     }
 
@@ -258,6 +185,12 @@ class HardBot(variant: GameVariant) : BotStrategy {
         return neighbors
     }
 }
+
+class EasyBot(variant: GameVariant) : MinimaxBot(variant, searchDepth = 0, thinkingDelay = 800, randomMoveChance = 0.75)
+
+class MediumBot(variant: GameVariant) : MinimaxBot(variant, searchDepth = 0, thinkingDelay = 1200)
+
+class HardBot(variant: GameVariant) : MinimaxBot(variant, searchDepth = 1, thinkingDelay = 1500)
 
 fun createBot(difficulty: BotDifficulty, variant: GameVariant = GameVariant.SIMPLE): BotStrategy {
     return when (difficulty) {

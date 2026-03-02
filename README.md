@@ -1,38 +1,66 @@
 # Chain Reaction 💥
 
-A classic **strategy board game** for Android — place dots, trigger explosive chain reactions, and be the last player standing!
+> *"One dot to rule them all... until it explodes and takes everything with it."*
 
-Built with **Jetpack Compose** and **Material 3**.
+A ridiculously addictive **strategy board game** for Android — tap to place dots, watch cells go **BOOM** 💣, steal your friends' territory, and be the last player standing. Simple to learn, impossible to put down.
+
+Built with **Jetpack Compose** and **Material 3** — because even explosions deserve good design.
+
+
+## 🎮 How It Works
+
+It's deceptively simple:
+
+1. **Tap** a cell to place a dot
+2. Each cell has a **critical mass** (corners = 2, edges = 3, middle = 4)
+<p align="center">
+  <img src="app/src/main/res/raw/add_dot.gif" alt="Adding a dot" width="280"/>
+</p>
+
+3. Hit critical mass? **💥 BOOM** — dots fly to neighbors and turn them your color
+<p align="center">
+  <img src="app/src/main/res/raw/capture.gif" alt="Chain reaction capture" width="283"/>
+</p>
+
+4. Those neighbors might explode too... and those neighbors... and *those* neighbors...
+5. One tap can flip the **entire board**. Last player alive wins!
+<p align="center">
+  <img src="app/src/main/res/raw/victory.gif" alt="Victory!" width="278"/>
+</p>
+
+---
+
 
 <p align="center">
   <img src="app/src/main/res/drawable/banner.jpeg" alt="Chain Reaction Banner" width="600"/>
 </p>
 
-## How It Works
+## ✨ Features
 
-Players take turns placing dots on a grid. Each cell has a **critical mass** based on its neighbors. When a cell reaches critical mass, it **explodes** — sending dots to adjacent cells and capturing them for the current player. Explosions can cascade into satisfying **chain reactions** that flip the entire board. The last player remaining wins!
+| | Feature | Details |
+|---|---|---|
+| 👥 | **Local Multiplayer** | 2–6 players, one device, zero friendships spared |
+| 🤖 | **VS Bot** | 3 difficulty levels — from "my grandma could beat this" to "I need therapy" |
+| 📐 | **Custom Grid Sizes** | 5×5 (quick chaos) up to 10×10 (strategic warfare) |
+| 💥 | **Explosion Animations** | Wave-by-wave BFS rendering — *chef's kiss* |
+| 🔊 | **Sound & Music** | Satisfying taps, boomy explosions, toggleable BGM |
+| 📳 | **Haptic Feedback** | Feel every explosion in your bones (toggleable) |
+| 📊 | **Game Stats** | Cells captured, total moves, game duration — brag with data |
+| 🔤 | **Custom Fonts** | 4 options: Default, DynaPuff, Sour Gummy, Comic Relief |
+| 📖 | **How to Play** | Built-in tutorial so nobody has an excuse |
+| ✨ | **Smooth Transitions** | Fade + scale animations between screens |
 
-## Features
+### 🤖 Bot Difficulty Levels
 
-- **Local Multiplayer** — 2 to 6 players on a single device
-- **VS Bot** — Play against an AI opponent with 3 difficulty levels:
-  - *Easy* — Random moves
-  - *Medium* — Heuristic-based strategy
-  - *Hard* — Minimax with alpha-beta pruning
-- **Customizable Grid** — 5×5 up to 10×10
-- **Explosion Animations** — Wave-by-wave BFS rendering with smooth dot transitions
-- **Sound & Music** — Background music, tap/explosion SFX (toggleable)
-- **Haptic Feedback** — Vibration on explosions (toggleable)
-- **Game Statistics** — End-of-game stats: captured cells, total moves, game duration
-- **Custom Fonts** — 4 font options: Default, DynaPuff, Sour Gummy, Comic Relief
-- **How to Play** — Built-in tutorial explaining the rules
-- **Smooth Transitions** — Fade + scale navigation animations between screens
+| Level | Strategy | Vibe |
+|---|---|---|
+| 🟢 Easy | Random moves | "Just vibing" |
+| 🟡 Medium | Heuristic-based | "I've read The Art of War" |
+| 🔴 Hard | Minimax + alpha-beta pruning | "I am the board" |
 
-## Screenshots
+---
 
-<!-- Add screenshots here -->
-
-## Tech Stack
+## 🛠 Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -46,17 +74,19 @@ Players take turns placing dots on a grid. Each cell has a **critical mass** bas
 | **Min SDK** | 24 (Android 7.0) |
 | **Target SDK** | 36 |
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```
 app/src/main/java/com/blueedge/chainreaction/
-├── ai/                  # Bot strategies (Easy, Medium, Hard)
-├── audio/               # Sound & music management
+├── ai/                  # Bot brains (Easy → Hard)
+├── audio/               # Boom sounds & background vibes
 ├── data/                # Data models & game config
-├── domain/              # Game engine & core logic
+├── domain/              # The explosion engine 💣
 ├── ui/
-│   ├── components/      # Reusable UI components (3D buttons, etc.)
-│   ├── screens/         # App screens
+│   ├── components/      # Reusable UI bits (3D buttons, etc.)
+│   ├── screens/         # All the screens
 │   │   ├── SplashScreen
 │   │   ├── MainMenuScreen
 │   │   ├── GameSetupScreen
@@ -66,10 +96,12 @@ app/src/main/java/com/blueedge/chainreaction/
 │   │   └── HowToPlayScreen
 │   └── theme/           # Colors, typography, theming
 ├── utils/               # Constants & helpers
-└── MainActivity.kt      # Entry point
+└── MainActivity.kt      # Where the magic begins
 ```
 
-## Getting Started
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -91,6 +123,14 @@ cd ChainReaction
 ./gradlew bundleRelease
 ```
 
-## License
+---
+
+## 📜 License
 
 Copyright © 2025 Blue Edge. All rights reserved.
+
+---
+
+<p align="center">
+  Made with 💥 and probably too much coffee ☕
+</p>
