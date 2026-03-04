@@ -57,31 +57,32 @@ import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
 import com.blueedge.chainreaction.R
+import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
 import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 
 private data class TutorialStep(
     val gifRes: Int,
-    val title: String,
-    val description: String
+    val titleKey: String,
+    val descriptionKey: String
 )
 
 private val tutorialSteps = listOf(
     TutorialStep(
         gifRes = R.raw.add_dot,
-        title = "Tap to Place",
-        description = "Tap any cell to place a dot.\nOnce a cell has 4 dots, it explodes!"
+        titleKey = "Tap to Place",
+        descriptionKey = "Tap any cell to place a dot.\nOnce a cell has 4 dots, it explodes!"
     ),
     TutorialStep(
         gifRes = R.raw.capture,
-        title = "Capture Cells",
-        description = "When your dots explode into a neighbor, you take over that cell — even if it belongs to someone else!"
+        titleKey = "Capture Cells",
+        descriptionKey = "When your dots explode into a neighbor, you take over that cell — even if it belongs to someone else!"
     ),
     TutorialStep(
         gifRes = R.raw.victory,
-        title = "Win the Game",
-        description = "Eliminate every opponent by\ncapturing all their cells. Last player standing wins!"
+        titleKey = "Win the Game",
+        descriptionKey = "Eliminate every opponent by\ncapturing all their cells. Last player standing wins!"
     )
 )
 
@@ -130,7 +131,7 @@ fun HowToPlayScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "How to Play",
+                text = Strings.howToPlay,
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary
@@ -202,7 +203,7 @@ fun HowToPlayScreen(
                                         .size(Size.ORIGINAL)
                                         .build(),
                                     imageLoader = imageLoader,
-                                    contentDescription = step.title,
+                                    contentDescription = step.titleKey,
                                     contentScale = ContentScale.FillWidth,
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -214,7 +215,7 @@ fun HowToPlayScreen(
                                 Spacer(modifier = Modifier.height(16.dp))
 
                                 Text(
-                                    text = step.title,
+                                    text = Strings.tr(step.titleKey),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary,
@@ -224,7 +225,7 @@ fun HowToPlayScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = step.description,
+                                    text = Strings.tr(step.descriptionKey),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     textAlign = TextAlign.Center,
@@ -324,13 +325,13 @@ fun HowToPlayScreen(
                         Text(
                             text = buildAnnotatedString {
                                 withStyle(SpanStyle(color = simpleColor)) {
-                                    append("Simple")
+                                    append(Strings.simple)
                                 }
                                 withStyle(SpanStyle(color = Color.Gray)) {
                                     append(" vs ")
                                 }
                                 withStyle(SpanStyle(color = classicColor)) {
-                                    append("Classic")
+                                    append(Strings.classic)
                                 }
                             },
                             style = MaterialTheme.typography.titleLarge,
@@ -338,27 +339,27 @@ fun HowToPlayScreen(
                         )
 
                         ModeDiffItem(
-                            topic = "First Move",
-                            simpleText = "Place 3 dots on any empty cell.",
-                            classicText = "Place 1 dot on any empty cell."
+                            topic = Strings.firstMove,
+                            simpleText = Strings.firstMoveSimple,
+                            classicText = Strings.firstMoveClassic
                         )
 
                         ModeDiffItem(
-                            topic = "Placement",
-                            simpleText = "You can place a dot on your own cells only.",
-                            classicText = "You can place a dot anywhere — on empty cells or your own cells at anytime."
+                            topic = Strings.placement,
+                            simpleText = Strings.placementSimple,
+                            classicText = Strings.placementClassic
                         )
 
                         ModeDiffItem(
-                            topic = "Critical Mass",
-                            simpleText = "Every cell explodes at 4 dots, regardless of position.",
-                            classicText = "Corners explode at 2, edges at 3, and interior cells at 4 dots."
+                            topic = Strings.criticalMass,
+                            simpleText = Strings.criticalMassSimple,
+                            classicText = Strings.criticalMassClassic
                         )
 
                         ModeDiffItem(
-                            topic = "Explosions",
-                            simpleText = "Exploding cell is emptied completely.",
-                            classicText = "Excess dots are preserved — only the critical mass is subtracted."
+                            topic = Strings.explosions,
+                            simpleText = Strings.explosionsSimple,
+                            classicText = Strings.explosionsClassic
                         )
                     }
                 }
@@ -371,7 +372,7 @@ fun HowToPlayScreen(
 
             // Back button
             Raised3DButton(
-                text = "Back",
+                text = Strings.back,
                 onClick = onBack,
                 mainColor = SecondaryActionColor,
                 shadowColor = SecondaryActionShadow,

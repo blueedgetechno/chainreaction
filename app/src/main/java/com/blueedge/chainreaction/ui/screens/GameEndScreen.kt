@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
+import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.theme.PlayerColorNames
 import com.blueedge.chainreaction.ui.theme.PlayerColors
@@ -46,11 +47,11 @@ fun GameEndScreen(
     val winner = players.firstOrNull { it.id == winnerId }
     val isBotMode = GameConfig.gameMode == GameMode.VS_BOT
     val winnerName = if (isBotMode) {
-        if (winner?.isBot == true) "Bot" else "You"
+        if (winner?.isBot == true) Strings.bot else Strings.you
     } else {
-        PlayerColorNames.getOrElse(winner?.colorIndex ?: 0) { "Player $winnerId" }
+        Strings.colorName(winner?.colorIndex ?: 0)
     }
-    val winsText = if (isBotMode) "Won!" else "Wins!"
+    val winsText = if (isBotMode) Strings.won else Strings.wins
     val winnerColor = PlayerColors.getOrElse((winner?.colorIndex ?: 0)) { PlayerColors[0] }
 
     Box(
@@ -108,7 +109,7 @@ fun GameEndScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Game Statistics",
+                        text = Strings.gameStatistics,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -117,26 +118,29 @@ fun GameEndScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
 
                     StatRow(
-                        label = "Final Score",
+                        label = Strings.finalScore,
                         value = "$capturedCells"
                     )
                     StatRow(
-                        label = "Total Moves",
+                        label = Strings.totalMoves,
                         value = "$totalMoves"
                     )
                     StatRow(
-                        label = "Duration",
+                        label = Strings.duration,
                         value = formatDuration(durationSeconds)
                     )
                     StatRow(
-                        label = "Grid Size",
+                        label = Strings.gridSizeLabel,
                         value = "${GameConfig.gridSize} x ${GameConfig.gridSize}"
                     )
                     if (GameConfig.gameMode == com.blueedge.chainreaction.data.GameMode.VS_BOT) {
                         StatRow(
-                            label = "Bot Difficulty",
-                            value = GameConfig.botDifficulty.name.lowercase()
-                                .replaceFirstChar { it.uppercase() }
+                            label = Strings.botDifficulty,
+                            value = when (GameConfig.botDifficulty) {
+                                com.blueedge.chainreaction.data.BotDifficulty.EASY -> Strings.easy
+                                com.blueedge.chainreaction.data.BotDifficulty.MEDIUM -> Strings.medium
+                                com.blueedge.chainreaction.data.BotDifficulty.HARD -> Strings.hard
+                            }
                         )
                     }
                 }
@@ -147,7 +151,7 @@ fun GameEndScreen(
 
             // Play Again button — 3D raised style
             Raised3DButton(
-                text = "Play Again",
+                text = Strings.playAgain,
                 onClick = onPlayAgain,
                 mainColor = Color.White,
                 shadowColor = Color(0xFFDDDDDD),
@@ -159,7 +163,7 @@ fun GameEndScreen(
 
             // Main Menu button — 3D raised style
             Raised3DButton(
-                text = "Main Menu",
+                text = Strings.mainMenu,
                 onClick = onMainMenu,
                 mainColor = SecondaryActionColor,
                 shadowColor = SecondaryActionShadow,

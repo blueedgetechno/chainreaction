@@ -67,6 +67,7 @@ import com.blueedge.chainreaction.ads.InterstitialAdManager
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameStatus
+import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.GameGrid
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.game.GameViewModel
@@ -193,7 +194,7 @@ fun GameBoardScreen(
 
                 val currentPlayer = state.players.firstOrNull { it.id == state.currentPlayerId }
                 val colorIndex = currentPlayer?.colorIndex ?: (state.currentPlayerId - 1)
-                val colorName = PlayerColorNames.getOrElse(colorIndex) { "Player ${state.currentPlayerId}" }
+                val colorName = Strings.colorName(colorIndex)
 
                 val indicatorText: String
                 val showAtBottom: Boolean
@@ -201,10 +202,10 @@ fun GameBoardScreen(
                 if (isSoloMode) {
                     val botPlayer = state.players.firstOrNull { it.isBot }
                     val isBotTurn = state.currentPlayerId == botPlayer?.id
-                    indicatorText = if (!isBotTurn) "Your turn" else "Bot's turn"
+                    indicatorText = if (!isBotTurn) Strings.yourTurn else Strings.botsTurn
                     showAtBottom = !isBotTurn
                 } else {
-                    indicatorText = "$colorName's turn"
+                    indicatorText = Strings.playerTurn(colorName)
                     // Alternate position based on move count: even → bottom, odd → top
                     showAtBottom = (state.moveCount % 2 == 0)
                 }
@@ -288,12 +289,12 @@ fun GameBoardScreen(
         val winnerPlayer = state.players.firstOrNull { it.id == state.winnerId }
         val isBotMode = GameConfig.gameMode == GameMode.VS_BOT
         val winnerName = if (isBotMode) {
-            if (winnerPlayer?.isBot == true) "Bot" else "You"
+            if (winnerPlayer?.isBot == true) Strings.bot else Strings.you
         } else {
             val colorIndex = winnerPlayer?.colorIndex ?: (state.winnerId - 1)
-            PlayerColorNames.getOrElse(colorIndex) { "Player ${state.winnerId}" }
+            Strings.colorName(colorIndex)
         }
-        val winsText = if (isBotMode) "WON!" else "WINS!"
+        val winsText = if (isBotMode) Strings.won else Strings.wins
 
         // Circular reveal animation
         val circleRadius = remember { Animatable(0f) }
@@ -399,7 +400,7 @@ fun GameBoardScreen(
 
                 // Play Again button
                 Raised3DButton(
-                    text = "Play Again",
+                    text = Strings.playAgain,
                     mainColor = Color.White,
                     shadowColor = Color(0xFFDDDDDD),
                     textColor = winnerColor,
@@ -411,7 +412,7 @@ fun GameBoardScreen(
 
                 // Menu button
                 Raised3DButton(
-                    text = "Menu",
+                    text = Strings.menu,
                     textColor = Color.White,
                     mainColor = SecondaryActionColor,
                     shadowColor = SecondaryActionShadow,
@@ -437,7 +438,7 @@ fun GameBoardScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Exit Game?",
+                        text = Strings.exitGameQ,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF333333)
@@ -446,7 +447,7 @@ fun GameBoardScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Are you sure you want to exit? Your game progress will be lost.",
+                        text = Strings.exitMessage,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = Color(0xFF666666)
@@ -494,7 +495,7 @@ fun GameBoardScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "Cancel",
+                                    text = Strings.cancel,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF333333)
                                 )
@@ -540,7 +541,7 @@ fun GameBoardScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "Exit",
+                                    text = Strings.exit,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )

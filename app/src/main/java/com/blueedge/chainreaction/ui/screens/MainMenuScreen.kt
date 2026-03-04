@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.blueedge.chainreaction.R
+import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.components.SmallRaised3DButton
 
@@ -111,7 +112,7 @@ fun MainMenuScreen(
 
             // How to Play button
             SmallRaised3DButton(
-                text = "HOW TO PLAY",
+                text = Strings.howToPlay,
                 onClick = onHowToPlay,
                 icon = Icons.Default.SportsEsports
             )
@@ -120,8 +121,8 @@ fun MainMenuScreen(
 
             // Local Multiplayer button
             Raised3DButton(
-                text = "FRIENDS",
-                topText = "PLAY W/",
+                text = Strings.friends,
+                topText = Strings.playWith,
                 onClick = onLocalMultiplayer,
                 mainColor = MaterialTheme.colorScheme.primary,
                 shadowColor = Color(0xFF2E8DAD),
@@ -133,8 +134,8 @@ fun MainMenuScreen(
 
             // Play vs Bot button
             Raised3DButton(
-                text = "BOT",
-                topText = "PLAY W/",
+                text = Strings.bot,
+                topText = Strings.playWith,
                 onClick = onPlayVsBot,
                 mainColor = MaterialTheme.colorScheme.tertiary,
                 shadowColor = Color(0xFFA8524E),

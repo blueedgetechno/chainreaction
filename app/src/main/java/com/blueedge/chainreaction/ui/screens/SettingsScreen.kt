@@ -65,6 +65,7 @@ import com.blueedge.chainreaction.data.AppFont
 import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
 import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 import com.blueedge.chainreaction.data.GameConfig
+import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.components.SmallRaised3DButton
 
@@ -103,7 +104,7 @@ fun SettingsScreen(
         ) {
             // Title
             Text(
-                text = if (isInGame) "Game Settings" else "Settings",
+                text = if (isInGame) Strings.gameSettings else Strings.settings,
                 style = if (isInGame) MaterialTheme.typography.displaySmall
                 else MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Black,
@@ -120,7 +121,7 @@ fun SettingsScreen(
                 SoundToggleButton(
                     iconEnabled = Icons.Rounded.MusicNote,
                     iconDisabled = Icons.Rounded.MusicOff,
-                    label = "Music",
+                    label = Strings.music,
                     enabled = GameConfig.musicEnabled,
                     onToggle = {
                         GameConfig.musicEnabled = !GameConfig.musicEnabled
@@ -130,7 +131,7 @@ fun SettingsScreen(
                 SoundToggleButton(
                     iconEnabled = Icons.Rounded.VolumeUp,
                     iconDisabled = Icons.Rounded.VolumeOff,
-                    label = "Sound",
+                    label = Strings.sound,
                     enabled = GameConfig.soundEnabled,
                     onToggle = { GameConfig.soundEnabled = !GameConfig.soundEnabled }
                 )
@@ -172,9 +173,12 @@ fun SettingsScreen(
                                     )
                                 }
                             },
-                            selectedValue = GameConfig.language,
-                            options = listOf("English", "Hindi", "Spanish", "French", "German", "Japanese"),
-                            onSelected = { GameConfig.language = it }
+                            selectedValue = Strings.languageDisplayName(GameConfig.language),
+                            options = Strings.supportedLanguageDisplay,
+                            onSelected = {
+                                GameConfig.language = Strings.languageKeyFromDisplay(it)
+                                GameConfig.save(context)
+                            }
                         )
 
                         HorizontalDivider(
@@ -221,7 +225,7 @@ fun SettingsScreen(
             if (isInGame) {
                 onRestart?.let {
                     Raised3DButton(
-                        text = "Restart Game",
+                        text = Strings.restartGame,
                         onClick = { showRestartConfirmation = true },
                         mainColor = Color(0xFF41AFD4),
                         shadowColor = Color(0xFF2E8DAD),
@@ -232,7 +236,7 @@ fun SettingsScreen(
 
                 onHowToPlay?.let {
                     Raised3DButton(
-                        text = "How to Play",
+                        text = Strings.howToPlay,
                         onClick = it,
                         mainColor = Color(0xFF4CAF50),
                         shadowColor = Color(0xFF3D8B40),
@@ -243,7 +247,7 @@ fun SettingsScreen(
 
                 onExitToMenu?.let {
                     Raised3DButton(
-                        text = "Exit to Menu",
+                        text = Strings.exitToMenu,
                         onClick = { showExitConfirmation = true },
                         mainColor = Color(0xFFEA695E),
                         shadowColor = Color(0xFFC55550),
@@ -257,17 +261,17 @@ fun SettingsScreen(
                 // Terms & Privacy
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
                 ) {
                     SmallRaised3DButton(
-                        text = "Terms of Service",
+                        text = Strings.termsOfService,
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://chainreaction.blueedge.me/terms.html"))
                             context.startActivity(intent)
                         }
                     )
                     SmallRaised3DButton(
-                        text = "Privacy Policy",
+                        text = Strings.privacyPolicy,
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://chainreaction.blueedge.me/privacy.html"))
                             context.startActivity(intent)
@@ -278,7 +282,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Version ${BuildConfig.VERSION_NAME}",
+                    text = "${Strings.version} ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
@@ -290,7 +294,7 @@ fun SettingsScreen(
 
             // Back button (always at the bottom)
             Raised3DButton(
-                text = "Back",
+                text = Strings.back,
                 onClick = onBack,
                 modifier = Modifier.fillMaxWidth(),
                 mainColor = SecondaryActionColor,
@@ -303,9 +307,9 @@ fun SettingsScreen(
         // Restart confirmation dialog
         if (showRestartConfirmation) {
             SettingsConfirmationDialog(
-                title = "Restart Game?",
-                message = "Are you sure you want to restart? Your current game progress will be lost.",
-                confirmText = "Restart",
+                title = Strings.restartGameQ,
+                message = Strings.restartMessage,
+                confirmText = Strings.restart,
                 confirmColor = Color(0xFF41AFD4),
                 confirmShadowColor = Color(0xFF2E8DAD),
                 onConfirm = {
@@ -319,9 +323,9 @@ fun SettingsScreen(
         // Exit to menu confirmation dialog
         if (showExitConfirmation) {
             SettingsConfirmationDialog(
-                title = "Exit to Menu?",
-                message = "Are you sure you want to exit? Your game progress will be lost.",
-                confirmText = "Exit",
+                title = Strings.exitToMenuQ,
+                message = Strings.exitMessage,
+                confirmText = Strings.exit,
                 confirmColor = Color(0xFFEA695E),
                 confirmShadowColor = Color(0xFFC55550),
                 onConfirm = {
@@ -532,7 +536,7 @@ private fun SettingsConfirmationDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Cancel",
+                                text = Strings.cancel,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF333333)
                             )

@@ -61,6 +61,7 @@ import com.blueedge.chainreaction.data.BotDifficulty
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameVariant
+import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.CustomSlider
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.theme.PlayerColors
@@ -111,7 +112,7 @@ fun GameSetupScreen(
             )
             Spacer(modifier = Modifier.size(16.dp))
             Text(
-                text = if (gameMode == GameMode.LOCAL_MULTIPLAYER) "Play w/ Friends" else "Play w/ Bot",
+                text = if (gameMode == GameMode.LOCAL_MULTIPLAYER) Strings.playWFriends else Strings.playWBot,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -122,8 +123,8 @@ fun GameSetupScreen(
 
         // Game Variant Tab Switch (Simple / Classic)
         SectionCard(
-            title = "Mode:",
-            animatedValue = gameVariant.name.lowercase().replaceFirstChar { it.uppercase() },
+            title = Strings.mode,
+            animatedValue = if (gameVariant == GameVariant.SIMPLE) Strings.simple else Strings.classic,
             valueColor = if (gameVariant == GameVariant.SIMPLE) MaterialTheme.colorScheme.primary else Color(0xFFE09B40),
             trailingAction = {
                 Box(
@@ -203,8 +204,7 @@ fun GameSetupScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = variant.name.lowercase()
-                                    .replaceFirstChar { it.uppercase() },
+                                text = if (variant == GameVariant.SIMPLE) Strings.simple else Strings.classic,
                                 fontWeight = FontWeight.Bold,
                                 color = textColor
                             )
@@ -216,7 +216,7 @@ fun GameSetupScreen(
 
         // Grid Size Section (shared by both modes)
         SectionCard(
-            title = "Grid Size:",
+            title = Strings.gridSize,
             animatedValue = "${localGridSize}x${localGridSize}",
             valueColor = MaterialTheme.colorScheme.primary
         ) {
@@ -231,7 +231,7 @@ fun GameSetupScreen(
         if (gameMode == GameMode.LOCAL_MULTIPLAYER) {
             // Number of Players Section - slider with color preview
             SectionCard(
-                title = "Players:",
+                title = Strings.players,
                 animatedValue = "$numPlayers",
                 valueColor = MaterialTheme.colorScheme.primary
             ) {
@@ -240,8 +240,12 @@ fun GameSetupScreen(
         } else {
             // VS_BOT mode - Difficulty slider
             SectionCard(
-                title = "Difficulty:",
-                animatedValue = botDifficulty.name.lowercase().replaceFirstChar { it.uppercase() },
+                title = Strings.difficulty,
+                animatedValue = when (botDifficulty) {
+                    BotDifficulty.EASY -> Strings.easy
+                    BotDifficulty.MEDIUM -> Strings.medium
+                    BotDifficulty.HARD -> Strings.hard
+                },
                 valueColor = when (botDifficulty) {
                     BotDifficulty.EASY -> SecondaryActionColor
                     BotDifficulty.MEDIUM -> MaterialTheme.colorScheme.primary
@@ -266,14 +270,14 @@ fun GameSetupScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Raised3DButton(
-                text = "Back",
+                text = Strings.back,
                 onClick = onBack,
                 modifier = Modifier.weight(1f),
                 mainColor = SecondaryActionColor,
                 shadowColor = SecondaryActionShadow
             )
             Raised3DButton(
-                text = "Play",
+                text = Strings.play,
                 onClick = {
                     GameConfig.apply {
                         this.gameMode = gameMode
