@@ -171,58 +171,7 @@ fun GameBoardScreen(
             }
         }
 
-        // Settings icon — top right, below status bar
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(top = 16.dp, end = 12.dp)
-                .size(40.dp)
-                .background(Color.White.copy(alpha = 0.85f), CircleShape)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = {
-                        viewModel.pauseGame()
-                        onOpenSettings()
-                    }
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Settings",
-                tint = Color(0xFF333333),
-                modifier = Modifier.size(22.dp)
-            )
-        }
-
-        // Undo icon — top left, below status bar
-        // if (state.canUndo && state.gameStatus == GameStatus.IN_PROGRESS) {
-        //     Box(
-        //         modifier = Modifier
-        //             .align(Alignment.TopStart)
-        //             .statusBarsPadding()
-        //             .padding(top = 16.dp, start = 12.dp)
-        //             .size(40.dp)
-        //             .background(Color.White.copy(alpha = 0.85f), CircleShape)
-        //             .clickable(
-        //                 interactionSource = remember { MutableInteractionSource() },
-        //                 indication = null,
-        //                 onClick = { viewModel.undo() }
-        //             ),
-        //         contentAlignment = Alignment.Center
-        //     ) {
-        //         Icon(
-        //             imageVector = Icons.AutoMirrored.Filled.Undo,
-        //             contentDescription = "Undo",
-        //             tint = Color(0xFF333333),
-        //             modifier = Modifier.size(22.dp)
-        //         )
-        //     }
-        // }
-
-        // Turn indicator semicircles
+        // Turn indicator semicircles (rendered before settings icon so it appears behind it)
         if (state.gameStatus == GameStatus.IN_PROGRESS) {
             key(state.currentPlayerId) {
                 val turnIndicatorScale = remember { Animatable(0f) }
@@ -304,6 +253,32 @@ fun GameBoardScreen(
                 }
             }
             }
+        }
+
+        // Settings icon — top right, below status bar (rendered after turn indicator so it appears on top)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(top = 16.dp, end = 12.dp)
+                .size(40.dp)
+                .background(Color.White.copy(alpha = 0.85f), CircleShape)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {
+                        viewModel.pauseGame()
+                        onOpenSettings()
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = Color(0xFF333333),
+                modifier = Modifier.size(22.dp)
+            )
         }
     }
 

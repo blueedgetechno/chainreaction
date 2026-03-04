@@ -134,13 +134,13 @@ fun SettingsScreen(
                     enabled = GameConfig.soundEnabled,
                     onToggle = { GameConfig.soundEnabled = !GameConfig.soundEnabled }
                 )
-                SoundToggleButton(
-                    iconEnabled = ImageVector.vectorResource(R.drawable.ic_vibration),
-                    iconDisabled = ImageVector.vectorResource(R.drawable.ic_vibration),
-                    label = "Vibration",
-                    enabled = GameConfig.vibrationEnabled,
-                    onToggle = { GameConfig.vibrationEnabled = !GameConfig.vibrationEnabled }
-                )
+                // SoundToggleButton(
+                //     iconEnabled = ImageVector.vectorResource(R.drawable.ic_vibration),
+                //     iconDisabled = ImageVector.vectorResource(R.drawable.ic_vibration),
+                //     label = "Vibration",
+                //     enabled = GameConfig.vibrationEnabled,
+                //     onToggle = { GameConfig.vibrationEnabled = !GameConfig.vibrationEnabled }
+                // )
             }
 
             if (!isInGame) {
@@ -219,24 +219,23 @@ fun SettingsScreen(
 
             // In-game buttons
             if (isInGame) {
-                // Resume Game button (proxy for back)
-                onBack?.let {
-                    Raised3DButton(
-                        text = "Resume Game",
-                        onClick = it,
-                        mainColor = SecondaryActionColor,
-                        shadowColor = SecondaryActionShadow,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
                 onRestart?.let {
                     Raised3DButton(
                         text = "Restart Game",
                         onClick = { showRestartConfirmation = true },
                         mainColor = Color(0xFF41AFD4),
                         shadowColor = Color(0xFF2E8DAD),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                onHowToPlay?.let {
+                    Raised3DButton(
+                        text = "How to Play",
+                        onClick = it,
+                        mainColor = Color(0xFF4CAF50),
+                        shadowColor = Color(0xFF3D8B40),
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -252,33 +251,9 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-                
-                onHowToPlay?.let {
-                    Raised3DButton(
-                        text = "How to Play",
-                        onClick = it,
-                        mainColor = Color(0xFF4CAF50),
-                        shadowColor = Color(0xFF3D8B40),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            } else {
-                // Back button
-                onBack?.let {
-                    Raised3DButton(
-                        text = "Back",
-                        onClick = it,
-                        modifier = Modifier.fillMaxWidth(),
-                        mainColor = SecondaryActionColor,
-                        shadowColor = SecondaryActionShadow
-                    )
-                }
             }
 
             if (!isInGame) {
-                Spacer(modifier = Modifier.height(36.dp))
-
                 // Terms & Privacy
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -310,6 +285,17 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Back button (always at the bottom)
+            Raised3DButton(
+                text = "Back",
+                onClick = onBack,
+                modifier = Modifier.fillMaxWidth(),
+                mainColor = SecondaryActionColor,
+                shadowColor = SecondaryActionShadow
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
         }
