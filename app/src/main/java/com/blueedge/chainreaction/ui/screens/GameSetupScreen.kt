@@ -17,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,7 +84,7 @@ fun GameSetupScreen(
     var botDifficulty by remember { mutableStateOf(GameConfig.botDifficulty) }
     var gameVariant by remember { mutableStateOf(GameConfig.gameVariant) }
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -92,7 +94,14 @@ fun GameSetupScreen(
                         MaterialTheme.colorScheme.background
                     )
                 )
-            )
+            ),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        val isLandscape = maxWidth > maxHeight
+    Column(
+        modifier = Modifier
+            .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
+            .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
@@ -308,6 +317,7 @@ fun GameSetupScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
     }
 }
 

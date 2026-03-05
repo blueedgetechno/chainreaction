@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -143,11 +145,13 @@ fun GameBoardScreen(
         showExitConfirmation = true
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(bgColor)
     ) {
+        val isLandscape = maxWidth > maxHeight
+
         // Grid centered
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -165,9 +169,15 @@ fun GameBoardScreen(
                     isInteractionEnabled = !state.isAnimating &&
                             !state.botThinking &&
                             state.gameStatus == GameStatus.IN_PROGRESS,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
+                    modifier = if (isLandscape) {
+                        Modifier
+                            .fillMaxHeight()
+                            .padding(vertical = 12.dp)
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp)
+                    }
                 )
             }
         }
@@ -197,7 +207,7 @@ fun GameBoardScreen(
                 val colorName = Strings.colorName(colorIndex)
 
                 val indicatorText: String
-                val showAtBottom: Boolean
+                val showAtBottom: Boolean // In portrait: bottom/top; in landscape: reused as right/left
 
                 if (isSoloMode) {
                     val botPlayer = state.players.firstOrNull { it.isBot }
@@ -206,51 +216,98 @@ fun GameBoardScreen(
                     showAtBottom = !isBotTurn
                 } else {
                     indicatorText = Strings.playerTurn(colorName)
-                    // Alternate position based on move count: even → bottom, odd → top
+                    // Alternate position based on move count: even → bottom/right, odd → top/left
                     showAtBottom = (state.moveCount % 2 == 0)
                 }
 
-                val indicatorAlignment = if (showAtBottom) Alignment.BottomCenter else Alignment.TopCenter
-                val originY = if (showAtBottom) 1f else 0f
-
-            // Offset pushes the flat edge off-screen so only the arc border is visible
             val borderWidth = 8.dp
-            val edgeOffset = if (showAtBottom) borderWidth else -borderWidth
 
-            BoxWithConstraints(
-                modifier = Modifier
-                    .align(indicatorAlignment)
-                    .offset(y = edgeOffset)
-                    .fillMaxWidth(0.85f)
-                    .aspectRatio(2f)
-                    .graphicsLayer {
-                        scaleX = turnIndicatorScale.value
-                        scaleY = turnIndicatorScale.value
-                        alpha = turnIndicatorAlpha.value
-                        transformOrigin = TransformOrigin(0.5f, originY)
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                // cornerRadius = maxWidth/2 = height (aspectRatio 2:1), making a perfect semicircle
-                val cornerRadius = maxWidth / 2
-                val shape = if (showAtBottom)
-                    RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)
-                else
-                    RoundedCornerShape(bottomStart = cornerRadius, bottomEnd = cornerRadius)
-                Box(
+            if (isLandscape) {
+                // Landscape: semicircles come from left/right sides
+                val showAtRight = showAtBottom
+                val indicatorAlignment = if (showAtRight) Alignment.CenterEnd else Alignment.CenterStart
+                val originX = if (showAtRight) 1f else 0f
+                val edgeOffset = if (showAtRight) borderWidth else -borderWidth
+
+                BoxWithConstraints(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Transparent, shape)
-                        .border(borderWidth, Color.White, shape),
+                        .align(indicatorAlignment)
+                        .offset(x = edgeOffset)
+                        .fillMaxHeight(0.85f)
+                        .aspectRatio(0.5f)
+                        .graphicsLayer {
+                            scaleX = turnIndicatorScale.value
+                            scaleY = turnIndicatorScale.value
+                            alpha = turnIndicatorAlpha.value
+                            transformOrigin = TransformOrigin(originX, 0.5f)
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = indicatorText,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 36.sp,
-                        color = Color.White
-                    )
+                    val cornerRadius = maxWidth
+                    val shape = if (showAtRight)
+                        RoundedCornerShape(topStart = cornerRadius, bottomStart = cornerRadius)
+                    else
+                        RoundedCornerShape(topEnd = cornerRadius, bottomEnd = cornerRadius)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Transparent, shape)
+                            .border(borderWidth, Color.White, shape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = indicatorText,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .graphicsLayer { rotationZ = if (showAtRight) 90f else -90f }
+                        )
+                    }
+                }
+            } else {
+                // Portrait: semicircles come from top/bottom (original behavior)
+                val indicatorAlignment = if (showAtBottom) Alignment.BottomCenter else Alignment.TopCenter
+                val originY = if (showAtBottom) 1f else 0f
+                val edgeOffset = if (showAtBottom) borderWidth else -borderWidth
+
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .align(indicatorAlignment)
+                        .offset(y = edgeOffset)
+                        .fillMaxWidth(0.85f)
+                        .aspectRatio(2f)
+                        .graphicsLayer {
+                            scaleX = turnIndicatorScale.value
+                            scaleY = turnIndicatorScale.value
+                            alpha = turnIndicatorAlpha.value
+                            transformOrigin = TransformOrigin(0.5f, originY)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    // cornerRadius = maxWidth/2 = height (aspectRatio 2:1), making a perfect semicircle
+                    val cornerRadius = maxWidth / 2
+                    val shape = if (showAtBottom)
+                        RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)
+                    else
+                        RoundedCornerShape(bottomStart = cornerRadius, bottomEnd = cornerRadius)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Transparent, shape)
+                            .border(borderWidth, Color.White, shape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = indicatorText,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 36.sp,
+                            color = Color.White
+                        )
+                    }
                 }
             }
             }
@@ -321,12 +378,14 @@ fun GameBoardScreen(
             )
         }
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .onSizeChanged { screenSize = it },
             contentAlignment = Alignment.Center
         ) {
+            val isLandscapeOverlay = maxWidth > maxHeight
+
             // Animated circular fill canvas
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawCircle(
@@ -367,58 +426,128 @@ fun GameBoardScreen(
             }
 
             // Victory content fades in after circle fills
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(32.dp)
-                    .alpha(contentAlpha.value)
-            ) {
-                Text(
-                    text = "\uD83C\uDFC6",
-                    fontSize = 80.sp
-                )
+            if (isLandscapeOverlay) {
+                // Landscape: side-by-side layout
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .padding(32.dp)
+                        .alpha(contentAlpha.value)
+                ) {
+                    // Left side: trophy + winner name
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "\uD83C\uDFC6",
+                            fontSize = 64.sp
+                        )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = winnerName,
-                    style = MaterialTheme.typography.displayLarge,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
+                        Text(
+                            text = winnerName,
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            textAlign = TextAlign.Center
+                        )
 
-                Text(
-                    text = winsText,
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White.copy(alpha = 0.9f),
-                    textAlign = TextAlign.Center
-                )
+                        Text(
+                            text = winsText,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White.copy(alpha = 0.9f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                    Spacer(modifier = Modifier.width(32.dp))
 
-                // Play Again button
-                Raised3DButton(
-                    text = Strings.playAgain,
-                    mainColor = Color.White,
-                    shadowColor = Color(0xFFDDDDDD),
-                    textColor = winnerColor,
-                    onClick = { onPlayAgain() },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    // Right side: buttons
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Raised3DButton(
+                            text = Strings.playAgain,
+                            mainColor = Color.White,
+                            shadowColor = Color(0xFFDDDDDD),
+                            textColor = winnerColor,
+                            onClick = { onPlayAgain() },
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                // Menu button
-                Raised3DButton(
-                    text = Strings.menu,
-                    textColor = Color.White,
-                    mainColor = SecondaryActionColor,
-                    shadowColor = SecondaryActionShadow,
-                    onClick = { onExit() },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                        Raised3DButton(
+                            text = Strings.menu,
+                            textColor = Color.White,
+                            mainColor = SecondaryActionColor,
+                            shadowColor = SecondaryActionShadow,
+                            onClick = { onExit() },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            } else {
+                // Portrait: original vertical layout
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .padding(32.dp)
+                        .alpha(contentAlpha.value)
+                ) {
+                    Text(
+                        text = "\uD83C\uDFC6",
+                        fontSize = 80.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = winnerName,
+                        style = MaterialTheme.typography.displayLarge,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        text = winsText,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White.copy(alpha = 0.9f),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(40.dp))
+
+                    // Play Again button
+                    Raised3DButton(
+                        text = Strings.playAgain,
+                        mainColor = Color.White,
+                        shadowColor = Color(0xFFDDDDDD),
+                        textColor = winnerColor,
+                        onClick = { onPlayAgain() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Menu button
+                    Raised3DButton(
+                        text = Strings.menu,
+                        textColor = Color.White,
+                        mainColor = SecondaryActionColor,
+                        shadowColor = SecondaryActionShadow,
+                        onClick = { onExit() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

@@ -9,12 +9,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -103,7 +105,7 @@ fun HowToPlayScreen(
 
     var currentPage by remember { mutableIntStateOf(0) }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -113,10 +115,13 @@ fun HowToPlayScreen(
                         MaterialTheme.colorScheme.background
                     )
                 )
-            )
+            ),
+        contentAlignment = Alignment.TopCenter
     ) {
+        val isLandscape = maxWidth > maxHeight
         Column(
             modifier = Modifier
+                .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
                 .fillMaxSize()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally

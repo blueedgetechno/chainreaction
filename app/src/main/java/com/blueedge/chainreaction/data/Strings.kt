@@ -22,7 +22,7 @@ object Strings {
     fun tr(key: String): String = t(key)
 
     // ── Main Menu ───────────────────────────────────────────────────────
-    val howToPlay: String get() = t("HOW TO PLAY")
+    val howToPlay: String get() = t("How to Play")
     val playWFriends: String get() = t("PLAY W/ FRIENDS")
     val playWBot: String get() = t("PLAY W/ BOT")
     val playWith: String get() = t("PLAY W/")
@@ -149,7 +149,7 @@ object Strings {
         }
 
         // Main Menu
-        add("HOW TO PLAY",        "HOW TO PLAY",        "कैसे खेलें",         "CÓMO JUGAR",         "COMMENT JOUER",      "SPIELANLEITUNG",     "遊び方")
+        add("How to Play",        "How to Play",        "कैसे खेलें",         "CÓMO JUGAR",         "COMMENT JOUER",      "SPIELANLEITUNG",     "遊び方")
         add("PLAY W/ FRIENDS",    "PLAY W/ FRIENDS",    "दोस्तों के साथ खेलें", "JUGAR CON AMIGOS",   "JOUER AVEC AMIS",    "MIT FREUNDEN",       "友達と遊ぶ")
         add("PLAY W/ BOT",        "PLAY W/ BOT",        "बॉट के साथ खेलें",    "JUGAR CON BOT",      "JOUER CONTRE BOT",   "GEGEN BOT",          "ボットと遊ぶ")
         add("PLAY W/",            "PLAY W/",            "साथ खेलें",           "JUGAR CON",          "JOUER AVEC",         "SPIELEN MIT",        "と遊ぶ")

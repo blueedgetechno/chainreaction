@@ -26,8 +26,8 @@ android {
         applicationId = "com.blueedge.chainreaction"
         minSdk = 24
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.8"
+        versionCode = 10
+        versionName = "1.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -96,4 +96,11 @@ dependencies {
     // Coil for GIF support
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("io.coil-kt:coil-gif:2.7.0")
+
+    // Google Play In-App Updates
+    implementation("com.google.android.play:app-update:2.1.0")
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+    // Material (for Snackbar in update flow)
+    implementation("com.google.android.material:material:1.12.0")
 }

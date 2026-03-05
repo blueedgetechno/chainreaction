@@ -3,14 +3,20 @@ package com.blueedge.chainreaction.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -54,122 +60,208 @@ fun GameEndScreen(
     val winsText = if (isBotMode) Strings.won else Strings.wins
     val winnerColor = PlayerColors.getOrElse((winner?.colorIndex ?: 0)) { PlayerColors[0] }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(winnerColor)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Victory emoji
-            Text(
-                text = "\uD83C\uDFC6",
-                fontSize = 72.sp
-            )
+        val isLandscape = maxWidth > maxHeight
 
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = "$winnerName\n$winsText",
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Black,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                lineHeight = 44.sp
-            )
-
-            Spacer(Modifier.height(36.dp))
-
-            // Stats card with shadow
-            Box(modifier = Modifier.fillMaxWidth()) {
-                // Shadow layer
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .offset(y = 5.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFFD0D0D0))
-                )
-                // Main card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                ) {
+        if (isLandscape) {
+            // --- Landscape layout: winner info left, stats + buttons right ---
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // Left side: trophy + winner name
                 Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = Strings.gameStatistics,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        text = "\uD83C\uDFC6",
+                        fontSize = 56.sp
                     )
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
+                    Spacer(Modifier.height(12.dp))
 
-                    StatRow(
-                        label = Strings.finalScore,
-                        value = "$capturedCells"
+                    Text(
+                        text = "$winnerName\n$winsText",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 38.sp
                     )
-                    StatRow(
-                        label = Strings.totalMoves,
-                        value = "$totalMoves"
-                    )
-                    StatRow(
-                        label = Strings.duration,
-                        value = formatDuration(durationSeconds)
-                    )
-                    StatRow(
-                        label = Strings.gridSizeLabel,
-                        value = "${GameConfig.gridSize} x ${GameConfig.gridSize}"
-                    )
-                    if (GameConfig.gameMode == com.blueedge.chainreaction.data.GameMode.VS_BOT) {
-                        StatRow(
-                            label = Strings.botDifficulty,
-                            value = when (GameConfig.botDifficulty) {
-                                com.blueedge.chainreaction.data.BotDifficulty.EASY -> Strings.easy
-                                com.blueedge.chainreaction.data.BotDifficulty.MEDIUM -> Strings.medium
-                                com.blueedge.chainreaction.data.BotDifficulty.HARD -> Strings.hard
-                            }
-                        )
-                    }
                 }
+
+                Spacer(Modifier.width(24.dp))
+
+                // Right side: stats card + buttons (scrollable)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // Stats card
+                    StatsCard(capturedCells, totalMoves, durationSeconds)
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Raised3DButton(
+                        text = Strings.playAgain,
+                        onClick = onPlayAgain,
+                        mainColor = Color.White,
+                        shadowColor = Color(0xFFDDDDDD),
+                        textColor = winnerColor,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Raised3DButton(
+                        text = Strings.mainMenu,
+                        onClick = onMainMenu,
+                        mainColor = SecondaryActionColor,
+                        shadowColor = SecondaryActionShadow,
+                        textColor = Color.White,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
+        } else {
+            // --- Portrait layout (original, now scrollable) ---
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Victory emoji
+                Text(
+                    text = "\uD83C\uDFC6",
+                    fontSize = 72.sp
+                )
 
-            Spacer(Modifier.height(40.dp))
+                Spacer(Modifier.height(16.dp))
 
-            // Play Again button — 3D raised style
-            Raised3DButton(
-                text = Strings.playAgain,
-                onClick = onPlayAgain,
-                mainColor = Color.White,
-                shadowColor = Color(0xFFDDDDDD),
-                textColor = winnerColor,
-                modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = "$winnerName\n$winsText",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 44.sp
+                )
+
+                Spacer(Modifier.height(36.dp))
+
+                // Stats card
+                StatsCard(capturedCells, totalMoves, durationSeconds)
+
+                Spacer(Modifier.height(40.dp))
+
+                // Play Again button — 3D raised style
+                Raised3DButton(
+                    text = Strings.playAgain,
+                    onClick = onPlayAgain,
+                    mainColor = Color.White,
+                    shadowColor = Color(0xFFDDDDDD),
+                    textColor = winnerColor,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                // Main Menu button — 3D raised style
+                Raised3DButton(
+                    text = Strings.mainMenu,
+                    onClick = onMainMenu,
+                    mainColor = SecondaryActionColor,
+                    shadowColor = SecondaryActionShadow,
+                    textColor = Color.White,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatsCard(
+    capturedCells: Int,
+    totalMoves: Int,
+    durationSeconds: Long
+) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        // Shadow layer
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .offset(y = 5.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color(0xFFD0D0D0))
+        )
+        // Main card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
             )
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = Strings.gameStatistics,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
-            Spacer(Modifier.height(16.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
 
-            // Main Menu button — 3D raised style
-            Raised3DButton(
-                text = Strings.mainMenu,
-                onClick = onMainMenu,
-                mainColor = SecondaryActionColor,
-                shadowColor = SecondaryActionShadow,
-                textColor = Color.White,
-                modifier = Modifier.fillMaxWidth()
-            )
+                StatRow(
+                    label = Strings.finalScore,
+                    value = "$capturedCells"
+                )
+                StatRow(
+                    label = Strings.totalMoves,
+                    value = "$totalMoves"
+                )
+                StatRow(
+                    label = Strings.duration,
+                    value = formatDuration(durationSeconds)
+                )
+                StatRow(
+                    label = Strings.gridSizeLabel,
+                    value = "${GameConfig.gridSize} x ${GameConfig.gridSize}"
+                )
+                if (GameConfig.gameMode == com.blueedge.chainreaction.data.GameMode.VS_BOT) {
+                    StatRow(
+                        label = Strings.botDifficulty,
+                        value = when (GameConfig.botDifficulty) {
+                            com.blueedge.chainreaction.data.BotDifficulty.EASY -> Strings.easy
+                            com.blueedge.chainreaction.data.BotDifficulty.MEDIUM -> Strings.medium
+                            com.blueedge.chainreaction.data.BotDifficulty.HARD -> Strings.hard
+                        }
+                    )
+                }
+            }
         }
     }
 }
