@@ -42,11 +42,13 @@ import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.components.SmallRaised3DButton
+import androidx.compose.material.icons.filled.Public
 
 @Composable
 fun MainMenuScreen(
     onLocalMultiplayer: () -> Unit,
     onPlayVsBot: () -> Unit,
+    onOnline: () -> Unit,
     onSettings: () -> Unit,
     onHowToPlay: () -> Unit
 ) {
@@ -118,6 +120,18 @@ fun MainMenuScreen(
                         shadowColor = Color(0xFFA8524E),
                         modifier = Modifier.fillMaxWidth(),
                         icon = Icons.Default.SmartToy
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Raised3DButton(
+                        text = "ONLINE",
+                        topText = "PLAY",
+                        onClick = onOnline,
+                        mainColor = Color(0xFF5CB85C),
+                        shadowColor = Color(0xFF449D44),
+                        modifier = Modifier.fillMaxWidth(),
+                        icon = Icons.Default.Public
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -235,6 +249,19 @@ fun MainMenuScreen(
                     shadowColor = Color(0xFFA8524E),
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Default.SmartToy
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Play Online button
+                Raised3DButton(
+                    text = "ONLINE",
+                    topText = "PLAY",
+                    onClick = onOnline,
+                    mainColor = Color(0xFF5CB85C),
+                    shadowColor = Color(0xFF449D44),
+                    modifier = Modifier.fillMaxWidth(),
+                    icon = Icons.Default.Public
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))

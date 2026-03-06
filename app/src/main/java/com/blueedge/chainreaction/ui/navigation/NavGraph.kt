@@ -17,6 +17,8 @@ import com.blueedge.chainreaction.ui.screens.GameEndScreen
 import com.blueedge.chainreaction.ui.screens.GameSetupScreen
 import com.blueedge.chainreaction.ui.screens.HowToPlayScreen
 import com.blueedge.chainreaction.ui.screens.MainMenuScreen
+import com.blueedge.chainreaction.ui.screens.OnlineLobbyScreen
+import com.blueedge.chainreaction.ui.screens.OnlineGameScreen
 import com.blueedge.chainreaction.ui.screens.SettingsScreen
 
 object Routes {
@@ -29,6 +31,8 @@ object Routes {
     const val IN_GAME_SETTINGS = "in_game_settings"
     const val IN_GAME_HOW_TO_PLAY = "in_game_how_to_play"
     const val SETUP_HOW_TO_PLAY = "setup_how_to_play"
+    const val ONLINE_LOBBY = "online_lobby"
+    const val ONLINE_GAME = "online_game"
 
     fun gameSetup(mode: String) = "game_setup/$mode"
     fun gameEnd(winnerId: Int, capturedCells: Int, moves: Int, duration: Long) =
@@ -62,6 +66,9 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                 },
                 onPlayVsBot = {
                     navController.navigate(Routes.gameSetup("bot"))
+                },
+                onOnline = {
+                    navController.navigate(Routes.ONLINE_LOBBY)
                 },
                 onSettings = {
                     navController.navigate(Routes.SETTINGS)
@@ -212,6 +219,72 @@ fun ChainReactionNavGraph(navController: NavHostController) {
                 },
                 onMainMenu = {
                     navController.popBackStack(Routes.MAIN_MENU, inclusive = false)
+                }
+            )
+        }
+
+        composable(
+            Routes.ONLINE_LOBBY,
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
+        ) {
+            OnlineLobbyScreen(
+                onBack = { navController.popBackStack() },
+                onRoomCreated = {
+                    // Navigate to online game screen; the ViewModel will handle room creation
+                    com.blueedge.chainreaction.data.GameConfig.gameMode = GameMode.ONLINE_MULTIPLAYER
+                    com.blueedge.chainreaction.data.GameConfig.numPlayers = 2
+                    navController.navigate(Routes.ONLINE_GAME) {
+                        popUpTo(Routes.MAIN_MENU)
+                    }
+                },
+                onRoomJoined = { roomCode ->
+                    com.blueedge.chainreaction.data.GameConfig.gameMode = GameMode.ONLINE_MULTIPLAYER
+                    com.blueedge.chainreaction.data.GameConfig.numPlayers = 2
+                    navController.navigate(Routes.ONLINE_GAME + "?action=join&code=$roomCode") {
+                        popUpTo(Routes.MAIN_MENU)
+                    }
+                },
+                onRandomMatch = {
+                    com.blueedge.chainreaction.data.GameConfig.gameMode = GameMode.ONLINE_MULTIPLAYER
+                    com.blueedge.chainreaction.data.GameConfig.numPlayers = 2
+                    navController.navigate(Routes.ONLINE_GAME + "?action=random") {
+                        popUpTo(Routes.MAIN_MENU)
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Routes.ONLINE_GAME + "?action={action}&code={code}",
+            arguments = listOf(
+                navArgument("action") { type = NavType.StringType; defaultValue = "create" },
+                navArgument("code") { type = NavType.StringType; defaultValue = "" }
+            ),
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
+        ) { backStackEntry ->
+            val action = backStackEntry.arguments?.getString("action") ?: "create"
+            val code = backStackEntry.arguments?.getString("code") ?: ""
+            OnlineGameScreen(
+                action = action,
+                roomCode = code,
+                onGameEnd = { winnerId, capturedCells, moves, duration ->
+                    navController.navigate(
+                        Routes.gameEnd(winnerId, capturedCells, moves, duration)
+                    ) {
+                        popUpTo(Routes.MAIN_MENU)
+                    }
+                },
+                onExit = {
+                    navController.popBackStack(Routes.MAIN_MENU, inclusive = false)
+                },
+                onOpenSettings = {
+                    navController.navigate(Routes.IN_GAME_SETTINGS)
                 }
             )
         }

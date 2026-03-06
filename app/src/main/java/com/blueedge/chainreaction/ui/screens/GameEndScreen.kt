@@ -52,12 +52,13 @@ fun GameEndScreen(
     val players = GameConfig.getPlayers()
     val winner = players.firstOrNull { it.id == winnerId }
     val isBotMode = GameConfig.gameMode == GameMode.VS_BOT
-    val winnerName = if (isBotMode) {
-        if (winner?.isBot == true) Strings.bot else Strings.you
-    } else {
-        Strings.colorName(winner?.colorIndex ?: 0)
+    val isOnlineMode = GameConfig.gameMode == GameMode.ONLINE_MULTIPLAYER
+    val winnerName = when {
+        isBotMode -> if (winner?.isBot == true) Strings.bot else Strings.you
+        isOnlineMode -> Strings.colorName(winner?.colorIndex ?: 0)
+        else -> Strings.colorName(winner?.colorIndex ?: 0)
     }
-    val winsText = if (isBotMode) Strings.won else Strings.wins
+    val winsText = if (isBotMode || isOnlineMode) Strings.won else Strings.wins
     val winnerColor = PlayerColors.getOrElse((winner?.colorIndex ?: 0)) { PlayerColors[0] }
 
     BoxWithConstraints(
