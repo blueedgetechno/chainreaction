@@ -88,7 +88,8 @@ fun HowToPlayScreen(
     onBack: () -> Unit
 ) {
     var currentPage by remember { mutableIntStateOf(0) }
-    val scrollState = rememberScrollState()
+    val portraitScrollState = rememberScrollState()
+    val landscapeScrollState = rememberScrollState()
 
     BoxWithConstraints(
         modifier = Modifier
@@ -104,26 +105,34 @@ fun HowToPlayScreen(
         contentAlignment = Alignment.TopCenter
     ) {
         val isLandscape = maxWidth > maxHeight
+        val outerColumnModifier = if (isLandscape) {
+            Modifier.fillMaxSize().verticalScroll(landscapeScrollState)
+        } else {
+            Modifier.fillMaxSize()
+        }
+        val middleColumnModifier = if (isLandscape) {
+            Modifier.widthIn(max = 480.dp).fillMaxWidth().padding(24.dp)
+        } else {
+            Modifier.weight(1f).fillMaxWidth().padding(24.dp)
+        }
+        val contentColumnModifier = if (isLandscape) {
+            Modifier
+        } else {
+            Modifier.weight(1f).verticalScroll(portraitScrollState)
+        }
 
         // Outer column: full-screen scrollable in landscape so side empty space scrolls too
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(if (isLandscape) Modifier.verticalScroll(scrollState) else Modifier),
+            modifier = outerColumnModifier,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
-                modifier = Modifier
-                    .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
-                    .then(if (!isLandscape) Modifier.weight(1f) else Modifier)
-                    .fillMaxWidth()
-                    .padding(24.dp),
+                modifier = middleColumnModifier,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Scrollable content area (portrait: scrollable+weight; landscape: plain column)
                 Column(
-                    modifier = Modifier
-                        .then(if (!isLandscape) Modifier.weight(1f).verticalScroll(scrollState) else Modifier),
+                    modifier = contentColumnModifier,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
@@ -457,20 +466,20 @@ private fun TutorialMiniBoard(
 
     val frames = frameSequences[tutorialIndex]
     var frameIndex by remember(tutorialIndex) { mutableIntStateOf(0) }
-    val prevFrameIndexState = remember(tutorialIndex) { mutableIntStateOf(0) }
+    var prevFrameIndex by remember(tutorialIndex) { mutableIntStateOf(0) }
 
     LaunchedEffect(tutorialIndex) {
         frameIndex = 0
-        prevFrameIndexState.value = 0
+        prevFrameIndex = 0
         while (true) {
             delay(frames[frameIndex].second)
-            prevFrameIndexState.value = frameIndex
+            prevFrameIndex = frameIndex
             frameIndex = (frameIndex + 1) % frames.size
         }
     }
 
     val currentCells = frames[frameIndex].first
-    val prevCells = frames[prevFrameIndexState.value].first
+    val prevCells = frames[prevFrameIndex].first
 
     Column(modifier = modifier) {
         for (row in 0 until 5) {
@@ -483,7 +492,8 @@ private fun TutorialMiniBoard(
                     val dots = current?.second ?: 0
                     val prevOwnerId = prev?.first ?: 0
                     val prevDots = prev?.second ?: 0
-                    // Animate dot count only when the owner didn't change; otherwise appear from 0
+                    // When ownership changes (capture or cell cleared), start dot animation from 0
+                    // so new dots appear rather than sliding from the previous owner's count.
                     val previousDots = if (prevOwnerId == ownerId) prevDots else 0
                     val ownerColor = if (ownerId > 0) PlayerColors[ownerId - 1] else Color.Transparent
 

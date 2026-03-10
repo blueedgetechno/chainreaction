@@ -96,18 +96,26 @@ fun SettingsScreen(
         val isLandscape = maxWidth > maxHeight
         var showRestartConfirmation by remember { mutableStateOf(false) }
         var showExitConfirmation by remember { mutableStateOf(false) }
-        val scrollState = rememberScrollState()
+        val portraitScrollState = rememberScrollState()
+        val landscapeScrollState = rememberScrollState()
+
+        val outerColumnModifier = if (isLandscape) {
+            Modifier.fillMaxSize().verticalScroll(landscapeScrollState)
+        } else {
+            Modifier.fillMaxSize()
+        }
+        val innerColumnModifier = if (isLandscape) {
+            Modifier.widthIn(max = 480.dp).fillMaxWidth()
+        } else {
+            Modifier.fillMaxSize().verticalScroll(portraitScrollState)
+        }
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(if (isLandscape) Modifier.verticalScroll(scrollState) else Modifier),
+            modifier = outerColumnModifier,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
         Column(
-            modifier = Modifier
-                .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
-                .then(if (!isLandscape) Modifier.fillMaxSize().verticalScroll(scrollState) else Modifier.fillMaxWidth())
+            modifier = innerColumnModifier
                 .padding(horizontal = 24.dp)
                 .padding(top = 64.dp, bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
