@@ -96,15 +96,20 @@ fun SettingsScreen(
         val isLandscape = maxWidth > maxHeight
         var showRestartConfirmation by remember { mutableStateOf(false) }
         var showExitConfirmation by remember { mutableStateOf(false) }
+        val scrollState = rememberScrollState()
 
         Column(
             modifier = Modifier
-                .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .then(if (isLandscape) Modifier.verticalScroll(scrollState) else Modifier),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+        Column(
+            modifier = Modifier
+                .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
+                .then(if (!isLandscape) Modifier.fillMaxSize().verticalScroll(scrollState) else Modifier.fillMaxWidth())
                 .padding(horizontal = 24.dp)
-                .padding(top = 64.dp, bottom = 40.dp)
-                .align(Alignment.TopCenter),
+                .padding(top = 64.dp, bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Title
@@ -310,6 +315,7 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
         }
+        } // end outer scroll column
 
         // Restart confirmation dialog
         if (showRestartConfirmation) {

@@ -1,6 +1,5 @@
 package com.blueedge.chainreaction.ui.screens
 
-import android.os.Build
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -34,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -44,45 +44,40 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import coil.ImageLoader
-import coil.compose.AsyncImage
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
-import coil.size.Size
-import com.blueedge.chainreaction.R
+import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.Strings
+import com.blueedge.chainreaction.ui.components.GridCell
 import com.blueedge.chainreaction.ui.components.Raised3DButton
+import com.blueedge.chainreaction.ui.theme.PlayerColors
 import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
 import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
+import kotlinx.coroutines.delay
 
 private data class TutorialStep(
-    val gifRes: Int,
+    val animationIndex: Int,
     val titleKey: String,
     val descriptionKey: String
 )
 
 private val tutorialSteps = listOf(
     TutorialStep(
-        gifRes = R.raw.add_dot,
+        animationIndex = 0,
         titleKey = "Tap to Place",
         descriptionKey = "Tap any cell to place a dot.\nOnce a cell has 4 dots, it explodes!"
     ),
     TutorialStep(
-        gifRes = R.raw.capture,
+        animationIndex = 1,
         titleKey = "Capture Cells",
         descriptionKey = "When your dots explode into a neighbor, you take over that cell — even if it belongs to someone else!"
     ),
     TutorialStep(
-        gifRes = R.raw.victory,
+        animationIndex = 2,
         titleKey = "Win the Game",
         descriptionKey = "Eliminate every opponent by\ncapturing all their cells. Last player standing wins!"
     )
@@ -92,18 +87,8 @@ private val tutorialSteps = listOf(
 fun HowToPlayScreen(
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
-    val imageLoader = ImageLoader.Builder(context)
-        .components {
-            if (Build.VERSION.SDK_INT >= 28) {
-                add(ImageDecoderDecoder.Factory())
-            } else {
-                add(GifDecoder.Factory())
-            }
-        }
-        .build()
-
     var currentPage by remember { mutableIntStateOf(0) }
+    val scrollState = rememberScrollState()
 
     BoxWithConstraints(
         modifier = Modifier
@@ -119,272 +104,406 @@ fun HowToPlayScreen(
         contentAlignment = Alignment.TopCenter
     ) {
         val isLandscape = maxWidth > maxHeight
+
+        // Outer column: full-screen scrollable in landscape so side empty space scrolls too
         Column(
             modifier = Modifier
-                .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
                 .fillMaxSize()
-                .padding(24.dp),
+                .then(if (isLandscape) Modifier.verticalScroll(scrollState) else Modifier),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-          ) {
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = Strings.howToPlay,
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Tutorial GIF pager card
-            val cardShadowOffset = 5.dp
-            Box(modifier = Modifier.fillMaxWidth()) {
-                // Shadow layer
-                Box(
+            Column(
+                modifier = Modifier
+                    .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
+                    .then(if (!isLandscape) Modifier.weight(1f) else Modifier)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Scrollable content area (portrait: scrollable+weight; landscape: plain column)
+                Column(
                     modifier = Modifier
-                        .matchParentSize()
-                        .offset(y = cardShadowOffset)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFFD0D0D0))
-                )
-                // Main card
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(MaterialTheme.colorScheme.surface)
+                        .then(if (!isLandscape) Modifier.weight(1f).verticalScroll(scrollState) else Modifier),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        AnimatedContent(
-                            targetState = currentPage,
-                            transitionSpec = {
-                                if (targetState > initialState) {
-                                    slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
-                                } else {
-                                    slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
-                                }
-                            },
-                            label = "tutorial_page",
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = Strings.howToPlay,
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Tutorial mini-board pager card
+                    val cardShadowOffset = 5.dp
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        // Shadow layer
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .offset(y = cardShadowOffset)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(Color(0xFFD0D0D0))
+                        )
+                        // Main card
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .pointerInput(Unit) {
-                                    var totalDrag = 0f
-                                    detectHorizontalDragGestures(
-                                        onDragStart = { totalDrag = 0f },
-                                        onDragEnd = {
-                                            if (totalDrag < -100 && currentPage < tutorialSteps.size - 1) {
-                                                currentPage++
-                                            } else if (totalDrag > 100 && currentPage > 0) {
-                                                currentPage--
-                                            }
-                                            totalDrag = 0f
-                                        },
-                                        onDragCancel = { totalDrag = 0f },
-                                        onHorizontalDrag = { _, dragAmount ->
-                                            totalDrag += dragAmount
-                                        }
-                                    )
-                                }
-                        ) { page ->
-                            val step = tutorialSteps[page]
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                        ) {
                             Column(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(context)
-                                        .data(step.gifRes)
-                                        .size(Size.ORIGINAL)
-                                        .build(),
-                                    imageLoader = imageLoader,
-                                    contentDescription = step.titleKey,
-                                    contentScale = ContentScale.FillWidth,
+                                AnimatedContent(
+                                    targetState = currentPage,
+                                    transitionSpec = {
+                                        if (targetState > initialState) {
+                                            slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                                        } else {
+                                            slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
+                                        }
+                                    },
+                                    label = "tutorial_page",
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .aspectRatio(1f)
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(Color.White)
-                                )
+                                        .pointerInput(Unit) {
+                                            var totalDrag = 0f
+                                            detectHorizontalDragGestures(
+                                                onDragStart = { totalDrag = 0f },
+                                                onDragEnd = {
+                                                    if (totalDrag < -100 && currentPage < tutorialSteps.size - 1) {
+                                                        currentPage++
+                                                    } else if (totalDrag > 100 && currentPage > 0) {
+                                                        currentPage--
+                                                    }
+                                                    totalDrag = 0f
+                                                },
+                                                onDragCancel = { totalDrag = 0f },
+                                                onHorizontalDrag = { _, dragAmount ->
+                                                    totalDrag += dragAmount
+                                                }
+                                            )
+                                        }
+                                ) { page ->
+                                    val step = tutorialSteps[page]
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        // Mini animated game board instead of GIF
+                                        TutorialMiniBoard(
+                                            tutorialIndex = step.animationIndex,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .aspectRatio(1f)
+                                                .clip(RoundedCornerShape(16.dp))
+                                                .background(MaterialTheme.colorScheme.background)
+                                                .padding(8.dp)
+                                        )
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+
+                                        Text(
+                                            text = Strings.tr(step.titleKey),
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            textAlign = TextAlign.Center
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        Text(
+                                            text = Strings.tr(step.descriptionKey),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(horizontal = 8.dp)
+                                        )
+                                    }
+                                }
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                Text(
-                                    text = Strings.tr(step.titleKey),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    textAlign = TextAlign.Center
-                                )
+                                // Navigation arrows + page indicator dots
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    IconButton(
+                                        onClick = { if (currentPage > 0) currentPage-- },
+                                        enabled = currentPage > 0
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                            contentDescription = "Previous",
+                                            tint = if (currentPage > 0)
+                                                MaterialTheme.colorScheme.primary
+                                            else
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
 
-                                Text(
-                                    text = Strings.tr(step.descriptionKey),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 8.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Navigation arrows + page indicator dots
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            IconButton(
-                                onClick = { if (currentPage > 0) currentPage-- },
-                                enabled = currentPage > 0
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                    contentDescription = "Previous",
-                                    tint = if (currentPage > 0)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                repeat(tutorialSteps.size) { index ->
-                                    val isSelected = currentPage == index
-                                    Box(
-                                        modifier = Modifier
-                                            .size(if (isSelected) 10.dp else 8.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                if (isSelected)
-                                                    MaterialTheme.colorScheme.primary
-                                                else
-                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        repeat(tutorialSteps.size) { index ->
+                                            val isSelected = currentPage == index
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(if (isSelected) 10.dp else 8.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        if (isSelected)
+                                                            MaterialTheme.colorScheme.primary
+                                                        else
+                                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                                    )
                                             )
-                                    )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    IconButton(
+                                        onClick = { if (currentPage < tutorialSteps.size - 1) currentPage++ },
+                                        enabled = currentPage < tutorialSteps.size - 1
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                            contentDescription = "Next",
+                                            tint = if (currentPage < tutorialSteps.size - 1)
+                                                MaterialTheme.colorScheme.primary
+                                            else
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
                                 }
                             }
+                        }
+                    }
 
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            IconButton(
-                                onClick = { if (currentPage < tutorialSteps.size - 1) currentPage++ },
-                                enabled = currentPage < tutorialSteps.size - 1
+                    // Simple vs Classic mode differences
+                    val cardShadowOffset2 = 5.dp
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .offset(y = cardShadowOffset2)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(Color(0xFFD0D0D0))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = "Next",
-                                    tint = if (currentPage < tutorialSteps.size - 1)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                                    modifier = Modifier.size(32.dp)
+                                val simpleColor = Color(0xFF41AFD4)
+                                val classicColor = Color(0xFFE09B40)
+                                Text(
+                                    text = buildAnnotatedString {
+                                        withStyle(SpanStyle(color = simpleColor)) {
+                                            append(Strings.simple)
+                                        }
+                                        withStyle(SpanStyle(color = Color.Gray)) {
+                                            append(" vs ")
+                                        }
+                                        withStyle(SpanStyle(color = classicColor)) {
+                                            append(Strings.classic)
+                                        }
+                                    },
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Black
+                                )
+
+                                ModeDiffItem(
+                                    topic = Strings.firstMove,
+                                    simpleText = Strings.firstMoveSimple,
+                                    classicText = Strings.firstMoveClassic
+                                )
+
+                                ModeDiffItem(
+                                    topic = Strings.placement,
+                                    simpleText = Strings.placementSimple,
+                                    classicText = Strings.placementClassic
+                                )
+
+                                ModeDiffItem(
+                                    topic = Strings.criticalMass,
+                                    simpleText = Strings.criticalMassSimple,
+                                    classicText = Strings.criticalMassClassic
+                                )
+
+                                ModeDiffItem(
+                                    topic = Strings.explosions,
+                                    simpleText = Strings.explosionsSimple,
+                                    classicText = Strings.explosionsClassic
                                 )
                             }
                         }
                     }
-                }
-            }
 
-            // Simple vs Classic mode differences
-            val cardShadowOffset2 = 5.dp
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .offset(y = cardShadowOffset2)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFFD0D0D0))
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        val simpleColor = Color(0xFF41AFD4)
-                        val classicColor = Color(0xFFE09B40)
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(SpanStyle(color = simpleColor)) {
-                                    append(Strings.simple)
-                                }
-                                withStyle(SpanStyle(color = Color.Gray)) {
-                                    append(" vs ")
-                                }
-                                withStyle(SpanStyle(color = classicColor)) {
-                                    append(Strings.classic)
-                                }
-                            },
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Black
-                        )
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                        ModeDiffItem(
-                            topic = Strings.firstMove,
-                            simpleText = Strings.firstMoveSimple,
-                            classicText = Strings.firstMoveClassic
+                    // In landscape: back button scrolls with content (non-sticky)
+                    if (isLandscape) {
+                        Raised3DButton(
+                            text = Strings.back,
+                            onClick = onBack,
+                            mainColor = SecondaryActionColor,
+                            shadowColor = SecondaryActionShadow,
+                            modifier = Modifier.fillMaxWidth()
                         )
-
-                        ModeDiffItem(
-                            topic = Strings.placement,
-                            simpleText = Strings.placementSimple,
-                            classicText = Strings.placementClassic
-                        )
-
-                        ModeDiffItem(
-                            topic = Strings.criticalMass,
-                            simpleText = Strings.criticalMassSimple,
-                            classicText = Strings.criticalMassClassic
-                        )
-
-                        ModeDiffItem(
-                            topic = Strings.explosions,
-                            simpleText = Strings.explosionsSimple,
-                            classicText = Strings.explosionsClassic
-                        )
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
+                } // end scrollable content column
+
+                // In portrait: back button is sticky at the bottom
+                if (!isLandscape) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Raised3DButton(
+                        text = Strings.back,
+                        onClick = onBack,
+                        mainColor = SecondaryActionColor,
+                        shadowColor = SecondaryActionShadow,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+            } // end constrained content column
+        } // end outer full-screen column
+    }
+}
+
+/**
+ * Animated 5×5 mini game board used in the tutorial.
+ * Cycles through pre-defined frame sequences on loop to illustrate game mechanics.
+ */
+@Composable
+private fun TutorialMiniBoard(
+    tutorialIndex: Int,
+    modifier: Modifier = Modifier
+) {
+    // Each frame: Map<(row,col), (ownerId,dots)> paired with duration in ms
+    val frameSequences = remember {
+        listOf(
+            // Tutorial 0: "Tap to Place" — place dots at centre until it explodes
+            listOf(
+                emptyMap<Pair<Int, Int>, Pair<Int, Int>>() to 600L,
+                mapOf((2 to 2) to (1 to 1)) to 700L,
+                mapOf((2 to 2) to (1 to 2)) to 700L,
+                mapOf((2 to 2) to (1 to 3)) to 700L,
+                mapOf((2 to 2) to (1 to 4)) to 400L, // critical mass → explosion!
+                mapOf(
+                    (1 to 2) to (1 to 1),
+                    (3 to 2) to (1 to 1),
+                    (2 to 1) to (1 to 1),
+                    (2 to 3) to (1 to 1)
+                ) to 1000L
+            ),
+            // Tutorial 1: "Capture Cells" — corner explosion captures opponent cell
+            listOf(
+                mapOf((0 to 1) to (2 to 1)) to 700L,
+                mapOf((0 to 0) to (1 to 1), (0 to 1) to (2 to 1)) to 800L,
+                mapOf((0 to 0) to (1 to 2), (0 to 1) to (2 to 1)) to 600L, // about to explode!
+                mapOf(
+                    (0 to 1) to (1 to 2), // P2's cell captured by P1
+                    (1 to 0) to (1 to 1)
+                ) to 1200L
+            ),
+            // Tutorial 2: "Win the Game" — P1 captures P2's last cell
+            listOf(
+                mapOf(
+                    (0 to 0) to (1 to 1),
+                    (2 to 2) to (1 to 1),
+                    (3 to 1) to (1 to 1),
+                    (3 to 3) to (1 to 1),
+                    (0 to 1) to (2 to 1) // P2's last cell
+                ) to 800L,
+                mapOf(
+                    (0 to 0) to (1 to 2), // corner, about to explode!
+                    (2 to 2) to (1 to 1),
+                    (3 to 1) to (1 to 1),
+                    (3 to 3) to (1 to 1),
+                    (0 to 1) to (2 to 1)
+                ) to 600L,
+                mapOf( // P1 wins — P2 eliminated!
+                    (0 to 1) to (1 to 2), // captured from P2
+                    (1 to 0) to (1 to 1),
+                    (2 to 2) to (1 to 1),
+                    (3 to 1) to (1 to 1),
+                    (3 to 3) to (1 to 1)
+                ) to 1500L
+            )
+        )
+    }
+
+    val frames = frameSequences[tutorialIndex]
+    var frameIndex by remember(tutorialIndex) { mutableIntStateOf(0) }
+    val prevFrameIndexState = remember(tutorialIndex) { mutableIntStateOf(0) }
+
+    LaunchedEffect(tutorialIndex) {
+        frameIndex = 0
+        prevFrameIndexState.value = 0
+        while (true) {
+            delay(frames[frameIndex].second)
+            prevFrameIndexState.value = frameIndex
+            frameIndex = (frameIndex + 1) % frames.size
+        }
+    }
+
+    val currentCells = frames[frameIndex].first
+    val prevCells = frames[prevFrameIndexState.value].first
+
+    Column(modifier = modifier) {
+        for (row in 0 until 5) {
+            Row(modifier = Modifier.weight(1f)) {
+                for (col in 0 until 5) {
+                    val key = row to col
+                    val current = currentCells[key]
+                    val prev = prevCells[key]
+                    val ownerId = current?.first ?: 0
+                    val dots = current?.second ?: 0
+                    val prevOwnerId = prev?.first ?: 0
+                    val prevDots = prev?.second ?: 0
+                    // Animate dot count only when the owner didn't change; otherwise appear from 0
+                    val previousDots = if (prevOwnerId == ownerId) prevDots else 0
+                    val ownerColor = if (ownerId > 0) PlayerColors[ownerId - 1] else Color.Transparent
+
+                    GridCell(
+                        cellState = CellState(
+                            ownerId = ownerId,
+                            dots = dots,
+                            previousDots = previousDots
+                        ),
+                        ownerColor = ownerColor,
+                        currentPlayerColor = ownerColor,
+                        isExploding = false,
+                        isCurrentPlayer = ownerId > 0,
+                        onClick = {},
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-          }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Back button
-            Raised3DButton(
-                text = Strings.back,
-                onClick = onBack,
-                mainColor = SecondaryActionColor,
-                shadowColor = SecondaryActionShadow,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
@@ -443,5 +562,4 @@ private fun ModeDiffItem(
         }
     }
 }
-
 

@@ -98,11 +98,17 @@ fun GameSetupScreen(
         contentAlignment = Alignment.TopCenter
     ) {
         val isLandscape = maxWidth > maxHeight
+        val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(if (isLandscape) Modifier.verticalScroll(scrollState) else Modifier),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
     Column(
         modifier = Modifier
             .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .then(if (!isLandscape) Modifier.fillMaxSize().verticalScroll(scrollState) else Modifier.fillMaxWidth())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -318,7 +324,8 @@ fun GameSetupScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
     }
-    }
+    } // end inner column
+    } // end outer column
 }
 
 @Composable
