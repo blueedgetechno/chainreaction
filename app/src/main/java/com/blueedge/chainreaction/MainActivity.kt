@@ -8,9 +8,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.blueedge.chainreaction.ads.InterstitialAdManager
 import com.blueedge.chainreaction.audio.SoundManager
@@ -23,7 +32,7 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
-import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -32,6 +41,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private val appUpdateManager by lazy { AppUpdateManagerFactory.create(this) }
+    private val snackbarHostState = SnackbarHostState()
 
     private val updateResultLauncher: ActivityResultLauncher<IntentSenderRequest> =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -61,8 +71,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ChainReactionTheme {
-                val navController = rememberNavController()
-                ChainReactionNavGraph(navController = navController)
+                Box(Modifier.fillMaxSize()) {
+                    val navController = rememberNavController()
+                    ChainReactionNavGraph(navController = navController)
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
+                }
             }
         }
     }
@@ -138,13 +154,15 @@ class MainActivity : ComponentActivity() {
      * after a flexible update has been downloaded.
      */
     private fun showUpdateSnackbar() {
-        Snackbar.make(
-            findViewById(android.R.id.content),
-            "An update has been downloaded.",
-            Snackbar.LENGTH_INDEFINITE
-        ).apply {
-            setAction("RESTART") { appUpdateManager.completeUpdate() }
-            show()
+        lifecycleScope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = "An update has been downloaded.",
+                actionLabel = "RESTART",
+                duration = SnackbarDuration.Indefinite
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                appUpdateManager.completeUpdate()
+            }
         }
     }
 

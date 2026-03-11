@@ -9,6 +9,16 @@
         "isDefault": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "assembleClean",
+      "type": "shell",
+      "command": "./gradlew.bat clean",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": []
     }
   ]
 }

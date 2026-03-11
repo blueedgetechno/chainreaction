@@ -41,6 +41,7 @@ object Strings {
     val termsOfService: String get() = t("Terms of Service")
     val privacyPolicy: String get() = t("Privacy Policy")
     val version: String get() = t("Version")
+    val madeWithLove: String get() = t("Made with ❤️ by Blue")
 
     // ── Confirmation dialogs ────────────────────────────────────────────
     val restartGameQ: String get() = t("Restart Game?")
@@ -313,6 +314,15 @@ object Strings {
             "Les points excédentaires sont conservés — seule la masse critique est soustraite.",
             "Überschüssige Punkte bleiben erhalten — nur die kritische Masse wird abgezogen.",
             "余分なドットは保持されます — 臨界量のみ差し引かれます。")
+
+        // Footer
+        add("Made with ❤️ by Blue",
+            "Made with ❤️ by Blue",
+            "❤️ से Blue द्वारा बनाया गया",
+            "Hecho con ❤️ por Blue",
+            "Fait avec ❤️ par Blue",
+            "Mit ❤️ von Blue",
+            "❤️ を込めて Blue が作りました")
 
         // Player color names
         add("Blue",    "Blue",    "नीला",    "Azul",      "Bleu",    "Blau",   "青")

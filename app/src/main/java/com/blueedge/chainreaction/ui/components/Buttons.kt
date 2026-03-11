@@ -24,11 +24,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,7 +51,7 @@ fun Raised3DButton(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     topText: String = "",
-    icon: ImageVector? = null
+    @DrawableRes icon: Int? = null
 ) {
     val isMenuStyle = topText.isNotEmpty() || icon != null
     val totalHeight = if (isMenuStyle) 86.dp else 66.dp
@@ -108,7 +109,7 @@ fun Raised3DButton(
                 ) {
                     if (icon != null) {
                         Icon(
-                            imageVector = icon,
+                            painter = painterResource(id = icon),
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(48.dp)
@@ -155,7 +156,7 @@ fun SmallRaised3DButton(
     mainColor: Color = Color(0xFFE8E8E8),
     shadowColor: Color = Color(0xFFBBBBBB),
     textColor: Color = Color(0xFF5A5A5A),
-    icon: ImageVector? = null,
+    @DrawableRes icon: Int? = null,
     iconTint: Color = textColor
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -216,7 +217,7 @@ fun SmallRaised3DButton(
         ) {
             if (icon != null) {
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(id = icon),
                     contentDescription = null,
                     tint = iconTint,
                     modifier = Modifier.size(20.dp)
