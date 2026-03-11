@@ -22,10 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -93,7 +90,7 @@ fun MainMenuScreen(
                     SmallRaised3DButton(
                         text = Strings.howToPlay,
                         onClick = onHowToPlay,
-                        icon = Icons.Default.SportsEsports
+                        icon = R.drawable.ic_sports_esports
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -105,7 +102,7 @@ fun MainMenuScreen(
                         mainColor = MaterialTheme.colorScheme.primary,
                         shadowColor = Color(0xFF2E8DAD),
                         modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Default.Person
+                        icon = R.drawable.ic_person
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -117,7 +114,7 @@ fun MainMenuScreen(
                         mainColor = MaterialTheme.colorScheme.tertiary,
                         shadowColor = Color(0xFFA8524E),
                         modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Default.SmartToy
+                        icon = R.drawable.ic_smart_toy
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -208,7 +205,7 @@ fun MainMenuScreen(
                 SmallRaised3DButton(
                     text = Strings.howToPlay,
                     onClick = onHowToPlay,
-                    icon = Icons.Default.SportsEsports
+                    icon = R.drawable.ic_sports_esports
                 )
 
                 Spacer(modifier = Modifier.height(28.dp))
@@ -221,7 +218,7 @@ fun MainMenuScreen(
                     mainColor = MaterialTheme.colorScheme.primary,
                     shadowColor = Color(0xFF2E8DAD),
                     modifier = Modifier.fillMaxWidth(),
-                    icon = Icons.Default.Person
+                    icon = R.drawable.ic_person
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -234,7 +231,7 @@ fun MainMenuScreen(
                     mainColor = MaterialTheme.colorScheme.tertiary,
                     shadowColor = Color(0xFFA8524E),
                     modifier = Modifier.fillMaxWidth(),
-                    icon = Icons.Default.SmartToy
+                    icon = R.drawable.ic_smart_toy
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))

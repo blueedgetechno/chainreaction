@@ -64,7 +64,7 @@ It's deceptively simple:
 
 | Layer | Technology |
 |---|---|
-| **UI** | Jetpack Compose, Material 3, Material Icons Extended |
+| **UI** | Jetpack Compose, Material 3 |
 | **Navigation** | Navigation Compose 2.7.7 |
 | **Architecture** | ViewModel + State, Lifecycle-aware Compose |
 | **AI** | Minimax with alpha-beta pruning (depth 3) |
