@@ -61,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.blueedge.chainreaction.BuildConfig
-import com.blueedge.chainreaction.R
+// import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.AppFont
 import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
@@ -302,6 +302,16 @@ fun SettingsScreen(
                 Text(
                     text = "${Strings.version} ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    text = Strings.madeWithLove,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
