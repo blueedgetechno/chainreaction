@@ -29,6 +29,8 @@ android {
         versionCode = 12
         versionName = "1.12"
 
+        resConfigs("en")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -93,14 +95,7 @@ dependencies {
     // Google AdMob
     implementation("com.google.android.gms:play-services-ads:23.6.0")
 
-    // Coil for GIF support
-    implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("io.coil-kt:coil-gif:2.7.0")
-
     // Google Play In-App Updates
     implementation("com.google.android.play:app-update:2.1.0")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
-
-    // Material (for Snackbar in update flow)
-    implementation("com.google.android.material:material:1.12.0")
 }
