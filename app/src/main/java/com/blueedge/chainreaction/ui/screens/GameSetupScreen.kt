@@ -35,10 +35,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -56,9 +52,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.data.BotDifficulty
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
@@ -98,12 +96,24 @@ fun GameSetupScreen(
         contentAlignment = Alignment.TopCenter
     ) {
         val isLandscape = maxWidth > maxHeight
+        val portraitScrollState = rememberScrollState()
+        val landscapeScrollState = rememberScrollState()
+        val outerColumnModifier = if (isLandscape) {
+            Modifier.fillMaxSize().verticalScroll(landscapeScrollState)
+        } else {
+            Modifier.fillMaxSize()
+        }
+        val innerColumnModifier = if (isLandscape) {
+            Modifier.widthIn(max = 480.dp).fillMaxWidth()
+        } else {
+            Modifier.fillMaxSize().verticalScroll(portraitScrollState)
+        }
     Column(
-        modifier = Modifier
-            .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier = outerColumnModifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+    Column(
+        modifier = innerColumnModifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -114,7 +124,7 @@ fun GameSetupScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
-                imageVector = if (gameMode == GameMode.LOCAL_MULTIPLAYER) Icons.Filled.People else Icons.Filled.SmartToy,
+                painter = painterResource(id = if (gameMode == GameMode.LOCAL_MULTIPLAYER) R.drawable.ic_people else R.drawable.ic_smart_toy),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(48.dp)
@@ -149,7 +159,7 @@ fun GameSetupScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Help,
+                        painter = painterResource(id = R.drawable.ic_help),
                         contentDescription = "How to play",
                         modifier = Modifier.size(22.dp),
                         tint = MaterialTheme.colorScheme.primary
@@ -318,7 +328,8 @@ fun GameSetupScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
     }
-    }
+    } // end inner column
+    } // end outer column
 }
 
 @Composable

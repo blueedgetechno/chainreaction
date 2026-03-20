@@ -45,7 +45,7 @@ abstract class MinimaxBot(
         }
 
         var bestScore = Int.MIN_VALUE
-        var bestMove = validMoves.first()
+        val bestMoves = mutableListOf<Move>()
 
         for (move in validMoves) {
             val (newBoard, _) = engine.executeMove(board, move.row, move.col, botPlayerId, isFirstMove)
@@ -57,11 +57,14 @@ abstract class MinimaxBot(
             val score = minimax(newBoard, searchDepth, false, botPlayerId, opponentId, Int.MIN_VALUE, Int.MAX_VALUE)
             if (score > bestScore) {
                 bestScore = score
-                bestMove = move
+                bestMoves.clear()
+                bestMoves.add(move)
+            } else if (score == bestScore) {
+                bestMoves.add(move)
             }
         }
 
-        return bestMove
+        return bestMoves.random()
     }
 
     private fun minimax(

@@ -29,11 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.MusicOff
-import androidx.compose.material.icons.rounded.Translate
-import androidx.compose.material.icons.rounded.VolumeOff
-import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -50,11 +45,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -96,15 +90,28 @@ fun SettingsScreen(
         val isLandscape = maxWidth > maxHeight
         var showRestartConfirmation by remember { mutableStateOf(false) }
         var showExitConfirmation by remember { mutableStateOf(false) }
+        val portraitScrollState = rememberScrollState()
+        val landscapeScrollState = rememberScrollState()
+
+        val outerColumnModifier = if (isLandscape) {
+            Modifier.fillMaxSize().verticalScroll(landscapeScrollState)
+        } else {
+            Modifier.fillMaxSize()
+        }
+        val innerColumnModifier = if (isLandscape) {
+            Modifier.widthIn(max = 480.dp).fillMaxWidth()
+        } else {
+            Modifier.fillMaxSize().verticalScroll(portraitScrollState)
+        }
 
         Column(
-            modifier = Modifier
-                .then(if (isLandscape) Modifier.widthIn(max = 480.dp) else Modifier)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+            modifier = outerColumnModifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+        Column(
+            modifier = innerColumnModifier
                 .padding(horizontal = 24.dp)
-                .padding(top = 64.dp, bottom = 40.dp)
-                .align(Alignment.TopCenter),
+                .padding(top = 64.dp, bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Title
@@ -124,8 +131,8 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 SoundToggleButton(
-                    iconEnabled = Icons.Rounded.MusicNote,
-                    iconDisabled = Icons.Rounded.MusicOff,
+                    iconEnabled = R.drawable.ic_music_note,
+                    iconDisabled = R.drawable.ic_music_off,
                     label = Strings.music,
                     enabled = GameConfig.musicEnabled,
                     onToggle = {
@@ -134,8 +141,8 @@ fun SettingsScreen(
                     }
                 )
                 SoundToggleButton(
-                    iconEnabled = Icons.Rounded.VolumeUp,
-                    iconDisabled = Icons.Rounded.VolumeOff,
+                    iconEnabled = R.drawable.ic_volume_up,
+                    iconDisabled = R.drawable.ic_volume_off,
                     label = Strings.sound,
                     enabled = GameConfig.soundEnabled,
                     onToggle = { GameConfig.soundEnabled = !GameConfig.soundEnabled }
@@ -171,7 +178,7 @@ fun SettingsScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Rounded.Translate,
+                                        painter = painterResource(id = R.drawable.ic_translate),
                                         contentDescription = "Language",
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(22.dp)
@@ -294,6 +301,16 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    text = Strings.madeWithLove,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -310,6 +327,7 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
         }
+        } // end outer scroll column
 
         // Restart confirmation dialog
         if (showRestartConfirmation) {
@@ -347,8 +365,8 @@ fun SettingsScreen(
 
 @Composable
 private fun SoundToggleButton(
-    iconEnabled: ImageVector,
-    iconDisabled: ImageVector,
+    @androidx.annotation.DrawableRes iconEnabled: Int,
+    @androidx.annotation.DrawableRes iconDisabled: Int,
     label: String,
     enabled: Boolean,
     onToggle: () -> Unit
@@ -377,7 +395,7 @@ private fun SoundToggleButton(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = if (enabled) iconEnabled else iconDisabled,
+                painter = painterResource(id = if (enabled) iconEnabled else iconDisabled),
                 contentDescription = label,
                 tint = iconColor,
                 modifier = Modifier.size(36.dp)
