@@ -20,12 +20,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.rememberNavController
 import com.blueedge.chainreaction.ads.InterstitialAdManager
 import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.GameConfig
-import com.blueedge.chainreaction.ui.navigation.ChainReactionNavGraph
-import com.blueedge.chainreaction.ui.theme.ChainReactionTheme
+import com.blueedge.chainreaction.platform.ServiceLocator
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.InstallStateUpdatedListener
@@ -60,25 +58,35 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        GameConfig.load(this)
+        GameConfig.initStorage(com.blueedge.chainreaction.bridge.AndroidPlatformStorage(this))
+        GameConfig.load()
         SoundManager.init(this)
         InterstitialAdManager.initializeSdk(this)
         enableEdgeToEdge()
         hideSystemBars()
 
+        // Wire platform services into shared module
+        val androidSoundPlayer = com.blueedge.chainreaction.bridge.AndroidSoundPlayer
+        val androidAdManager = com.blueedge.chainreaction.bridge.AndroidAdManager(this)
+        val androidOnlineGameRepo = com.blueedge.chainreaction.bridge.AndroidOnlineGameRepo
+        ServiceLocator.soundPlayer = androidSoundPlayer
+        ServiceLocator.adManager = androidAdManager
+        ServiceLocator.onlineGameRepo = androidOnlineGameRepo
+
         // Check for app updates
         checkForUpdate()
 
         setContent {
-            ChainReactionTheme {
-                Box(Modifier.fillMaxSize()) {
-                    val navController = rememberNavController()
-                    ChainReactionNavGraph(navController = navController)
-                    SnackbarHost(
-                        hostState = snackbarHostState,
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    )
-                }
+            Box(Modifier.fillMaxSize()) {
+                App(
+                    soundPlayer = androidSoundPlayer,
+                    adManager = androidAdManager,
+                    onlineGameRepo = androidOnlineGameRepo
+                )
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
         }
     }
@@ -108,7 +116,7 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         SoundManager.pauseMusic()
-        GameConfig.save(this)
+        GameConfig.save()
     }
 
     override fun onDestroy() {

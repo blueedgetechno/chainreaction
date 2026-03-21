@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "ChainReaction"
 include(":app")
+include(":shared")
  

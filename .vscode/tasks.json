@@ -3,7 +3,7 @@
     {
       "label": "assembleDebug",
       "type": "shell",
-      "command": " ./gradlew.bat installDebug; adb shell am start -n com.blueedge.chainreaction/.MainActivity",
+      "command": " ./gradlew installDebug; adb shell am start -n com.blueedge.chainreaction/.MainActivity",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -13,7 +13,7 @@
     {
       "label": "assembleClean",
       "type": "shell",
-      "command": "./gradlew.bat clean",
+      "command": "./gradlew clean",
       "group": {
         "kind": "build",
         "isDefault": false
