@@ -28,6 +28,11 @@ object Strings {
     val playWith: String get() = t("PLAY W/")
     val friends: String get() = t("FRIENDS")
     val bot: String get() = t("BOT")
+    val stranger: String get() = t("STRANGER")
+    val playWStranger: String get() = t("PLAY W/ STRANGER")
+    val searchingForMatch: String get() = t("Searching for a match...")
+    val playWBotInstead: String get() = t("Play w/ Bot instead")
+    val botInstead: String get() = t("Bot Instead")
 
     // ── Settings ────────────────────────────────────────────────────────
     val settings: String get() = t("Settings")
@@ -68,9 +73,16 @@ object Strings {
     // ── Game Board ──────────────────────────────────────────────────────
     val yourTurn: String get() = t("Your turn")
     val botsTurn: String get() = t("Bot's turn")
+    val theirTurn: String get() = t("Their turn")
     fun playerTurn(colorName: String): String = "$colorName${t("'s turn")}"
     val playAgain: String get() = t("Play Again")
     val menu: String get() = t("Menu")
+
+    // ── Online Multiplayer ──────────────────────────────────────────────
+    val opponentDisconnected: String get() = t("Opponent Disconnected")
+    val opponentLeft: String get() = t("Opponent left")
+    val opponentLeftMessage: String get() = t("Your opponent has left the game.")
+    val playWithBot: String get() = t("Play w/ Bot")
 
     // ── Victory / Game End ──────────────────────────────────────────────
     val won: String get() = t("WON!")
@@ -156,6 +168,11 @@ object Strings {
         add("PLAY W/",            "PLAY W/",            "साथ खेलें",           "JUGAR CON",          "JOUER AVEC",         "SPIELEN MIT",        "と遊ぶ")
         add("FRIENDS",            "FRIENDS",            "दोस्त",              "AMIGOS",             "AMIS",               "FREUNDE",            "友達")
         add("BOT",                "BOT",                "बॉट",                "BOT",                "BOT",                "BOT",                "ボット")
+        add("STRANGER",           "STRANGER",           "अजनबी",              "EXTRAÑO",           "INCONNU",           "FREMDER",           "他人")
+        add("PLAY W/ STRANGER",   "PLAY W/ STRANGER",   "अजनबी के साथ खेलें",   "JUGAR CON EXTRAÑO", "JOUER CONTRE INCONNU","GEGEN FREMDEN",     "他人と遊ぶ")
+        add("Searching for a match...", "Searching for a match...", "मैच खोज रहे हैं...", "Buscando partida...", "Recherche de partie...", "Suche nach Spiel...", "マッチを検索中...")
+        add("Play w/ Bot instead", "Play w/ Bot instead", "बॉट के साथ खेलें", "Jugar con Bot",      "Jouer contre Bot",  "Gegen Bot spielen", "ボットと遊ぶ")
+        add("Bot Instead",        "Bot Instead",        "बॉट के साथ",        "Bot en su lugar",   "Bot à la place",    "Bot stattdessen",   "ボット代わり")
 
         // Settings
         add("Settings",           "Settings",           "सेटिंग्स",            "Ajustes",            "Paramètres",         "Einstellungen",      "設定")
@@ -209,9 +226,16 @@ object Strings {
         // Game Board
         add("Your turn",          "Your turn",          "आपकी बारी",           "Tu turno",           "Votre tour",         "Dein Zug",           "あなたの番")
         add("Bot's turn",         "Bot's turn",         "बॉट की बारी",         "Turno del Bot",      "Tour du Bot",        "Bot ist dran",       "ボットの番")
+        add("Their turn",         "Their turn",         "उनकी बारी",           "Su turno",           "Leur tour",          "Deren Zug",          "相手の番")
         add("'s turn",            "'s turn",            " की बारी",            " turno",             " joue",              " ist dran",          "の番")
         add("Play Again",         "Play Again",         "फिर से खेलें",        "Jugar de Nuevo",     "Rejouer",            "Nochmal Spielen",    "もう一度")
         add("Menu",               "Menu",               "मेनू",               "Menú",               "Menu",               "Menü",               "メニュー")
+
+        // Online Multiplayer
+        add("Opponent Disconnected", "Opponent Disconnected", "प्रतिद्वंद्वी डिस्कनेक्ट", "Oponente Desconectado", "Adversaire Déconnecté", "Gegner Getrennt", "相手が切断されました")
+        add("Opponent left",       "Opponent left",      "प्रतिद्वंद्वी चला गया", "El oponente se fue", "L'adversaire est parti", "Gegner hat verlassen", "相手が退出しました")
+        add("Your opponent has left the game.", "Your opponent has left the game.", "आपका प्रतिद्वंद्वी खेल छोड़ गया।", "Tu oponente ha dejado la partida.", "Votre adversaire a quitté la partie.", "Dein Gegner hat das Spiel verlassen.", "相手がゲームを退出しました。")
+        add("Play w/ Bot",         "Play w/ Bot",        "बॉट के साथ खेलें",    "Jugar con Bot",      "Jouer contre Bot",   "Gegen Bot spielen",  "ボットと遊ぶ")
 
         // Victory / Game End
         add("WON!",               "WON!",               "जीते!",              "¡GANÓ!",             "GAGNÉ !",            "GEWONNEN!",          "勝利！")

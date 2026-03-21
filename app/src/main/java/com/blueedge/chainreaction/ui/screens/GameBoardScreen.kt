@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,9 +33,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,13 +63,11 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.ads.InterstitialAdManager
+import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameStatus
@@ -82,12 +84,12 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameBoardScreen(
-    onGameEnd: (winnerId: Int, capturedCells: Int, moves: Int, duration: Long) -> Unit,
     onPlayAgain: () -> Unit,
+    onRestart: () -> Unit,
     onExit: () -> Unit,
-    onOpenSettings: () -> Unit,
     viewModel: GameViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -113,16 +115,6 @@ fun GameBoardScreen(
         }
     }
 
-    // Resume game when returning from settings (lifecycle becomes RESUMED)
-    val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            if (viewModel.state.value.isPaused) {
-                viewModel.resumeGame()
-            }
-        }
-    }
-
     val playerColors = state.players.map { player ->
         PlayerColors.getOrElse(player.colorIndex) { PlayerColors[player.id - 1] }
     }
@@ -136,6 +128,19 @@ fun GameBoardScreen(
     )
 
     var showExitConfirmation by remember { mutableStateOf(false) }
+    var showSettingsSheet by remember { mutableStateOf(false) }
+    var showExitFromSettingsConfirmation by remember { mutableStateOf(false) }
+    var showRestartConfirmation by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var pendingExit by remember { mutableStateOf(false) }
+
+    // Deferred exit: dialog fades out first, then navigate
+    LaunchedEffect(pendingExit) {
+        if (pendingExit) {
+            delay(200)
+            onExit()
+        }
+    }
 
     // Turn indicator animation state
     val isSoloMode = GameConfig.gameMode == GameMode.VS_BOT
@@ -325,8 +330,7 @@ fun GameBoardScreen(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {
-                        viewModel.pauseGame()
-                        onOpenSettings()
+                        showSettingsSheet = true
                     }
                 ),
             contentAlignment = Alignment.Center
@@ -340,7 +344,114 @@ fun GameBoardScreen(
         }
     }
 
-    // Full-screen victory overlay with circular fill animation
+    // ── Settings Bottom Sheet ───────────────────────────────────────
+    if (showSettingsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSettingsSheet = false },
+            sheetState = sheetState,
+            containerColor = Color.White,
+            tonalElevation = 0.dp
+        ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 420.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = Strings.gameSettings,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+
+                // Music & Sound toggles
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    SettingsToggleButton(
+                        iconEnabled = R.drawable.ic_music_note,
+                        iconDisabled = R.drawable.ic_music_off,
+                        label = Strings.music,
+                        enabled = GameConfig.musicEnabled,
+                        onToggle = {
+                            GameConfig.musicEnabled = !GameConfig.musicEnabled
+                            SoundManager.onMusicToggled()
+                        }
+                    )
+                    SettingsToggleButton(
+                        iconEnabled = R.drawable.ic_volume_up,
+                        iconDisabled = R.drawable.ic_volume_off,
+                        label = Strings.sound,
+                        enabled = GameConfig.soundEnabled,
+                        onToggle = { GameConfig.soundEnabled = !GameConfig.soundEnabled }
+                    )
+                }
+
+                Raised3DButton(
+                    text = Strings.restartGame,
+                    onClick = {
+                        showSettingsSheet = false
+                        showRestartConfirmation = true
+                    },
+                    mainColor = Color(0xFF41AFD4),
+                    shadowColor = Color(0xFF2E8DAD),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Raised3DButton(
+                    text = Strings.exitToMenu,
+                    onClick = {
+                        showSettingsSheet = false
+                        showExitFromSettingsConfirmation = true
+                    },
+                    mainColor = Color(0xFFEA695E),
+                    shadowColor = Color(0xFFC55550),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            } // end Box
+        }
+    }
+
+    // Restart confirmation dialog
+    if (showRestartConfirmation) {
+        ConfirmationDialog(
+            title = Strings.restartGameQ,
+            message = Strings.restartMessage,
+            confirmText = Strings.restart,
+            confirmColor = Color(0xFF41AFD4),
+            confirmShadowColor = Color(0xFF2E8DAD),
+            onConfirm = {
+                showRestartConfirmation = false
+                onRestart()
+            },
+            onDismiss = { showRestartConfirmation = false }
+        )
+    }
+
+    // Exit from settings confirmation dialog
+    if (showExitFromSettingsConfirmation) {
+        ConfirmationDialog(
+            title = Strings.exitToMenuQ,
+            message = Strings.exitMessage,
+            confirmText = Strings.exit,
+            confirmColor = Color(0xFFEA695E),
+            confirmShadowColor = Color(0xFFC55550),
+            onConfirm = {
+                showExitFromSettingsConfirmation = false
+                pendingExit = true
+            },
+            onDismiss = { showExitFromSettingsConfirmation = false }
+        )
+    }
+
+    // Full-screen victory overlay
     if (state.gameStatus == GameStatus.GAME_OVER) {
         val winnerColor = playerColors.getOrElse(state.winnerId - 1) { Color(0xFF41AFD4) }
         val winnerPlayer = state.players.firstOrNull { it.id == state.winnerId }
@@ -353,203 +464,17 @@ fun GameBoardScreen(
         }
         val winsText = if (isBotMode) Strings.won else Strings.wins
 
-        // Circular reveal animation
-        val circleRadius = remember { Animatable(0f) }
-        val contentAlpha = remember { Animatable(0f) }
-        var screenSize by remember { mutableStateOf(IntSize.Zero) }
-
-        LaunchedEffect(state.gameStatus) {
-            // Animate circle expanding to cover full screen
-            // Diagonal of the screen = sqrt(w² + h²). We use 3000f as a safe fallback
-            // for when screen size hasn't been reported yet (covers all common display resolutions).
-            val maxRadius = if (screenSize != IntSize.Zero) {
-                sqrt((screenSize.width * screenSize.width + screenSize.height * screenSize.height).toDouble()).toFloat()
-            } else {
-                3000f
-            }
-            circleRadius.animateTo(
-                targetValue = maxRadius,
-                animationSpec = tween(durationMillis = 700)
-            )
-            // Fade in content after circle fills screen
-            contentAlpha.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 350)
-            )
-        }
-
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .onSizeChanged { screenSize = it },
-            contentAlignment = Alignment.Center
-        ) {
-            val isLandscapeOverlay = maxWidth > maxHeight
-
-            // Animated circular fill canvas
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawCircle(
-                    color = winnerColor,
-                    radius = circleRadius.value,
-                    center = Offset(size.width / 2f, size.height / 2f)
-                )
-            }
-
-            // Info (stats) icon — top right, below status bar
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .statusBarsPadding()
-                    .padding(top = 16.dp, end = 12.dp)
-                    .size(40.dp)
-                    .background(Color.White.copy(alpha = 0.85f), CircleShape)
-                    .alpha(contentAlpha.value)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {
-                            onGameEnd(
-                                state.winnerId,
-                                state.capturedCells,
-                                state.moveCount,
-                                viewModel.getGameDurationSeconds()
-                            )
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_equalizer),
-                    contentDescription = "View Stats",
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            // Victory content fades in after circle fills
-            if (isLandscapeOverlay) {
-                // Landscape: side-by-side layout
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .padding(32.dp)
-                        .alpha(contentAlpha.value)
-                ) {
-                    // Left side: trophy + winner name
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "\uD83C\uDFC6",
-                            fontSize = 64.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = winnerName,
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Text(
-                            text = winsText,
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White.copy(alpha = 0.9f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(32.dp))
-
-                    // Right side: buttons
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Raised3DButton(
-                            text = Strings.playAgain,
-                            mainColor = Color.White,
-                            shadowColor = Color(0xFFDDDDDD),
-                            textColor = winnerColor,
-                            onClick = { onPlayAgain() },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Raised3DButton(
-                            text = Strings.menu,
-                            textColor = Color.White,
-                            mainColor = SecondaryActionColor,
-                            shadowColor = SecondaryActionShadow,
-                            onClick = { onExit() },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            } else {
-                // Portrait: original vertical layout
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .padding(32.dp)
-                        .alpha(contentAlpha.value)
-                ) {
-                    Text(
-                        text = "\uD83C\uDFC6",
-                        fontSize = 80.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text(
-                        text = winnerName,
-                        style = MaterialTheme.typography.displayLarge,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        text = winsText,
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White.copy(alpha = 0.9f),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(40.dp))
-
-                    // Play Again button
-                    Raised3DButton(
-                        text = Strings.playAgain,
-                        mainColor = Color.White,
-                        shadowColor = Color(0xFFDDDDDD),
-                        textColor = winnerColor,
-                        onClick = { onPlayAgain() },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Menu button
-                    Raised3DButton(
-                        text = Strings.menu,
-                        textColor = Color.White,
-                        mainColor = SecondaryActionColor,
-                        shadowColor = SecondaryActionShadow,
-                        onClick = { onExit() },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        }
+        VictoryScreen(
+            winnerName = winnerName,
+            winsText = winsText,
+            winnerColor = winnerColor,
+            capturedCells = state.capturedCells,
+            totalMoves = state.moveCount,
+            durationSeconds = viewModel.getGameDurationSeconds(),
+            showPlayAgain = true,
+            onPlayAgain = { onPlayAgain() },
+            onMenu = { onExit() }
+        )
     }
 
     // Exit confirmation dialog
@@ -664,7 +589,7 @@ fun GameBoardScreen(
                                         indication = null,
                                         onClick = {
                                             showExitConfirmation = false
-                                            onExit()
+                                            pendingExit = true
                                         }
                                     ),
                                 contentAlignment = Alignment.Center
@@ -683,3 +608,172 @@ fun GameBoardScreen(
     }
 }
 
+@Composable
+private fun SettingsToggleButton(
+    @androidx.annotation.DrawableRes iconEnabled: Int,
+    @androidx.annotation.DrawableRes iconDisabled: Int,
+    label: String,
+    enabled: Boolean,
+    onToggle: () -> Unit
+) {
+    val bgColor by animateColorAsState(
+        targetValue = if (enabled) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+        label = "sheetToggleBg"
+    )
+    val iconColor = if (enabled) Color.White
+    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(
+            onClick = onToggle,
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(bgColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = if (enabled) iconEnabled else iconDisabled),
+                contentDescription = label,
+                tint = iconColor,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (enabled) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            fontWeight = if (enabled) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+private fun ConfirmationDialog(
+    title: String,
+    message: String,
+    confirmText: String,
+    confirmColor: Color,
+    confirmShadowColor: Color,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color.White)
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFF666666)
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    val cancelInteractionSource = remember { MutableInteractionSource() }
+                    val isCancelPressed by cancelInteractionSource.collectIsPressedAsState()
+                    val cancelShadowHeight = 4.dp
+                    val cancelYOffset by animateDpAsState(
+                        targetValue = if (isCancelPressed) cancelShadowHeight else 0.dp,
+                        animationSpec = tween(durationMillis = 80),
+                        label = "confirmDlgCancel"
+                    )
+                    Box(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .offset(y = cancelShadowHeight)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFB0B0B0))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .offset(y = cancelYOffset)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFE0E0E0))
+                                .clickable(
+                                    interactionSource = cancelInteractionSource,
+                                    indication = null,
+                                    onClick = onDismiss
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = Strings.cancel,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF333333)
+                            )
+                        }
+                    }
+
+                    val confirmInteractionSource = remember { MutableInteractionSource() }
+                    val isConfirmPressed by confirmInteractionSource.collectIsPressedAsState()
+                    val confirmShadowHeight = 4.dp
+                    val confirmYOffset by animateDpAsState(
+                        targetValue = if (isConfirmPressed) confirmShadowHeight else 0.dp,
+                        animationSpec = tween(durationMillis = 80),
+                        label = "confirmDlgConfirm"
+                    )
+                    Box(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .offset(y = confirmShadowHeight)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(confirmShadowColor)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .offset(y = confirmYOffset)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(confirmColor)
+                                .clickable(
+                                    interactionSource = confirmInteractionSource,
+                                    indication = null,
+                                    onClick = onConfirm
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = confirmText,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

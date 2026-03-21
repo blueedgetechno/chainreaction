@@ -70,13 +70,16 @@ object GameConfig {
     }
 
     fun getPlayers(): List<PlayerInfo> {
-        return if (gameMode == GameMode.VS_BOT) {
-            listOf(
+        return when (gameMode) {
+            GameMode.VS_BOT -> listOf(
                 PlayerInfo(1, player1Name, player1ColorIndex),
                 PlayerInfo(2, player2Name, player2ColorIndex, isBot = true)
             )
-        } else {
-            (1..numPlayers).map { i ->
+            GameMode.ONLINE_MULTIPLAYER -> listOf(
+                PlayerInfo(1, player1Name, player1ColorIndex),
+                PlayerInfo(2, player2Name, player2ColorIndex)
+            )
+            else -> (1..numPlayers).map { i ->
                 PlayerInfo(i, "Player $i", i - 1)
             }
         }

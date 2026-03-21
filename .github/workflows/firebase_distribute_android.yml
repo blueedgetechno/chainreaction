@@ -2,8 +2,6 @@ name: Build & Distribute to Firebase
 
 on:
   workflow_dispatch:
-  push:
-    branches: ["feat/*"]
 
 # 1. You MUST grant the workflow permission to use GitHub Models
 permissions:

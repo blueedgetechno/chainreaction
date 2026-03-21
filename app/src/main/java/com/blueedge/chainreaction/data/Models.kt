@@ -2,7 +2,8 @@ package com.blueedge.chainreaction.data
 
 enum class GameMode {
     LOCAL_MULTIPLAYER,
-    VS_BOT
+    VS_BOT,
+    ONLINE_MULTIPLAYER
 }
 
 enum class GameVariant {
@@ -74,5 +75,14 @@ data class GameUiState(
     val canUndo: Boolean = false,
     val gameMode: GameMode = GameMode.LOCAL_MULTIPLAYER,
     val gameVariant: GameVariant = GameVariant.SIMPLE,
-    val botDifficulty: BotDifficulty = BotDifficulty.MEDIUM
+    val botDifficulty: BotDifficulty = BotDifficulty.MEDIUM,
+    // Online multiplayer fields
+    val roomCode: String = "",
+    val localPlayerId: Int = 1,
+    val isHost: Boolean = false,
+    val opponentName: String = "",
+    val waitingForOpponent: Boolean = false,
+    val opponentDisconnected: Boolean = false,
+    val isBotMode: Boolean = false,
+    val turnDeadlineMs: Long = 0L
 )
