@@ -82,5 +82,7 @@ data class GameUiState(
     val isHost: Boolean = false,
     val opponentName: String = "",
     val waitingForOpponent: Boolean = false,
-    val opponentDisconnected: Boolean = false
+    val opponentDisconnected: Boolean = false,
+    val isBotMode: Boolean = false,
+    val turnDeadlineMs: Long = 0L
 )

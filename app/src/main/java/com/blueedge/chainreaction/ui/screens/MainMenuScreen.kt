@@ -39,7 +39,6 @@ import com.blueedge.chainreaction.R
 import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.components.SmallRaised3DButton
-import androidx.compose.material.icons.filled.Public
 
 @Composable
 fun MainMenuScreen(
@@ -122,13 +121,13 @@ fun MainMenuScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Raised3DButton(
-                        text = "ONLINE",
-                        topText = "PLAY",
+                        text = Strings.stranger,
+                        topText = Strings.playWith,
                         onClick = onOnline,
                         mainColor = Color(0xFF5CB85C),
                         shadowColor = Color(0xFF449D44),
                         modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Default.Public
+                        icon = R.drawable.ic_public
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -161,7 +160,7 @@ fun MainMenuScreen(
             val imageDisplayHeight = with(LocalDensity.current) {
                 (maxWidth / imageAspectRatio)
             }
-            val cardOverlap = 32.dp
+            val cardOverlap = 100.dp
             val cardHeight = (maxHeight - imageDisplayHeight + cardOverlap).coerceAtLeast(0.dp)
 
             // Banner image at the top — sized to fit width
@@ -202,7 +201,8 @@ fun MainMenuScreen(
                     .align(Alignment.BottomCenter)
                     .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
                     .background(Color.White)
-                    .padding(start = 24.dp, end = 24.dp, bottom = 36.dp),
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Name logo
@@ -213,7 +213,7 @@ fun MainMenuScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // How to Play button
                 SmallRaised3DButton(
@@ -222,7 +222,7 @@ fun MainMenuScreen(
                     icon = R.drawable.ic_sports_esports
                 )
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // Local Multiplayer button
                 Raised3DButton(
@@ -235,7 +235,7 @@ fun MainMenuScreen(
                     icon = R.drawable.ic_person
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Play vs Bot button
                 Raised3DButton(
@@ -248,20 +248,20 @@ fun MainMenuScreen(
                     icon = R.drawable.ic_smart_toy
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Play Online button
+                // Play w/ Stranger button
                 Raised3DButton(
-                    text = "ONLINE",
-                    topText = "PLAY",
+                    text = Strings.stranger,
+                    topText = Strings.playWith,
                     onClick = onOnline,
                     mainColor = Color(0xFF5CB85C),
                     shadowColor = Color(0xFF449D44),
                     modifier = Modifier.fillMaxWidth(),
-                    icon = Icons.Default.Public
+                    icon = R.drawable.ic_public
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

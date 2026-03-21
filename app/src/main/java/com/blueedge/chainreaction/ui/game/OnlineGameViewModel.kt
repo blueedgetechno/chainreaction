@@ -2,7 +2,10 @@ package com.blueedge.chainreaction.ui.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.blueedge.chainreaction.ai.BotStrategy
+import com.blueedge.chainreaction.ai.createBot
 import com.blueedge.chainreaction.audio.SoundManager
+import com.blueedge.chainreaction.data.BotDifficulty
 import com.blueedge.chainreaction.data.CellState
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
@@ -11,24 +14,24 @@ import com.blueedge.chainreaction.data.GameUiState
 import com.blueedge.chainreaction.data.OnlineGameRepository
 import com.blueedge.chainreaction.data.PlayerInfo
 import com.blueedge.chainreaction.data.RoomStatus
+import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.domain.GameEngine
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 class OnlineGameViewModel : ViewModel() {
 
     private val engine = GameEngine(GameConfig.gameVariant)
     private var moveJob: Job? = null
     private var roomListenerJob: Job? = null
-    private val pauseMutex = Mutex()
+    private var botStrategy: BotStrategy? = null
+    private var isBotMode = false
 
     private val _state = MutableStateFlow(createInitialState())
     val state: StateFlow<GameUiState> = _state.asStateFlow()
@@ -90,6 +93,13 @@ class OnlineGameViewModel : ViewModel() {
         }
     }
 
+    /** Attach to an already-matched room (lobby already did findRandomMatch). */
+    fun attachToRoom(code: String) {
+        roomCode = code
+        _state.update { it.copy(roomCode = code, waitingForOpponent = false) }
+        startListeningToRoom(code)
+    }
+
     private fun startListeningToRoom(code: String) {
         roomListenerJob?.cancel()
         roomListenerJob = viewModelScope.launch {
@@ -106,11 +116,8 @@ class OnlineGameViewModel : ViewModel() {
 
         // Determine if opponent joined
         val opponentJoined = room.status == RoomStatus.IN_PROGRESS.name
-        val opponentDisconnected = if (isHost) {
-            room.guestUid == "disconnected"
-        } else {
-            room.status == RoomStatus.FINISHED.name
-        }
+        val opponentDisconnected = room.status == RoomStatus.FINISHED.name &&
+                _state.value.gameStatus == GameStatus.IN_PROGRESS
 
         // Build player list from room data
         val players = listOf(
@@ -118,7 +125,8 @@ class OnlineGameViewModel : ViewModel() {
             PlayerInfo(2, room.guestName, room.guestColorIndex)
         )
 
-        val opponentName = if (isHost) room.guestName else room.hostName
+        val opponentColorIndex = if (isHost) room.guestColorIndex else room.hostColorIndex
+        val opponentName = Strings.colorName(opponentColorIndex)
 
         // Check if there's a new remote move to process
         if (room.lastMoveBy != 0 &&
@@ -134,7 +142,39 @@ class OnlineGameViewModel : ViewModel() {
             }
         }
 
-        // Update non-move state
+        // Sync currentPlayerId from Firebase when no move is in progress
+        // This handles turn skips synced by the other player
+        if (!_state.value.isAnimating && room.currentPlayerId != 0) {
+            val localCurrentPlayer = _state.value.currentPlayerId
+            if (room.currentPlayerId != localCurrentPlayer &&
+                room.lastMoveTimestamp <= lastProcessedMoveTimestamp
+            ) {
+                _state.update { it.copy(
+                    currentPlayerId = room.currentPlayerId,
+                    turnDeadlineMs = System.currentTimeMillis() + 30_000
+                ) }
+            }
+        }
+
+        // Sync board from Firebase for recovery — if Firebase has a newer board
+        // and no animation is in progress, adopt it as truth
+        if (!_state.value.isAnimating && room.board.isNotEmpty() &&
+            room.moveCount > _state.value.moveCount
+        ) {
+            val remoteBoard = OnlineGameRepository.deserializeBoard(room.board, room.gridSize)
+            if (remoteBoard.isNotEmpty()) {
+                _state.update { it.copy(
+                    board = remoteBoard,
+                    moveCount = room.moveCount,
+                    currentPlayerId = room.currentPlayerId,
+                    turnDeadlineMs = System.currentTimeMillis() + 30_000
+                ) }
+                lastProcessedMoveTimestamp = room.lastMoveTimestamp
+            }
+        }
+
+        // Update non-move state – never show "waiting" once the game is over
+        val newWaiting = if (opponentDisconnected || _state.value.gameStatus == GameStatus.GAME_OVER) false else !opponentJoined
         _state.update { state ->
             state.copy(
                 players = players,
@@ -142,13 +182,47 @@ class OnlineGameViewModel : ViewModel() {
                 localPlayerId = localPlayerId,
                 roomCode = room.roomCode,
                 opponentName = opponentName,
-                waitingForOpponent = !opponentJoined,
-                opponentDisconnected = opponentDisconnected
+                waitingForOpponent = newWaiting,
+                opponentDisconnected = opponentDisconnected,
+                turnDeadlineMs = if (!newWaiting && state.turnDeadlineMs == 0L && state.gameStatus == GameStatus.IN_PROGRESS) {
+                    System.currentTimeMillis() + 30_000
+                } else state.turnDeadlineMs
             )
         }
     }
 
     // ── Move Handling ───────────────────────────────────────────────
+
+    /** Skip the current player's turn (called when 30s timer expires). */
+    fun skipTurn() {
+        val currentState = _state.value
+        if (currentState.gameStatus != GameStatus.IN_PROGRESS) return
+
+        val nextPlayer = getNextActivePlayer(
+            currentState.board, currentState.currentPlayerId, currentState.players, currentState.playersHasMoved
+        )
+        // Don't skip if next player is the same (e.g. only one player left)
+        if (nextPlayer == currentState.currentPlayerId) return
+
+        _state.update { it.copy(
+            currentPlayerId = nextPlayer,
+            turnDeadlineMs = if (!isBotMode) System.currentTimeMillis() + 30_000 else 0L
+        ) }
+
+        // Only the player whose turn was skipped syncs to Firebase
+        if (!isBotMode && currentState.currentPlayerId == currentState.localPlayerId) {
+            viewModelScope.launch {
+                OnlineGameRepository.syncGameState(
+                    roomCode = roomCode,
+                    board = currentState.board,
+                    currentPlayerId = nextPlayer,
+                    moveCount = currentState.moveCount,
+                    winnerId = currentState.winnerId,
+                    gameStatus = currentState.gameStatus
+                )
+            }
+        }
+    }
 
     fun onCellClicked(row: Int, col: Int) {
         val currentState = _state.value
@@ -164,15 +238,10 @@ class OnlineGameViewModel : ViewModel() {
 
         // Send the move to Firebase first, then execute locally
         moveJob = viewModelScope.launch {
-            OnlineGameRepository.sendMove(roomCode, row, col, currentState.currentPlayerId)
+            if (!isBotMode) {
+                OnlineGameRepository.sendMove(roomCode, row, col, currentState.currentPlayerId)
+            }
             executeMove(row, col, isRemote = false)
-        }
-    }
-
-    private suspend fun awaitIfPaused() {
-        kotlin.coroutines.coroutineContext.ensureActive()
-        if (_state.value.isPaused) {
-            pauseMutex.withLock { }
         }
     }
 
@@ -199,12 +268,10 @@ class OnlineGameViewModel : ViewModel() {
         _state.update { it.copy(board = intermediateBoard.map { r -> r.toList() }) }
 
         delay(250)
-        awaitIfPaused()
 
         // Animate explosions wave by wave
         for (waveData in explosionWaveData) {
             delay(200)
-            awaitIfPaused()
 
             SoundManager.playPop()
             SoundManager.vibrate()
@@ -217,7 +284,6 @@ class OnlineGameViewModel : ViewModel() {
                 )
             }
             delay(300)
-            awaitIfPaused()
 
             _state.update {
                 it.copy(
@@ -227,7 +293,6 @@ class OnlineGameViewModel : ViewModel() {
                 )
             }
             delay(250)
-            awaitIfPaused()
         }
 
         _state.update { it.copy(explodingCells = emptySet(), explosionMoves = emptyList()) }
@@ -245,6 +310,10 @@ class OnlineGameViewModel : ViewModel() {
 
         val nextPlayer = getNextActivePlayer(newBoard, playerId, currentState.players, newPlayersHasMoved)
 
+        val newDeadline = if (gameStatus == GameStatus.IN_PROGRESS && !isBotMode) {
+            System.currentTimeMillis() + 30_000
+        } else 0L
+
         _state.update { state ->
             state.copy(
                 board = newBoard,
@@ -256,12 +325,13 @@ class OnlineGameViewModel : ViewModel() {
                 winnerId = winner ?: 0,
                 isAnimating = false,
                 lastMovedCell = null,
-                canUndo = false // No undo in online mode
+                canUndo = false, // No undo in online mode
+                turnDeadlineMs = newDeadline
             )
         }
 
         // If this was a local move, sync the final state to Firebase
-        if (!isRemote) {
+        if (!isRemote && !isBotMode) {
             val finalState = _state.value
             viewModelScope.launch {
                 OnlineGameRepository.syncGameState(
@@ -272,6 +342,17 @@ class OnlineGameViewModel : ViewModel() {
                     winnerId = finalState.winnerId,
                     gameStatus = finalState.gameStatus
                 )
+            }
+        }
+
+        // In bot mode, trigger bot move if it's the opponent's turn
+        if (isBotMode) {
+            val finalState = _state.value
+            val opponentId = if (finalState.localPlayerId == 1) 2 else 1
+            if (finalState.gameStatus == GameStatus.IN_PROGRESS &&
+                finalState.currentPlayerId == opponentId
+            ) {
+                executeBotMove()
             }
         }
     }
@@ -300,25 +381,44 @@ class OnlineGameViewModel : ViewModel() {
         return (System.currentTimeMillis() - _state.value.gameStartTimeMs) / 1000
     }
 
-    fun pauseGame() {
-        if (!pauseMutex.isLocked) {
-            pauseMutex.tryLock()
+    /** Switch from online to local bot when opponent disconnects. */
+    fun switchToBot() {
+        // Stop listening to Firebase
+        roomListenerJob?.cancel()
+        isBotMode = true
+        botStrategy = createBot(BotDifficulty.MEDIUM, GameConfig.gameVariant)
+
+        // Clear disconnect flag, set bot mode in state, remove timer
+        _state.update { it.copy(opponentDisconnected = false, isBotMode = true, turnDeadlineMs = 0L) }
+
+        // If it's currently the opponent's turn, make a bot move
+        val currentState = _state.value
+        if (currentState.currentPlayerId != currentState.localPlayerId &&
+            currentState.gameStatus == GameStatus.IN_PROGRESS
+        ) {
+            viewModelScope.launch { executeBotMove() }
         }
-        _state.update { it.copy(isPaused = true) }
     }
 
-    fun resumeGame() {
-        _state.update { it.copy(isPaused = false) }
-        if (pauseMutex.isLocked) {
-            try { pauseMutex.unlock() } catch (_: Exception) {}
+    private suspend fun executeBotMove() {
+        val currentState = _state.value
+        val opponentId = if (currentState.localPlayerId == 1) 2 else 1
+        val isBotFirstMove = !currentState.playersHasMoved.contains(opponentId)
+        val move = botStrategy?.calculateMove(
+            currentState.board, opponentId, currentState.localPlayerId, isBotFirstMove
+        )
+        if (move != null) {
+            executeMove(move.row, move.col, isRemote = true)
         }
     }
 
     fun leaveRoom() {
         roomListenerJob?.cancel()
         moveJob?.cancel()
-        viewModelScope.launch {
-            if (roomCode.isNotEmpty()) {
+        if (roomCode.isNotEmpty()) {
+            // Use GlobalScope to ensure Firebase update completes even if ViewModel is cleared
+            @Suppress("OPT_IN_USAGE")
+            GlobalScope.launch {
                 OnlineGameRepository.leaveRoom(roomCode)
             }
         }

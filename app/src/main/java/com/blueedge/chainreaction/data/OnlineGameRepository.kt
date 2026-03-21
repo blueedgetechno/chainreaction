@@ -67,7 +67,7 @@ object OnlineGameRepository {
     suspend fun createRoom(
         gridSize: Int = GameConfig.gridSize,
         gameVariant: GameVariant = GameConfig.gameVariant,
-        hostName: String = GameConfig.player1Name,
+        hostName: String = Strings.colorName(GameConfig.player1ColorIndex),
         hostColorIndex: Int = GameConfig.player1ColorIndex
     ): String {
         val uid = ensureAuthenticated()
@@ -116,7 +116,7 @@ object OnlineGameRepository {
     /** Join an existing room. Returns true on success, false if room doesn't exist or is full. */
     suspend fun joinRoom(
         roomCode: String,
-        guestName: String = GameConfig.player1Name,
+        guestName: String = Strings.colorName(GameConfig.player1ColorIndex),
         guestColorIndex: Int = GameConfig.player1ColorIndex
     ): Boolean {
         val uid = ensureAuthenticated()
@@ -162,26 +162,30 @@ object OnlineGameRepository {
     suspend fun findRandomMatch(
         gridSize: Int = GameConfig.gridSize,
         gameVariant: GameVariant = GameConfig.gameVariant,
-        playerName: String = GameConfig.player1Name,
+        playerName: String = Strings.colorName(GameConfig.player1ColorIndex),
         playerColorIndex: Int = GameConfig.player1ColorIndex
     ): String {
         val uid = ensureAuthenticated()
 
         // Look for existing waiting rooms (not our own)
-        val waitingRooms = roomsRef
-            .orderByChild("status")
-            .equalTo(RoomStatus.WAITING.name)
-            .get().await()
+        try {
+            val waitingRooms = roomsRef
+                .orderByChild("status")
+                .equalTo(RoomStatus.WAITING.name)
+                .get().await()
 
-        for (child in waitingRooms.children) {
-            val hostUid = child.child("hostUid").getValue(String::class.java) ?: continue
-            if (hostUid == uid) continue // Skip our own rooms
-            val code = child.key ?: continue
+            for (child in waitingRooms.children) {
+                val hostUid = child.child("hostUid").getValue(String::class.java) ?: continue
+                if (hostUid == uid) continue // Skip our own rooms
+                val code = child.key ?: continue
 
-            // Try to join this room
-            if (joinRoom(code, playerName, playerColorIndex)) {
-                return code
+                // Try to join this room
+                if (joinRoom(code, playerName, playerColorIndex)) {
+                    return code
+                }
             }
+        } catch (_: Exception) {
+            // Index not defined or network error — fall through to create
         }
 
         // No open rooms found — create one and wait
