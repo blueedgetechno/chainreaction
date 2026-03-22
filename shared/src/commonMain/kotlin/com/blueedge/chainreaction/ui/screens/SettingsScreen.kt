@@ -47,6 +47,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -65,6 +66,7 @@ import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
@@ -303,13 +305,38 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                Text(
-                    text = Strings.madeWithLove,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                val loveParts = Strings.madeWithLove.split("♥")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { openUrl("https://blueedge.me") },
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = loveParts.first(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        textDecoration = TextDecoration.Underline
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.Favorite,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = Color(0xFFE57373)
+                    )
+                    if (loveParts.size > 1) {
+                        Text(
+                            text = loveParts[1],
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            textDecoration = TextDecoration.Underline
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
             }

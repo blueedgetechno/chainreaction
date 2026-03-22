@@ -31,6 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material3.Icon
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.Strings
@@ -85,9 +89,11 @@ fun GameEndScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = "\uD83C\uDFC6",
-                        fontSize = 56.sp
+                    Icon(
+                        imageVector = Icons.Filled.EmojiEvents,
+                        contentDescription = null,
+                        modifier = Modifier.size(56.dp),
+                        tint = Color(0xFFFFD700)
                     )
 
                     Spacer(Modifier.height(12.dp))
@@ -151,10 +157,12 @@ fun GameEndScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Victory emoji
-                Text(
-                    text = "\uD83C\uDFC6",
-                    fontSize = 72.sp
+                // Victory icon
+                Icon(
+                    imageVector = Icons.Filled.EmojiEvents,
+                    contentDescription = null,
+                    modifier = Modifier.size(72.dp),
+                    tint = Color(0xFFFFD700)
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -240,10 +248,6 @@ private fun StatsCard(
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
 
-                StatRow(
-                    label = Strings.finalScore,
-                    value = "$capturedCells"
-                )
                 StatRow(
                     label = Strings.totalMoves,
                     value = "$totalMoves"

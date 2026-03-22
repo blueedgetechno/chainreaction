@@ -76,6 +76,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameStatus
@@ -105,7 +107,7 @@ fun OnlineGameScreen(
     action: String,
     roomCode: String,
     onExit: () -> Unit,
-    viewModel: OnlineGameViewModel = viewModel()
+    viewModel: OnlineGameViewModel = viewModel(factory = viewModelFactory { initializer { OnlineGameViewModel() } })
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val adManager = LocalAdManager.current

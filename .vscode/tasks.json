@@ -19,6 +19,15 @@
         "isDefault": false
       },
       "problemMatcher": []
+    },{
+      "label": "run for ios",
+      "type": "shell",
+      "command": "npx react-native run-ios",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": []
     }
   ]
 }

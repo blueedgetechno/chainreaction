@@ -43,6 +43,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material3.Icon
 import com.blueedge.chainreaction.data.BotDifficulty
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
@@ -120,9 +124,11 @@ fun VictoryScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = "\uD83C\uDFC6",
-                        fontSize = 56.sp
+                    Icon(
+                        imageVector = Icons.Filled.EmojiEvents,
+                        contentDescription = null,
+                        modifier = Modifier.size(72.dp),
+                        tint = Color(0xFFFFFFFF)
                     )
 
                     Spacer(Modifier.height(12.dp))
@@ -186,9 +192,11 @@ fun VictoryScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = "\uD83C\uDFC6",
-                    fontSize = 72.sp
+                Icon(
+                    imageVector = Icons.Filled.EmojiEvents,
+                    contentDescription = null,
+                    modifier = Modifier.size(72.dp),
+                    tint = Color(0xFFFFD700)
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -280,7 +288,6 @@ private fun StatsCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                 )
 
-                StatRow(label = Strings.finalScore, value = "$capturedCells")
                 StatRow(label = Strings.totalMoves, value = "$totalMoves")
                 StatRow(label = Strings.duration, value = formatDuration(durationSeconds))
                 StatRow(

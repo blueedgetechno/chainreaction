@@ -62,6 +62,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.blueedge.chainreaction.data.GameConfig
 import com.blueedge.chainreaction.data.GameMode
 import com.blueedge.chainreaction.data.GameStatus
@@ -91,7 +93,7 @@ fun GameBoardScreen(
     onPlayAgain: () -> Unit,
     onRestart: () -> Unit,
     onExit: () -> Unit,
-    viewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel(factory = viewModelFactory { initializer { GameViewModel() } })
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val adManager = LocalAdManager.current

@@ -22,3 +22,4 @@ release.keystore
 google-services.json
 *.kt.copy
 HISTORY.md
+java-backup
