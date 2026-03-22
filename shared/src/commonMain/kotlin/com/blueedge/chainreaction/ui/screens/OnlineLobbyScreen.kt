@@ -7,6 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -130,7 +132,7 @@ fun OnlineLobbyScreen(
         }
     }
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -140,49 +142,74 @@ fun OnlineLobbyScreen(
                         MaterialTheme.colorScheme.background
                     )
                 )
-            )
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally
+            ),
+        contentAlignment = Alignment.TopCenter
     ) {
-        // Header – matches GameSetupScreen style
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = Icons.Default.Public,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(modifier = Modifier.size(16.dp))
-            Text(
-                text = Strings.playWStranger,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+        val isLandscape = maxWidth > maxHeight
+        val portraitScrollState = rememberScrollState()
+        val landscapeScrollState = rememberScrollState()
+
+        val outerColumnModifier = if (isLandscape) {
+            Modifier.fillMaxSize().verticalScroll(landscapeScrollState)
+        } else {
+            Modifier.fillMaxSize()
+        }
+        
+        val innerColumnModifier = if (isLandscape) {
+            Modifier.widthIn(max = 480.dp).fillMaxWidth()
+        } else {
+            Modifier.fillMaxSize().verticalScroll(portraitScrollState)
         }
 
-        // Timer + searching in one compact row
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = outerColumnModifier,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+        Column(
+            modifier = innerColumnModifier
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Mode header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Public,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(36.dp)
+                )
+                Spacer(modifier = Modifier.size(16.dp))
+                Text(
+                    text = Strings.playWStranger,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            if (!isLandscape) {
+                Spacer(modifier = Modifier.size(16.dp))
+            }
+
+            // Timer
             Text(
                 text = timerText,
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.width(20.dp))
+
+            // Searching indicator
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.alpha(pulseAlpha)
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth().alpha(pulseAlpha)
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
@@ -196,29 +223,32 @@ fun OnlineLobbyScreen(
                     color = Color(0xFF666666)
                 )
             }
-        }
 
-        // Bottom buttons
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Raised3DButton(
-                text = Strings.botInstead,
-                topText = Strings.playWith,
-                onClick = onPlayVsBot,
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Bottom buttons
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                mainColor = MaterialTheme.colorScheme.tertiary,
-                shadowColor = Color(0xFFA8524E),
-                icon = Icons.Default.SmartToy
-            )
-            Raised3DButton(
-                text = Strings.back,
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth(),
-                mainColor = SecondaryActionColor,
-                shadowColor = SecondaryActionShadow
-            )
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Raised3DButton(
+                    text = Strings.botInstead,
+                    topText = Strings.playWith,
+                    onClick = onPlayVsBot,
+                    modifier = Modifier.fillMaxWidth(),
+                    mainColor = MaterialTheme.colorScheme.tertiary,
+                    shadowColor = Color(0xFFA8524E),
+                    icon = Icons.Default.SmartToy
+                )
+                Raised3DButton(
+                    text = Strings.back,
+                    onClick = onBack,
+                    modifier = Modifier.fillMaxWidth(),
+                    mainColor = SecondaryActionColor,
+                    shadowColor = SecondaryActionShadow
+                )
+            }
+        }
         }
     }
 }

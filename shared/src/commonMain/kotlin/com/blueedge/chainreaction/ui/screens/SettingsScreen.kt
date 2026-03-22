@@ -122,7 +122,7 @@ fun SettingsScreen(
                 text = if (isInGame) Strings.gameSettings else Strings.settings,
                 style = if (isInGame) MaterialTheme.typography.displaySmall
                 else MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
 

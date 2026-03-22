@@ -9,6 +9,14 @@
 /* Begin PBXBuildFile section */
 		91A0DC4B2B0E00AA00F12345 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A0DC4A2B0E00AA00F12345 /* AppDelegate.swift */; };
 		91A0DC4F2B0E00AB00F12345 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 91A0DC4E2B0E00AB00F12345 /* Assets.xcassets */; };
+		AABB000100000001F1234567 /* bop.caf in Resources */ = {isa = PBXBuildFile; fileRef = AABB000200000001F1234567 /* bop.caf */; };
+		AABB000100000002F1234567 /* pop.caf in Resources */ = {isa = PBXBuildFile; fileRef = AABB000200000002F1234567 /* pop.caf */; };
+		AABB000100000003F1234567 /* bgmusic.caf in Resources */ = {isa = PBXBuildFile; fileRef = AABB000200000003F1234567 /* bgmusic.caf */; };
+		CCDD000400000001F1234567 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CCDD000400000002F1234567 /* GoogleService-Info.plist */; };
+		CCDD000500000001F1234567 /* SwiftFirebaseRepo.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDD000500000002F1234567 /* SwiftFirebaseRepo.swift */; };
+		CCDD000300000001F1234567 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = CCDD000200000001F1234567 /* FirebaseAuth */; };
+		CCDD000300000002F1234567 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = CCDD000200000002F1234567 /* FirebaseDatabase */; };
+		CCDD000300000003F1234567 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = CCDD000200000003F1234567 /* FirebaseAnalytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -16,6 +24,11 @@
 		91A0DC4A2B0E00AA00F12345 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		91A0DC4E2B0E00AB00F12345 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		91A0DC532B0E00AB00F12345 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AABB000200000001F1234567 /* bop.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = bop.caf; sourceTree = "<group>"; };
+		AABB000200000002F1234567 /* pop.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pop.caf; sourceTree = "<group>"; };
+		AABB000200000003F1234567 /* bgmusic.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = bgmusic.caf; sourceTree = "<group>"; };
+		CCDD000400000002F1234567 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		CCDD000500000002F1234567 /* SwiftFirebaseRepo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftFirebaseRepo.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -23,6 +36,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CCDD000300000001F1234567 /* FirebaseAuth in Frameworks */,
+				CCDD000300000002F1234567 /* FirebaseDatabase in Frameworks */,
+				CCDD000300000003F1234567 /* FirebaseAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -51,6 +67,11 @@
 				91A0DC4A2B0E00AA00F12345 /* AppDelegate.swift */,
 				91A0DC4E2B0E00AB00F12345 /* Assets.xcassets */,
 				91A0DC532B0E00AB00F12345 /* Info.plist */,
+				AABB000200000001F1234567 /* bop.caf */,
+				AABB000200000002F1234567 /* pop.caf */,
+				AABB000200000003F1234567 /* bgmusic.caf */,
+				CCDD000400000002F1234567 /* GoogleService-Info.plist */,
+				CCDD000500000002F1234567 /* SwiftFirebaseRepo.swift */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -72,6 +93,11 @@
 			dependencies = (
 			);
 			name = iosApp;
+			packageProductDependencies = (
+				CCDD000200000001F1234567 /* FirebaseAuth */,
+				CCDD000200000002F1234567 /* FirebaseDatabase */,
+				CCDD000200000003F1234567 /* FirebaseAnalytics */,
+			);
 			productName = iosApp;
 			productReference = 91A0DC472B0E00AA00F12345 /* iosApp.app */;
 			productType = "com.apple.product-type.application";
@@ -102,6 +128,9 @@
 			mainGroup = 91A0DC3E2B0E00AA00F12345;
 			productRefGroup = 91A0DC482B0E00AA00F12345 /* Products */;
 			projectDirPath = "";
+			packageReferences = (
+				CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			projectRoot = "";
 			targets = (
 				91A0DC462B0E00AA00F12345 /* iosApp */,
@@ -109,12 +138,45 @@
 		};
 /* End PBXProject section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CCDD000200000001F1234567 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		CCDD000200000002F1234567 /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		CCDD000200000003F1234567 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 /* Begin PBXResourcesBuildPhase section */
 		91A0DC452B0E00AA00F12345 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				91A0DC4F2B0E00AB00F12345 /* Assets.xcassets in Resources */,
+				AABB000100000001F1234567 /* bop.caf in Resources */,
+				AABB000100000002F1234567 /* pop.caf in Resources */,
+				AABB000100000003F1234567 /* bgmusic.caf in Resources */,
+				CCDD000400000001F1234567 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -147,6 +209,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				91A0DC4B2B0E00AA00F12345 /* AppDelegate.swift in Sources */,
+				CCDD000500000001F1234567 /* SwiftFirebaseRepo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

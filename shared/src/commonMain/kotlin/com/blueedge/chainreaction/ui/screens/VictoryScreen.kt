@@ -127,7 +127,7 @@ fun VictoryScreen(
                     Icon(
                         imageVector = Icons.Filled.EmojiEvents,
                         contentDescription = null,
-                        modifier = Modifier.size(72.dp),
+                        modifier = Modifier.size(96.dp),
                         tint = Color(0xFFFFFFFF)
                     )
 
