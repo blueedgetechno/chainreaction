@@ -69,6 +69,7 @@ android {
 
 dependencies {
 
+    implementation(project(":shared"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.fragment.ktx)
@@ -92,8 +93,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
 
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-database")
-    implementation("com.google.firebase:firebase-auth")
 
     // Google AdMob
     implementation("com.google.android.gms:play-services-ads:23.6.0")
