@@ -26,3 +26,4 @@ java-backup
 GoogleService-Info.plist
 node_modules/
 *.xcworkspace
+*.xcuserstate

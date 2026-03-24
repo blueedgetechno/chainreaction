@@ -58,6 +58,7 @@ fun MainMenuScreen(
             .background(SecondaryActionColor)
     ) {
         val isLandscape = maxWidth > maxHeight
+        val screenHeight = maxHeight
 
         if (isLandscape) {
             // --- Landscape layout: banner left, card right ---
@@ -89,8 +90,18 @@ fun MainMenuScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // Name logo (hidden in landscape — banner already visible)
-                    // Spacer to maintain consistent spacing
+                    // Show name logo on taller landscape screens (e.g. iPad)
+                    if (screenHeight >= 600.dp) {
+                        Image(
+                            painter = painterResource(Res.drawable.namelogoflat),
+                            contentDescription = "Chain Reaction",
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
                     SmallRaised3DButton(
                         text = Strings.howToPlay,
                         onClick = onHowToPlay,
