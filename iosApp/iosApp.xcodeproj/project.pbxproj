@@ -12,8 +12,8 @@
 		AABB000100000001F1234567 /* bop.caf in Resources */ = {isa = PBXBuildFile; fileRef = AABB000200000001F1234567 /* bop.caf */; };
 		AABB000100000002F1234567 /* pop.caf in Resources */ = {isa = PBXBuildFile; fileRef = AABB000200000002F1234567 /* pop.caf */; };
 		AABB000100000003F1234567 /* bgmusic.caf in Resources */ = {isa = PBXBuildFile; fileRef = AABB000200000003F1234567 /* bgmusic.caf */; };
-		CCDD000400000001F1234567 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CCDD000400000002F1234567 /* GoogleService-Info.plist */; };
 		CCDD000300000003F1234567 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = CCDD000200000003F1234567 /* FirebaseAnalytics */; };
+		CCDD000400000001F1234567 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CCDD000400000002F1234567 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -117,36 +117,17 @@
 				Base,
 			);
 			mainGroup = 91A0DC3E2B0E00AA00F12345;
-			productRefGroup = 91A0DC482B0E00AA00F12345 /* Products */;
-			projectDirPath = "";
 			packageReferences = (
 				CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
+			productRefGroup = 91A0DC482B0E00AA00F12345 /* Products */;
+			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				91A0DC462B0E00AA00F12345 /* iosApp */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 11.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		CCDD000200000003F1234567 /* FirebaseAnalytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalytics;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin PBXResourcesBuildPhase section */
 		91A0DC452B0E00AA00F12345 /* Resources */ = {
@@ -318,10 +299,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 13;
+				DEVELOPMENT_TEAM = YYKD74G2JH;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Chain Reaction";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.board-games";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -335,6 +321,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.blueedge.chainreaction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -346,10 +333,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 13;
+				DEVELOPMENT_TEAM = YYKD74G2JH;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Chain Reaction";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.board-games";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -363,6 +355,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.blueedge.chainreaction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -392,6 +385,24 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CCDD000200000003F1234567 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCDD000100000001F1234567 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 91A0DC3F2B0E00AA00F12345 /* Project object */;
 }

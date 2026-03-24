@@ -15,7 +15,7 @@ shared/build
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+local*.properties
 .kotlin
 keystore.properties
 release.keystore
@@ -25,3 +25,4 @@ HISTORY.md
 java-backup
 GoogleService-Info.plist
 node_modules/
+*.xcworkspace
