@@ -1,5 +1,6 @@
-SIM_ID="iPad Air 11-inch (M2)"
-# SIM_ID="iPhone 17 Pro"
+# SIM_ID="iPad Air 11-inch (M2)"
+# SIM_ID="iPhone 15 Pro"
+SIM_ID="iPad Pro 13-inch (M5)"
 
 echo "platform=iOS Simulator,name=$SIM_ID"
 
