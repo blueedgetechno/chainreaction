@@ -7,6 +7,19 @@ A ridiculously addictive **strategy board game** for Android — tap to place do
 Built with **Jetpack Compose** and **Material 3** — because even explosions deserve good design.
 
 
+## 📲 Download
+
+<div align="center" style="display: flex; justify-content: center; align-items: center;">
+  <a href="https://play.google.com/store/apps/details?id=com.blueedge.chainreaction">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="60"/>
+  </a>
+  
+  <a href="https://apps.apple.com/us/app/chainreaction-a-better-one/id6761188220">
+    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="40"/>
+  </a>
+</div>
+
+
 ## 🎮 How It Works
 
 It's deceptively simple:
@@ -32,7 +45,7 @@ It's deceptively simple:
 
 
 <p align="center">
-  <img src="app/src/main/res/drawable/banner.webp" alt="Chain Reaction Banner" width="600"/>
+  <img src="shared/src/commonMain/composeResources/drawable/banner.webp" alt="Chain Reaction Banner" width="600"/>
 </p>
 
 ## ✨ Features
