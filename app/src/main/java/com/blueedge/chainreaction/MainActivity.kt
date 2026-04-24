@@ -23,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import com.blueedge.chainreaction.ads.InterstitialAdManager
 import com.blueedge.chainreaction.audio.SoundManager
 import com.blueedge.chainreaction.data.GameConfig
+import com.blueedge.chainreaction.platform.AndroidContextHolder
 import com.blueedge.chainreaction.platform.ServiceLocator
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
@@ -62,6 +63,7 @@ class MainActivity : ComponentActivity() {
         GameConfig.load()
         SoundManager.init(this)
         InterstitialAdManager.initializeSdk(this)
+        AndroidContextHolder.appContext = applicationContext
         enableEdgeToEdge()
         hideSystemBars()
 
