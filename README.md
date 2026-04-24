@@ -32,7 +32,7 @@ It's deceptively simple:
 
 
 <p align="center">
-  <img src="shared/src/main/res/drawable/banner.webp" alt="Chain Reaction Banner" width="600"/>
+  <img src="shared/src/commonMain/composeResources/drawable/banner.webp" alt="Chain Reaction Banner" width="600"/>
 </p>
 
 ## ✨ Features
