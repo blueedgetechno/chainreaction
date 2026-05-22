@@ -11,6 +11,9 @@ import chainreaction.shared.generated.resources.ic_people
 import chainreaction.shared.generated.resources.ic_smart_toy
 import chainreaction.shared.generated.resources.ic_sports_esports
 import chainreaction.shared.generated.resources.ic_settings
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,17 +35,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.blueedge.chainreaction.data.Strings
 import com.blueedge.chainreaction.ui.components.Raised3DButton
 import com.blueedge.chainreaction.ui.components.SmallRaised3DButton
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainMenuScreen(
@@ -51,6 +59,35 @@ fun MainMenuScreen(
     onSettings: () -> Unit,
     onHowToPlay: () -> Unit
 ) {
+    // Animation state: 0f = off-screen (below), 1f = final position
+    val cardOffset = remember { Animatable(1f) }
+    val buttonOffsets = remember { List(3) { Animatable(1f) } }
+
+    LaunchedEffect(Unit) {
+        // Card slides up with subtle bounce
+        launch {
+            cardOffset.animateTo(
+                targetValue = 0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            )
+        }
+        // Buttons slide up with staggered delay
+        buttonOffsets.forEachIndexed { index, anim ->
+            launch {
+                delay(150L + index * 80L)
+                anim.animateTo(
+                    targetValue = 0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
+        }
+    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -83,6 +120,9 @@ fun MainMenuScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
+                        .graphicsLayer {
+                            translationY = cardOffset.value * 150f
+                        }
                         .clip(RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp))
                         .background(Color.White)
                         .verticalScroll(rememberScrollState())
@@ -105,10 +145,14 @@ fun MainMenuScreen(
                     SmallRaised3DButton(
                         text = Strings.howToPlay,
                         onClick = onHowToPlay,
-                        icon = painterResource(Res.drawable.ic_sports_esports)
-                    )
+                        icon = painterResource(Res.drawable.ic_sports_esports),
+                        modifier = Modifier.graphicsLayer {
+                        translationY = buttonOffsets[0].value * 80f
+                        alpha = 1f - buttonOffsets[0].value
+                    }
+                )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                     Raised3DButton(
                         text = Strings.friends,
@@ -116,7 +160,10 @@ fun MainMenuScreen(
                         onClick = onLocalMultiplayer,
                         mainColor = MaterialTheme.colorScheme.primary,
                         shadowColor = Color(0xFF2E8DAD),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().graphicsLayer {
+                            translationY = buttonOffsets[1].value * 80f
+                            alpha = 1f - buttonOffsets[1].value
+                        },
                         icon = painterResource(Res.drawable.ic_people)
                     )
 
@@ -128,7 +175,9 @@ fun MainMenuScreen(
                         onClick = onPlayVsBot,
                         mainColor = MaterialTheme.colorScheme.tertiary,
                         shadowColor = Color(0xFFA8524E),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().graphicsLayer {
+                            translationY = buttonOffsets[2].value * 80f
+                        },
                         icon = painterResource(Res.drawable.ic_smart_toy)
                     )
 
@@ -201,6 +250,9 @@ fun MainMenuScreen(
                     .fillMaxWidth()
                     .height(cardHeight)
                     .align(Alignment.BottomCenter)
+                    .graphicsLayer {
+                        translationY = cardOffset.value * 200f
+                    }
                     .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
                     .background(Color.White)
                     .verticalScroll(rememberScrollState())
@@ -221,7 +273,11 @@ fun MainMenuScreen(
                 SmallRaised3DButton(
                     text = Strings.howToPlay,
                     onClick = onHowToPlay,
-                    icon = painterResource(Res.drawable.ic_sports_esports)
+                    icon = painterResource(Res.drawable.ic_sports_esports),
+                    modifier = Modifier.graphicsLayer {
+                        translationY = buttonOffsets[0].value * 80f
+                        alpha = 1f - buttonOffsets[0].value
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -233,7 +289,10 @@ fun MainMenuScreen(
                     onClick = onLocalMultiplayer,
                     mainColor = MaterialTheme.colorScheme.primary,
                     shadowColor = Color(0xFF2E8DAD),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().graphicsLayer {
+                        translationY = buttonOffsets[1].value * 80f
+                        alpha = 1f - buttonOffsets[1].value
+                    },
                     icon = painterResource(Res.drawable.ic_people)
                 )
 
@@ -246,7 +305,10 @@ fun MainMenuScreen(
                     onClick = onPlayVsBot,
                     mainColor = MaterialTheme.colorScheme.tertiary,
                     shadowColor = Color(0xFFA8524E),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().graphicsLayer {
+                        translationY = buttonOffsets[2].value * 80f
+                        alpha = 1f - buttonOffsets[2].value
+                    },
                     icon = painterResource(Res.drawable.ic_smart_toy)
                 )
 
