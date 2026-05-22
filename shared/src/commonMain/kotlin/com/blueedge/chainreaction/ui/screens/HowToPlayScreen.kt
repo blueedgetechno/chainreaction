@@ -2,6 +2,8 @@ package com.blueedge.chainreaction.ui.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -49,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -64,6 +67,7 @@ import com.blueedge.chainreaction.ui.theme.PlayerColors
 import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
 import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private data class TutorialStep(
         val animationIndex: Int,
@@ -112,6 +116,23 @@ fun HowToPlayScreen(onBack: () -> Unit) {
     var currentPage by remember { mutableIntStateOf(0) }
     val portraitScrollState = rememberScrollState()
     val landscapeScrollState = rememberScrollState()
+
+    // Bounce slide-up animations: title, tutorial card, mode card, back button
+    val sectionOffsets = remember { List(4) { Animatable(1f) } }
+    LaunchedEffect(Unit) {
+        sectionOffsets.forEachIndexed { index, anim ->
+            launch {
+                delay(index * 80L)
+                anim.animateTo(
+                    targetValue = 0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
+        }
+    }
 
     BoxWithConstraints(
             modifier =
@@ -166,14 +187,21 @@ fun HowToPlayScreen(onBack: () -> Unit) {
                             text = Strings.howToPlay,
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.graphicsLayer {
+                                translationY = sectionOffsets[0].value * 100f
+                                alpha = 1f - sectionOffsets[0].value
+                            }
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Tutorial mini-board pager card
                     val cardShadowOffset = 5.dp
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.fillMaxWidth().graphicsLayer {
+                        translationY = sectionOffsets[1].value * 100f
+                        alpha = 1f - sectionOffsets[1].value
+                    }) {
                         // Shadow layer
                         Box(
                                 modifier =
@@ -361,7 +389,10 @@ fun HowToPlayScreen(onBack: () -> Unit) {
 
                     // Simple vs Classic mode differences
                     val cardShadowOffset2 = 5.dp
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.fillMaxWidth().graphicsLayer {
+                        translationY = sectionOffsets[2].value * 100f
+                        alpha = 1f - sectionOffsets[2].value
+                    }) {
                         Box(
                                 modifier =
                                         Modifier.matchParentSize()
@@ -434,7 +465,10 @@ fun HowToPlayScreen(onBack: () -> Unit) {
                                 onClick = onBack,
                                 mainColor = SecondaryActionColor,
                                 shadowColor = SecondaryActionShadow,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth().graphicsLayer {
+                                    translationY = sectionOffsets[3].value * 100f
+                                    alpha = 1f - sectionOffsets[3].value
+                                }
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                     }
@@ -448,7 +482,10 @@ fun HowToPlayScreen(onBack: () -> Unit) {
                             onClick = onBack,
                             mainColor = SecondaryActionColor,
                             shadowColor = SecondaryActionShadow,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().graphicsLayer {
+                                translationY = sectionOffsets[3].value * 100f
+                                alpha = 1f - sectionOffsets[3].value
+                            }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                 }

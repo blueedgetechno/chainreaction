@@ -1,7 +1,10 @@
 package com.blueedge.chainreaction.ui.screens
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -69,6 +74,8 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -97,6 +104,23 @@ fun SettingsScreen(
         val portraitScrollState = rememberScrollState()
         val landscapeScrollState = rememberScrollState()
 
+        // Bounce slide-up animations: title, toggles, card, footer, back button
+        val sectionOffsets = remember { List(5) { Animatable(1f) } }
+        LaunchedEffect(Unit) {
+            sectionOffsets.forEachIndexed { index, anim ->
+                launch {
+                    delay(index * 80L)
+                    anim.animateTo(
+                        targetValue = 0f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    )
+                }
+            }
+        }
+
         val outerColumnModifier = if (isLandscape) {
             Modifier.fillMaxSize().verticalScroll(landscapeScrollState)
         } else {
@@ -124,7 +148,11 @@ fun SettingsScreen(
                 style = if (isInGame) MaterialTheme.typography.displaySmall
                 else MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.graphicsLayer {
+                    translationY = sectionOffsets[0].value * 100f
+                    alpha = 1f - sectionOffsets[0].value
+                }
             )
 
             Spacer(modifier = Modifier.height(36.dp))
@@ -132,7 +160,10 @@ fun SettingsScreen(
             // Music, Sound & Vibration icon toggle buttons
             val soundPlayer = LocalSoundPlayer.current
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().graphicsLayer {
+                    translationY = sectionOffsets[1].value * 100f
+                    alpha = 1f - sectionOffsets[1].value
+                },
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 SoundToggleButton(
@@ -168,6 +199,10 @@ fun SettingsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .graphicsLayer {
+                            translationY = sectionOffsets[2].value * 100f
+                            alpha = 1f - sectionOffsets[2].value
+                        }
                         .clip(RoundedCornerShape(20.dp))
                         .background(MaterialTheme.colorScheme.surface)
                 ) {
@@ -277,7 +312,10 @@ fun SettingsScreen(
             if (!isInGame) {
                 // Terms & Privacy
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().graphicsLayer {
+                        translationY = sectionOffsets[3].value * 100f
+                        alpha = 1f - sectionOffsets[3].value
+                    },
                     horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
                 ) {
                     SmallRaised3DButton(
@@ -301,7 +339,10 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().graphicsLayer {
+                        translationY = sectionOffsets[3].value * 100f
+                        alpha = 1f - sectionOffsets[3].value
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -310,6 +351,10 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .graphicsLayer {
+                            translationY = sectionOffsets[3].value * 100f
+                            alpha = 1f - sectionOffsets[3].value
+                        }
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
@@ -348,7 +393,10 @@ fun SettingsScreen(
             Raised3DButton(
                 text = Strings.back,
                 onClick = onBack,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().graphicsLayer {
+                    translationY = sectionOffsets[4].value * 100f
+                    alpha = 1f - sectionOffsets[4].value
+                },
                 mainColor = SecondaryActionColor,
                 shadowColor = SecondaryActionShadow
             )

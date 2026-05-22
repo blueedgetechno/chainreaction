@@ -4,7 +4,10 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -41,6 +44,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -71,6 +75,8 @@ import com.blueedge.chainreaction.ui.theme.PlayerColors
 import com.blueedge.chainreaction.ui.theme.SecondaryActionColor
 import com.blueedge.chainreaction.ui.theme.SecondaryActionShadow
 import com.blueedge.chainreaction.utils.Constants
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun GameSetupScreen(
@@ -85,6 +91,24 @@ fun GameSetupScreen(
     var botDifficulty by remember { mutableStateOf(GameConfig.botDifficulty) }
     var gameVariant by remember { mutableStateOf(GameConfig.gameVariant) }
 
+    // Bounce slide-up animations for each section
+    // Items: header, mode card, grid card, players/difficulty card, buttons row
+    val sectionOffsets = remember { List(5) { Animatable(1f) } }
+
+    LaunchedEffect(Unit) {
+        sectionOffsets.forEachIndexed { index, anim ->
+            launch {
+                delay(index * 80L)
+                anim.animateTo(
+                    targetValue = 0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
+        }
+    }
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -124,7 +148,10 @@ fun GameSetupScreen(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().graphicsLayer {
+                translationY = sectionOffsets[0].value * 100f
+                alpha = 1f - sectionOffsets[0].value
+            }
         ) {
             Icon(
                 painter = if (gameMode == GameMode.LOCAL_MULTIPLAYER) painterResource(Res.drawable.ic_people) else painterResource(Res.drawable.ic_smart_toy),
@@ -148,6 +175,10 @@ fun GameSetupScreen(
             title = Strings.mode,
             animatedValue = if (gameVariant == GameVariant.SIMPLE) Strings.simple else Strings.classic,
             valueColor = if (gameVariant == GameVariant.SIMPLE) MaterialTheme.colorScheme.primary else Color(0xFFE09B40),
+            modifier = Modifier.graphicsLayer {
+                translationY = sectionOffsets[1].value * 100f
+                alpha = 1f - sectionOffsets[1].value
+            },
             trailingAction = {
                 Box(
                     modifier = Modifier
@@ -240,7 +271,11 @@ fun GameSetupScreen(
         SectionCard(
             title = Strings.gridSize,
             animatedValue = "${localGridSize}x${localGridSize}",
-            valueColor = MaterialTheme.colorScheme.primary
+            valueColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.graphicsLayer {
+                translationY = sectionOffsets[2].value * 100f
+                alpha = 1f - sectionOffsets[2].value
+            }
         ) {
             CustomSlider(
                 value = Constants.GRID_SIZES.indexOf(localGridSize).coerceAtLeast(0),
@@ -255,7 +290,11 @@ fun GameSetupScreen(
             SectionCard(
                 title = Strings.players,
                 animatedValue = "$numPlayers",
-                valueColor = MaterialTheme.colorScheme.primary
+                valueColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.graphicsLayer {
+                    translationY = sectionOffsets[3].value * 100f
+                    alpha = 1f - sectionOffsets[3].value
+                }
             ) {
                 PlayerCountContent(numPlayers) { numPlayers = it }
             }
@@ -272,6 +311,10 @@ fun GameSetupScreen(
                     BotDifficulty.EASY -> SecondaryActionColor
                     BotDifficulty.MEDIUM -> MaterialTheme.colorScheme.primary
                     BotDifficulty.HARD -> Color(0xFFE05555)
+                },
+                modifier = Modifier.graphicsLayer {
+                    translationY = sectionOffsets[3].value * 100f
+                    alpha = 1f - sectionOffsets[3].value
                 }
             ) {
                 val difficulties = BotDifficulty.entries
@@ -288,7 +331,10 @@ fun GameSetupScreen(
 
         // Back + Play buttons row
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().graphicsLayer {
+                translationY = sectionOffsets[4].value * 100f
+                alpha = 1f - sectionOffsets[4].value
+            },
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Raised3DButton(
@@ -340,12 +386,13 @@ private fun SectionCard(
     title: String,
     animatedValue: String,
     valueColor: Color = MaterialTheme.colorScheme.primary,
+    modifier: Modifier = Modifier,
     trailingAction: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val shadowOffset = 5.dp
     Box(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         // Shadow layer
         Box(

@@ -3,7 +3,7 @@
     {
       "label": "assembleDebug",
       "type": "shell",
-      "command": " ./gradlew installDebug; adb shell am start -n com.blueedge.chainreaction/.MainActivity",
+      "command": "./gradlew installDebug; adb shell am start -n com.blueedge.chainreaction/.MainActivity",
       "group": {
         "kind": "build",
         "isDefault": true
